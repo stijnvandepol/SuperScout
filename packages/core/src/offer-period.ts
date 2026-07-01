@@ -36,3 +36,27 @@ export function isExpiringSoon(validUntil: string, nowIso: string, thresholdDays
   const days = daysUntilExpiry(validUntil, nowIso);
   return !Number.isNaN(days) && days <= thresholdDays;
 }
+
+function startOfValidity(validFrom: string): number {
+  const iso = validFrom.length <= 10 ? `${validFrom}T00:00:00Z` : validFrom;
+  return Date.parse(iso);
+}
+
+/**
+ * Whether an offer is valid *today* — i.e. it has started and not expired.
+ * This is the "reken met de week" guard: a next-week offer (future start) or a
+ * past-week offer (expired) is filtered out. Unparseable dates fail open (kept),
+ * so we never silently drop an offer whose period we couldn't read.
+ */
+export function isActive(validFrom: string, validUntil: string, nowIso: string): boolean {
+  const now = Date.parse(nowIso);
+  if (Number.isNaN(now)) return true;
+
+  const start = validFrom ? startOfValidity(validFrom) : Number.NaN;
+  if (!Number.isNaN(start) && now < start) return false;
+
+  const end = validUntil ? endOfValidity(validUntil) : Number.NaN;
+  if (!Number.isNaN(end) && now > end) return false;
+
+  return true;
+}

@@ -30,7 +30,7 @@ const cases: Array<[string, CategorySlug]> = [
   ["Groente, aardappelen", "groente-fruit"],
   ["Borrel, chips, snacks", "snacks"], // NOT bier-wijn, despite "borrel"
   ["Wijn, bier, sterke drank", "bier-wijn"],
-  ["Frisdrank, sappen, koffie, thee", "dranken"],
+  ["Frisdrank, sappen, koffie, thee", "frisdrank"],
   ["Pasta, rijst, internationale keuken", "pasta-rijst"],
   ["Soepen, conserven, sauzen, smaakmakers", "sauzen-conserven"],
   ["Drogisterij/Styling paste", "drogisterij"],
@@ -44,6 +44,18 @@ describe("categorizeOffer", () => {
 
   test("falls back to the title when there is no raw category (Jumbo)", () => {
     expect(categorizeOffer(offer(undefined, "Alle Valess vleesvervangers"))).toBe("vlees-vis");
+  });
+
+  test("splits drinks by title even when the source lumps them together", () => {
+    const drinks = "Frisdrank, sappen, koffie, thee";
+    expect(categorizeOffer(offer(drinks, "Coca-Cola Zero 1,5L"))).toBe("frisdrank");
+    expect(categorizeOffer(offer(drinks, "Douwe Egberts koffiebonen"))).toBe("koffie-thee");
+    expect(categorizeOffer(offer(drinks, "Spa mineraalwater"))).toBe("water");
+  });
+
+  test("separates snoep/koek from chips", () => {
+    expect(categorizeOffer(offer(undefined, "Verkade chocolade reep"))).toBe("snoep-koek");
+    expect(categorizeOffer(offer(undefined, "Lay's chips naturel"))).toBe("snacks");
   });
 
   test("is 'overig' when nothing matches", () => {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { daysUntilExpiry, isExpired, isExpiringSoon } from "../src/offer-period";
+import { daysUntilExpiry, isActive, isExpired, isExpiringSoon } from "../src/offer-period";
 
 describe("daysUntilExpiry", () => {
   test("counts a date-only validUntil through the end of that day", () => {
@@ -38,5 +38,26 @@ describe("isExpiringSoon", () => {
   test("respects a custom threshold", () => {
     expect(isExpiringSoon("2026-07-07", "2026-07-04T12:00:00.000Z", 4)).toBe(true);
     expect(isExpiringSoon("2026-07-07", "2026-07-04T12:00:00.000Z", 1)).toBe(false);
+  });
+});
+
+describe("isActive", () => {
+  const now = "2026-07-03T12:00:00.000Z"; // a Friday mid-week
+
+  test("true when today is within the period", () => {
+    expect(isActive("2026-06-29", "2026-07-05", now)).toBe(true);
+  });
+
+  test("false for a next-week offer that hasn't started", () => {
+    expect(isActive("2026-07-06", "2026-07-12", now)).toBe(false);
+  });
+
+  test("false for a past-week offer that has expired", () => {
+    expect(isActive("2026-06-22", "2026-06-28", now)).toBe(false);
+  });
+
+  test("keeps offers with unreadable dates (fails open)", () => {
+    expect(isActive("", "", now)).toBe(true);
+    expect(isActive("nope", "nope", now)).toBe(true);
   });
 });

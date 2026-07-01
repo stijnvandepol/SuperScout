@@ -21,6 +21,7 @@ export const STORE_META: Record<SupermarketSlug, StoreMeta> = {
   vomar: { name: "Vomar", bg: "#d4021d", fg: "#ffffff", offersUrl: "https://www.vomar.nl/aanbiedingen" },
   coop: { name: "Coop", bg: "#e2001a", fg: "#ffffff", offersUrl: "https://www.coop.nl/aanbiedingen" },
   spar: { name: "Spar", bg: "#009640", fg: "#ffffff", offersUrl: "https://www.spar.nl/aanbiedingen" },
+  ekoplaza: { name: "Ekoplaza", bg: "#4b9b3f", fg: "#ffffff", offersUrl: "https://www.ekoplaza.nl/aanbiedingen" },
 };
 
 export const MECHANISM_LABEL: Record<MechanismType, string> = {

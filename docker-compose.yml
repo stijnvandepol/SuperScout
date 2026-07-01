@@ -29,8 +29,8 @@ services:
     container_name: superscout-ingestion
     environment:
       - OFFERS_OUT=/data/offers.json
-      # Check for new offers once a day (ms). Runs once on start, then daily.
-      - INGEST_INTERVAL_MS=86400000
+      # Runs once on start, then every morning at this UTC hour (5 ≈ 07:00 NL).
+      - INGEST_HOUR=5
     volumes:
       - offers-data:/data
     restart: unless-stopped

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import type { Offer } from "@superscout/core";
-import { CATEGORIES, categorizeOffer, type CategorySlug } from "@superscout/core";
+import { CATEGORIES, categorizeOffer, isActive, type CategorySlug } from "@superscout/core";
 import { offerSlug } from "@/lib/format";
 import seed from "@/data/offers.json";
 
@@ -12,12 +12,7 @@ const SEED = seed as unknown as Offer[];
 const TTL_MS = 60_000;
 let cache: { at: number; offers: Offer[] } | null = null;
 
-/**
- * All current offers. Reads the live file at OFFERS_PATH (written by the
- * ingestion worker) when set, else the bundled seed. Cached briefly so ISR
- * re-reads stay cheap.
- */
-export function getOffers(): Offer[] {
+function loadRaw(): Offer[] {
   const path = process.env.OFFERS_PATH;
   if (!path) return SEED;
 
@@ -30,6 +25,16 @@ export function getOffers(): Offer[] {
   } catch {
     return cache?.offers ?? SEED;
   }
+}
+
+/**
+ * All offers valid today. Reads the live file at OFFERS_PATH (written by the
+ * ingestion worker) when set, else the bundled seed, then drops anything not
+ * currently valid (stale seed / next-week deals).
+ */
+export function getOffers(): Offer[] {
+  const nowIso = new Date().toISOString();
+  return loadRaw().filter((o) => isActive(o.validFrom, o.validUntil, nowIso));
 }
 
 export function getBySlug(slug: string): Offer | undefined {
