@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { BasketView } from "@/components/BasketView";
+import { getOffers } from "@/lib/offers";
+
+export const revalidate = 1800;
 
 export const metadata: Metadata = {
   title: "Mijn mandje — SuperScout",
@@ -13,7 +16,7 @@ export default function MandjePage() {
       <p className="mt-2 font-mono text-sm text-ink-soft">
         Per winkel gegroepeerd — open de winkel-app om te bestellen.
       </p>
-      <BasketView />
+      <BasketView allOffers={getOffers()} />
     </div>
   );
 }

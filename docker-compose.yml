@@ -3,8 +3,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: web
     image: superscout-web:latest
     container_name: superscout-web
+    environment:
+      - OFFERS_PATH=/data/offers.json
+    volumes:
+      - offers-data:/data
     ports:
       - "3000:3000"
     restart: unless-stopped
@@ -14,3 +19,21 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
+
+  ingestion:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ingest
+    image: superscout-ingestion:latest
+    container_name: superscout-ingestion
+    environment:
+      - OFFERS_OUT=/data/offers.json
+      # Check for new offers once a day (ms). Runs once on start, then daily.
+      - INGEST_INTERVAL_MS=86400000
+    volumes:
+      - offers-data:/data
+    restart: unless-stopped
+
+volumes:
+  offers-data:

@@ -5,33 +5,20 @@
    clean cool-fresh ground, warm near-black ink, marigold as the one
    signature "deal" colour, fresh green for savings, tomato for urgency. */
 :root {
-  --bg: #f5f7f2;
+  color-scheme: light;
+  --bg: #fbfcf9;
   --surface: #ffffff;
-  --surface-2: #eef1e9;
-  --ink: #14170e;
-  --ink-soft: #5c6152;
-  --line: #e3e6dc;
-  --deal: #ffbe0f;
+  --surface-2: #f2f4ed;
+  --ink: #16180f;
+  --ink-soft: #51564a;
+  --line: #e5e7dd;
+  --deal: #f5a800;
   --deal-ink: #1c1500;
-  --fresh: #0d8a46;
-  --urgent: #e5431c;
+  --fresh: #0b7f40;
+  --urgent: #d63a17;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) {
-    --bg: #0e110c;
-    --surface: #171c14;
-    --surface-2: #1f251c;
-    --ink: #f1f4ea;
-    --ink-soft: #a4ab98;
-    --line: #2a3126;
-    --deal: #ffc733;
-    --deal-ink: #1c1500;
-    --fresh: #33c06e;
-    --urgent: #ff6a45;
-  }
-}
-
+/* Light by default (was too dark in system dark mode). Manual dark opt-in only. */
 .dark {
   --bg: #0e110c;
   --surface: #171c14;

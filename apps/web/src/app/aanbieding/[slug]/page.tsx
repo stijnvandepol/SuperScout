@@ -9,7 +9,9 @@ import {
   isExpiringSoon,
   relatedOffers,
 } from "@superscout/core";
-import { OFFERS, getBySlug } from "@/lib/offers";
+import { getBySlug, getOffers } from "@/lib/offers";
+
+export const revalidate = 1800;
 import {
   formatEuro,
   mechanismDescription,
@@ -25,7 +27,7 @@ import { AddToBasketButton } from "@/components/AddToBasketButton";
 type Params = { params: Promise<{ slug: string }> };
 
 export function generateStaticParams() {
-  return OFFERS.map((offer) => ({ slug: offerSlug(offer) }));
+  return getOffers().map((offer) => ({ slug: offerSlug(offer) }));
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -61,7 +63,7 @@ export default async function OfferPage({ params }: Params) {
 
   const nowIso = new Date().toISOString();
   const store = STORE_META[offer.source];
-  const { sameBrand, alternatives, related } = relatedOffers(offer, OFFERS);
+  const { sameBrand, alternatives, related } = relatedOffers(offer, getOffers());
   const soon = isExpiringSoon(offer.validUntil, nowIso);
   const days = daysUntilExpiry(offer.validUntil, nowIso);
   const { pricing } = offer;

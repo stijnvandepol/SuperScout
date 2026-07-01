@@ -3,11 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Offer, SupermarketSlug } from "@superscout/core";
-import { OFFERS } from "@/lib/offers";
 import { getBasket, onBasketChange, removeFromBasket } from "@/lib/basket";
 import { formatEuro, offerSlug, STORE_META } from "@/lib/format";
 
-export function BasketView() {
+export function BasketView({ allOffers }: { allOffers: Offer[] }) {
   const [ids, setIds] = useState<string[] | null>(null);
 
   useEffect(() => {
@@ -18,8 +17,9 @@ export function BasketView() {
 
   if (ids === null) return <p className="mt-8 font-mono text-sm text-ink-soft">Laden…</p>;
 
+  const byId = new Map(allOffers.map((o) => [o.id, o]));
   const items = ids
-    .map((id) => OFFERS.find((o) => o.id === id))
+    .map((id) => byId.get(id))
     .filter((o): o is Offer => Boolean(o));
 
   if (items.length === 0) {

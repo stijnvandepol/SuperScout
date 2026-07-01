@@ -4,6 +4,8 @@ import { CATEGORY_LABEL, type CategorySlug } from "@superscout/core";
 import { byBiggestDiscount, categoriesPresent, offersInCategory } from "@/lib/offers";
 import { OfferGrid } from "@/components/OfferGrid";
 
+export const revalidate = 1800;
+
 type Params = { params: Promise<{ slug: string }> };
 
 export function generateStaticParams() {

@@ -1,12 +1,16 @@
 import Link from "next/link";
 import { STORE_META } from "@/lib/format";
-import { OFFERS, categoriesPresent, stats } from "@/lib/offers";
+import { categoriesPresent, getOffers, stats } from "@/lib/offers";
 import { OfferExplorer } from "@/components/OfferExplorer";
 
+// Re-read live offers periodically (ISR).
+export const revalidate = 1800;
+
 export default function Home() {
-  const { total, stores } = stats(OFFERS);
+  const offers = getOffers();
+  const { total, stores } = stats(offers);
   const categories = categoriesPresent();
-  const storeSlugs = [...new Set(OFFERS.map((o) => o.source))].sort();
+  const storeSlugs = [...new Set(offers.map((o) => o.source))].sort();
   // Reference "now" resolved once on the server so client + SSR agree (no
   // hydration mismatch). For a static build this is build time — production
   // freshness will come from ISR/revalidation later.
@@ -69,7 +73,7 @@ export default function Home() {
       </section>
 
       <div className="pb-24 pt-8">
-        <OfferExplorer offers={OFFERS} nowIso={nowIso} />
+        <OfferExplorer offers={offers} nowIso={nowIso} />
       </div>
     </div>
   );

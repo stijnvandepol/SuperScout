@@ -1,18 +1,20 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import type { SupermarketSlug } from "@superscout/core";
-import { OFFERS, byBiggestDiscount } from "@/lib/offers";
+import { byBiggestDiscount, getOffers } from "@/lib/offers";
 import { STORE_META } from "@/lib/format";
 import { OfferGrid } from "@/components/OfferGrid";
+
+export const revalidate = 1800;
 
 type Params = { params: Promise<{ slug: string }> };
 
 function storeOffers(slug: string) {
-  return OFFERS.filter((o) => o.source === slug);
+  return getOffers().filter((o) => o.source === slug);
 }
 
 export function generateStaticParams() {
-  return [...new Set(OFFERS.map((o) => o.source))].map((slug) => ({ slug }));
+  return [...new Set(getOffers().map((o) => o.source))].map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {

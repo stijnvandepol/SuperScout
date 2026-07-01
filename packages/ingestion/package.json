@@ -8,9 +8,13 @@
   },
   "scripts": {
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:cli": "esbuild src/cli.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/ingest.cjs"
   },
   "dependencies": {
     "@superscout/core": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
   }
 }

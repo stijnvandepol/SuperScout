@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { categoriesPresent } from "@/lib/offers";
 
+export const revalidate = 1800;
+
 export const metadata: Metadata = {
   title: "Alle categorieën — SuperScout",
   description: "Blader door alle productcategorieën met actuele supermarktaanbiedingen.",
