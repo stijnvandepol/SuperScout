@@ -14,3 +14,9 @@ export type { AhFetcher } from "./adapters/ah/ah.adapter";
 export { normalizeAhPromotion } from "./adapters/ah/ah.normalize";
 export { parseAhMechanism } from "./adapters/ah/ah.mechanism";
 export type * from "./adapters/ah/ah.raw";
+
+export { PlusAdapter } from "./adapters/plus/plus.adapter";
+export type { PlusFetcher } from "./adapters/plus/plus.adapter";
+export { normalizePlusOffer } from "./adapters/plus/plus.normalize";
+export { parsePlusMechanism } from "./adapters/plus/plus.mechanism";
+export type * from "./adapters/plus/plus.raw";

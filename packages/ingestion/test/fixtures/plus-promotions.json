@@ -1,0 +1,292 @@
+{
+  "data": {
+    "PromotionOfferList": {
+      "List": [
+        {
+          "Category": {
+            "CategoryId": "x",
+            "CategoryLabel": "Aardappelen, groente, fruit",
+            "Offers": {
+              "List": [
+                {
+                  "PromotionID": "4436",
+                  "Offer_Id": "177",
+                  "PromotionSortOrder": "7.0",
+                  "Brand": "PLUS",
+                  "Name": "Verse watermeloen- en ananasblokjes en fruitsalade ananas/druif",
+                  "Example": "Bijv. Verse watermeloen blokjes",
+                  "Variant": "Schaal 275-400 gram",
+                  "Explanation": "**Voor 1+1 gratis geldt: per combinatie kan de prijs verschillen. Je krijgt 50% korting op de totaalprijs. ",
+                  "Package": "",
+                  "Slug": "4436-177",
+                  "ImageURL": "//images.ctfassets.net/s0lodsnpsezb/4436_177_M/7d77d4ccd8c377ca676d8d4e09457845/4436_177.png",
+                  "ImageLabel": "",
+                  "MetaTitle": "",
+                  "MetaDescription": "",
+                  "NewPrice": "3.89",
+                  "PriceOriginal_Product": "0.0",
+                  "PriceOriginal_Highest": "0.0",
+                  "PriceOriginal_Lowest": "7.78",
+                  "IsOfflineSaleOnly": false,
+                  "IsProductOverMajorityAge": false,
+                  "DisplayInfo_Label": "1+1 GRATIS",
+                  "DisplayInfo_PromotionBasedLabel": "",
+                  "StartDate": "2026-07-01",
+                  "EndDate": "2026-07-07",
+                  "IsFreeDeliveryOffer": false,
+                  "IsSingleProduct": false,
+                  "Product_SKU": "170036",
+                  "Product_LineItemId": "",
+                  "Product_Quantity": 0,
+                  "ProductLoyaltyInfoID": 0,
+                  "Product_IsNIX18": false,
+                  "Product_MaxOrderLimit": 0,
+                  "StampURL": "",
+                  "StoreNumberList": {
+                    "List": [],
+                    "EmptyListItem": ""
+                  }
+                },
+                {
+                  "PromotionID": "4436",
+                  "Offer_Id": "176",
+                  "PromotionSortOrder": "7.0",
+                  "Brand": "PLUS",
+                  "Name": "Frambozen",
+                  "Example": "Per 225 g",
+                  "Variant": "",
+                  "Explanation": "",
+                  "Package": "",
+                  "Slug": "plus-frambozen-tray-225-g-170036",
+                  "ImageURL": "https://images.ctfassets.net/s0lodsnpsezb/170036_M/3db1f055e646727c9065a6e0da5f2159/170036.png",
+                  "ImageLabel": "",
+                  "MetaTitle": "PLUS Frambozen 225 Gram - PLUS",
+                  "MetaDescription": "Bestel PLUS Frambozen 225 Gram online op plus.nl. Laat je boodschappen makkelijk en snel thuis bezorgen of haal het op bij jouw PLUS.",
+                  "NewPrice": "2.99",
+                  "PriceOriginal_Product": "4.99",
+                  "PriceOriginal_Highest": "0.0",
+                  "PriceOriginal_Lowest": "0.0",
+                  "IsOfflineSaleOnly": false,
+                  "IsProductOverMajorityAge": false,
+                  "DisplayInfo_Label": "",
+                  "DisplayInfo_PromotionBasedLabel": "",
+                  "StartDate": "2026-07-01",
+                  "EndDate": "2026-07-07",
+                  "IsFreeDeliveryOffer": false,
+                  "IsSingleProduct": true,
+                  "Product_SKU": "170036",
+                  "Product_LineItemId": "",
+                  "Product_Quantity": 0,
+                  "ProductLoyaltyInfoID": 0,
+                  "Product_IsNIX18": false,
+                  "Product_MaxOrderLimit": 199,
+                  "StampURL": "",
+                  "StoreNumberList": {
+                    "List": [],
+                    "EmptyListItem": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Category": {
+            "CategoryId": "x",
+            "CategoryLabel": "Zuivel, eieren, boter",
+            "Offers": {
+              "List": [
+                {
+                  "PromotionID": "4436",
+                  "Offer_Id": "146",
+                  "PromotionSortOrder": "50.0",
+                  "Brand": "Campina",
+                  "Name": "Boter",
+                  "Example": "",
+                  "Variant": "Alle varianten à 200-250 gram",
+                  "Explanation": "",
+                  "Package": "2 stuks",
+                  "Slug": "4436-146",
+                  "ImageURL": "https://images.ctfassets.net/s0lodsnpsezb/4436_146_M/0472f0bd20a9ce3e3b22ec3c14726805/4436_146.png",
+                  "ImageLabel": "",
+                  "MetaTitle": "",
+                  "MetaDescription": "",
+                  "NewPrice": "4.99",
+                  "PriceOriginal_Product": "0.0",
+                  "PriceOriginal_Highest": "7.98",
+                  "PriceOriginal_Lowest": "5.18",
+                  "IsOfflineSaleOnly": false,
+                  "IsProductOverMajorityAge": false,
+                  "DisplayInfo_Label": "2 VOOR 4.99",
+                  "DisplayInfo_PromotionBasedLabel": "",
+                  "StartDate": "2026-07-01",
+                  "EndDate": "2026-07-07",
+                  "IsFreeDeliveryOffer": false,
+                  "IsSingleProduct": false,
+                  "Product_SKU": "165144",
+                  "Product_LineItemId": "",
+                  "Product_Quantity": 0,
+                  "ProductLoyaltyInfoID": 0,
+                  "Product_IsNIX18": false,
+                  "Product_MaxOrderLimit": 0,
+                  "StampURL": "",
+                  "StoreNumberList": {
+                    "List": [],
+                    "EmptyListItem": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Category": {
+            "CategoryId": "x",
+            "CategoryLabel": "Vlees, kip, vis, vega",
+            "Offers": {
+              "List": [
+                {
+                  "PromotionID": "4436",
+                  "Offer_Id": "128",
+                  "PromotionSortOrder": "50.0",
+                  "Brand": "Alle PLUS en Beyond Meat",
+                  "Name": "Vleesvervangers",
+                  "Example": "Bijv. Plantaardig gekruid rulgehakt",
+                  "Variant": "",
+                  "Explanation": "",
+                  "Package": "",
+                  "Slug": "4436-128",
+                  "ImageURL": "https://images.ctfassets.net/s0lodsnpsezb/4436_128_M/00cfe4c0de45390597285b8c73671811/4436_128.png",
+                  "ImageLabel": "",
+                  "MetaTitle": "",
+                  "MetaDescription": "",
+                  "NewPrice": "1.49",
+                  "PriceOriginal_Product": "0.0",
+                  "PriceOriginal_Highest": "0.0",
+                  "PriceOriginal_Lowest": "1.99",
+                  "IsOfflineSaleOnly": false,
+                  "IsProductOverMajorityAge": false,
+                  "DisplayInfo_Label": "25 % KORTING",
+                  "DisplayInfo_PromotionBasedLabel": "",
+                  "StartDate": "2026-07-01",
+                  "EndDate": "2026-07-07",
+                  "IsFreeDeliveryOffer": false,
+                  "IsSingleProduct": false,
+                  "Product_SKU": "625155",
+                  "Product_LineItemId": "",
+                  "Product_Quantity": 0,
+                  "ProductLoyaltyInfoID": 0,
+                  "Product_IsNIX18": false,
+                  "Product_MaxOrderLimit": 0,
+                  "StampURL": "",
+                  "StoreNumberList": {
+                    "List": [],
+                    "EmptyListItem": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Category": {
+            "CategoryId": "x",
+            "CategoryLabel": "Gratis bezorging",
+            "Offers": {
+              "List": [
+                {
+                  "PromotionID": "4436",
+                  "Offer_Id": "145",
+                  "PromotionSortOrder": "10.0",
+                  "Brand": "Duvel, Chouffe, Liefmans, Brouwerij 't I",
+                  "Name": "",
+                  "Example": "",
+                  "Variant": "",
+                  "Explanation": "**Let op: deze actie is alleen van toepassing wanneer het bezorg- of ophaalmoment binnen de actieperiode valt en is niet combineerbaar met andere gratis bezorgacties. *PLUS Express is uitgezonderd.",
+                  "Package": "",
+                  "Slug": "4436-145",
+                  "ImageURL": "https://images.ctfassets.net/s0lodsnpsezb/4436_145_M/7fe43d09a68bcfc4adc3a677df8a24a0/4436_145.png",
+                  "ImageLabel": "",
+                  "MetaTitle": "",
+                  "MetaDescription": "",
+                  "NewPrice": "0.0",
+                  "PriceOriginal_Product": "0.0",
+                  "PriceOriginal_Highest": "0.0",
+                  "PriceOriginal_Lowest": "0.0",
+                  "IsOfflineSaleOnly": false,
+                  "IsProductOverMajorityAge": false,
+                  "DisplayInfo_Label": "GRATIS BEZORGING BIJ 10.00 EURO",
+                  "DisplayInfo_PromotionBasedLabel": "",
+                  "StartDate": "2026-07-01",
+                  "EndDate": "2026-07-07",
+                  "IsFreeDeliveryOffer": true,
+                  "IsSingleProduct": false,
+                  "Product_SKU": "165144",
+                  "Product_LineItemId": "",
+                  "Product_Quantity": 0,
+                  "ProductLoyaltyInfoID": 0,
+                  "Product_IsNIX18": false,
+                  "Product_MaxOrderLimit": 0,
+                  "StampURL": "",
+                  "StoreNumberList": {
+                    "List": [],
+                    "EmptyListItem": ""
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "Category": {
+            "CategoryId": "x",
+            "CategoryLabel": "Wijn, bier, sterke drank",
+            "Offers": {
+              "List": [
+                {
+                  "PromotionID": "4436",
+                  "Offer_Id": "69",
+                  "PromotionSortOrder": "80.0",
+                  "Brand": "Wijn top 5 juli",
+                  "Name": "",
+                  "Example": "Bijv. Grande Réserve Chardonnay",
+                  "Variant": "Fles 75 cl",
+                  "Explanation": "",
+                  "Package": "",
+                  "Slug": "4436-69",
+                  "ImageURL": "https://images.ctfassets.net/s0lodsnpsezb/4436_69_M/074ed237555939b927088d9f89ac5a6c/4436_69.png",
+                  "ImageLabel": "",
+                  "MetaTitle": "",
+                  "MetaDescription": "",
+                  "NewPrice": "5.49",
+                  "PriceOriginal_Product": "0.0",
+                  "PriceOriginal_Highest": "0.0",
+                  "PriceOriginal_Lowest": "6.49",
+                  "IsOfflineSaleOnly": false,
+                  "IsProductOverMajorityAge": false,
+                  "DisplayInfo_Label": "1.00 KORTING",
+                  "DisplayInfo_PromotionBasedLabel": "",
+                  "StartDate": "2026-07-01",
+                  "EndDate": "2026-07-31",
+                  "IsFreeDeliveryOffer": false,
+                  "IsSingleProduct": false,
+                  "Product_SKU": "165144",
+                  "Product_LineItemId": "",
+                  "Product_Quantity": 0,
+                  "ProductLoyaltyInfoID": 0,
+                  "Product_IsNIX18": false,
+                  "Product_MaxOrderLimit": 0,
+                  "StampURL": "",
+                  "StoreNumberList": {
+                    "List": [],
+                    "EmptyListItem": ""
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}
