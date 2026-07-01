@@ -1,0 +1,286 @@
+{
+  "currentOffers": [
+    {
+      "offerId": 137274,
+      "headerText": "Bonduelle",
+      "packaging": "Blik 300 - 400 gram.",
+      "offerPrice": 0.99,
+      "normalPrice": 2.79,
+      "textPriceSign": "ACTIE_\n ",
+      "image": "4/7/2/7/3/1/Bonduelle V2_639178257799454239.png",
+      "startDate": "2026-07-01T00:00:00.000Z",
+      "endDate": "2026-07-07T23:59:00.000Z",
+      "disclaimerStartDate": "2026-07-01T00:00:00.000Z",
+      "disclaimerEndDate": "2026-07-07T00:00:00.000Z",
+      "products": [
+        {
+          "productId": 1509,
+          "offerPrice": 0.99,
+          "normalPrice": 2.49,
+          "productInformation": {
+            "productId": 1509,
+            "headerText": "Bonduelle Mexico melange",
+            "packaging": "400 g",
+            "image": "artikelen/201234_1_147263_638630310311279320.png",
+            "department": "Aardappelen, groente & fruit",
+            "webgroup": "Groenteconserven",
+            "brand": "Bonduelle",
+            "logos": []
+          },
+          "productOffer": {
+            "textPriceSign": "ACTIE_\n "
+          }
+        },
+        {
+          "productId": 49681,
+          "offerPrice": 0.99,
+          "normalPrice": 1.87,
+          "productInformation": {
+            "productId": 49681,
+            "headerText": "Bonduelle Linzen pure",
+            "packaging": "310 g",
+            "image": "artikelen/180053_1_403442_638415147254927100.png",
+            "department": "Aardappelen, groente & fruit",
+            "webgroup": "Groenteconserven",
+            "brand": "Bonduelle",
+            "logos": []
+          },
+          "productOffer": {
+            "textPriceSign": "ACTIE_\n "
+          }
+        },
+        {
+          "productId": 6599,
+          "offerPrice": 0.99,
+          "normalPrice": 1.93,
+          "productInformation": {
+            "productId": 6599,
+            "headerText": "Bonduelle Zwarte bonen",
+            "packaging": "400 g",
+            "image": "artikelen/201239_1_346929_638630310313480747.png",
+            "department": "Aardappelen, groente & fruit",
+            "webgroup": "Groenteconserven",
+            "brand": "Bonduelle",
+            "logos": []
+          },
+          "productOffer": {
+            "textPriceSign": "ACTIE_\n "
+          }
+        },
+        {
+          "productId": 12798,
+          "offerPrice": 0.99,
+          "normalPrice": 1.69,
+          "productInformation": {
+            "productId": 12798,
+            "headerText": "Bonduelle Rode kidneybonen",
+            "packaging": "310 g",
+            "image": "artikelen/181039_1_369124_638422146629298884.png",
+            "department": "Aardappelen, groente & fruit",
+            "webgroup": "Groenteconserven",
+            "brand": "Bonduelle",
+            "logos": []
+          },
+          "productOffer": {
+            "textPriceSign": "ACTIE_\n "
+          }
+        },
+        {
+          "productId": 9554,
+          "offerPrice": 0.99,
+          "normalPrice": 1.87,
+          "productInformation": {
+            "productId": 9554,
+            "headerText": "Bonduelle Crispy maïs",
+            "packaging": "300 g",
+            "image": "artikelen/201269_1_845070_638630313510193578.png",
+            "department": "Aardappelen, groente & fruit",
+            "webgroup": "Groenteconserven",
+            "brand": "Bonduelle",
+            "logos": []
+          },
+          "productOffer": {
+            "textPriceSign": "ACTIE_\n "
+          }
+        },
+        {
+          "productId": 72592,
+          "offerPrice": 0.99,
+          "normalPrice": 2.19,
+          "productInformation": {
+            "productId": 72592,
+            "headerText": "Bonduelle Cannellinibonen",
+            "packaging": "310 g",
+            "image": "artikelen/201246_1_426855_638630310532260338.png",
+            "department": "Aardappelen, groente & fruit",
+            "webgroup": "Groenteconserven",
+            "brand": "Bonduelle",
+            "logos": []
+          },
+          "productOffer": {
+            "textPriceSign": "ACTIE_\n "
+          }
+        },
+        {
+          "productId": 37033,
+          "offerPrice": 0.99,
+          "normalPrice": 2.79,
+          "productInformation": {
+            "productId": 37033,
+            "headerText": "Bonduelle Chilibonen in saus",
+            "packaging": "400 g",
+            "image": "artikelen/183749_1_388561_638447079186353092.png",
+            "department": "Aardappelen, groente & fruit",
+            "webgroup": "Groenteconserven",
+            "brand": "Bonduelle",
+            "logos": []
+          },
+          "productOffer": {
+            "textPriceSign": "ACTIE_\n "
+          }
+        },
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "offerId": 137396,
+      "headerText": "Blauwe bessen",
+      "packaging": "Per bak.",
+      "offerPrice": 2.99,
+      "normalPrice": 0,
+      "textPriceSign": "VR, ZA & ZO_actie",
+      "image": "6/9/3/7/3/1/Blauwe bessen_639178350437484805.png",
+      "startDate": "2026-07-01T00:00:00.000Z",
+      "endDate": "2026-07-05T23:59:00.000Z",
+      "disclaimerStartDate": "2026-07-03T00:00:00.000Z",
+      "disclaimerEndDate": "2026-07-05T00:00:00.000Z",
+      "products": [
+        {
+          "productId": 51069,
+          "offerPrice": 2.99,
+          "normalPrice": 3.59,
+          "productInformation": {
+            "productId": 51069,
+            "headerText": "1 de Beste Blauwe bessen",
+            "packaging": "300 g",
+            "image": "artikelen/247739_2026-07-01_04-06-51-746_8903214a-4f9b-472f-8bcc-6ee2e3e05a41.png",
+            "department": "Aardappelen, groente & fruit",
+            "webgroup": "Fruit",
+            "brand": "1 de Beste",
+            "logos": [
+              {
+                "description": "NUTRI-SCORE A = GROEN",
+                "position": 99,
+                "link": "https://www.dirk.nl/meer/over-dirk/duurzaamheid/nutriscore",
+                "image": "logos/f2548751-3ebc-4f6d-bd2f-7fb42efb04ea.png"
+              },
+              {
+                "description": "1 DE BESTE (VERSIE 2018) ",
+                "position": 99,
+                "link": "https://www.dirk.nl/meer/inspiratie/1-de-beste",
+                "image": "logos/81054b94-68db-4d5d-9ca0-392e8070401e.png"
+              }
+            ]
+          },
+          "productOffer": null
+        }
+      ]
+    },
+    {
+      "offerId": 137395,
+      "headerText": "1 de Beste Watermeloen of Ananas ",
+      "packaging": "Schaal 250 gram.",
+      "offerPrice": 1.79,
+      "normalPrice": 2.29,
+      "textPriceSign": "VR, ZA & ZO_actie",
+      "image": "5/9/3/7/3/1/Watermeloen of ananas_639178259111003113.png",
+      "startDate": "2026-07-01T00:00:00.000Z",
+      "endDate": "2026-07-05T23:59:00.000Z",
+      "disclaimerStartDate": "2026-07-03T00:00:00.000Z",
+      "disclaimerEndDate": "2026-07-05T00:00:00.000Z",
+      "products": [
+        null,
+        null
+      ]
+    },
+    {
+      "offerId": 137307,
+      "headerText": "1 de Beste Bami nasi- of macaroni spaghettigroente ",
+      "packaging": "Zak 450 gram.",
+      "offerPrice": 1.49,
+      "normalPrice": 0,
+      "textPriceSign": "ACTIE_\n ",
+      "image": "7/0/3/7/3/1/Bami nasi- of macaroni spaghettigroente_639178258815478592.png",
+      "startDate": "2026-07-01T00:00:00.000Z",
+      "endDate": "2026-07-07T23:59:00.000Z",
+      "disclaimerStartDate": "2026-07-01T00:00:00.000Z",
+      "disclaimerEndDate": "2026-07-07T00:00:00.000Z",
+      "products": [
+        {
+          "productId": 111908,
+          "offerPrice": 1.49,
+          "normalPrice": 1.79,
+          "productInformation": {
+            "productId": 111908,
+            "headerText": "1 de Beste Bami nasi groente",
+            "packaging": "450 g",
+            "image": "artikelen/203848_1_472107_638657310386716991.png",
+            "department": "Aardappelen, groente & fruit",
+            "webgroup": "Groente",
+            "brand": "1 de Beste",
+            "logos": [
+              {
+                "description": "NUTRI-SCORE A = GROEN",
+                "position": 99,
+                "link": "https://www.dirk.nl/meer/over-dirk/duurzaamheid/nutriscore",
+                "image": "logos/f2548751-3ebc-4f6d-bd2f-7fb42efb04ea.png"
+              },
+              {
+                "description": "1 DE BESTE (VERSIE 2018) ",
+                "position": 99,
+                "link": "https://www.dirk.nl/meer/inspiratie/1-de-beste",
+                "image": "logos/81054b94-68db-4d5d-9ca0-392e8070401e.png"
+              }
+            ]
+          },
+          "productOffer": {
+            "textPriceSign": "ACTIE_\n "
+          }
+        },
+        {
+          "productId": 111909,
+          "offerPrice": 1.49,
+          "normalPrice": 1.79,
+          "productInformation": {
+            "productId": 111909,
+            "headerText": "1 de Beste Macaroni spaghetti groente",
+            "packaging": "450 g",
+            "image": "artikelen/203849_1_472108_638657310402574785.png",
+            "department": "Aardappelen, groente & fruit",
+            "webgroup": "Groente",
+            "brand": "1 de Beste",
+            "logos": [
+              {
+                "description": "NUTRI-SCORE A = GROEN",
+                "position": 99,
+                "link": "https://www.dirk.nl/meer/over-dirk/duurzaamheid/nutriscore",
+                "image": "logos/f2548751-3ebc-4f6d-bd2f-7fb42efb04ea.png"
+              },
+              {
+                "description": "1 DE BESTE (VERSIE 2018) ",
+                "position": 99,
+                "link": "https://www.dirk.nl/meer/inspiratie/1-de-beste",
+                "image": "logos/81054b94-68db-4d5d-9ca0-392e8070401e.png"
+              }
+            ]
+          },
+          "productOffer": {
+            "textPriceSign": "ACTIE_\n "
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+coverage/
+*.log
+
+# Never commit raw MITM captures — they contain PII
+*.flows
+flows*
+*.har
