@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { MechanismType, Offer, SupermarketSlug } from "@superscout/core";
 import { isExpiringSoon } from "@superscout/core";
 import { MECHANISM_LABEL, STORE_META } from "@/lib/format";
@@ -11,6 +11,7 @@ export function OfferExplorer({ offers, nowIso }: { offers: Offer[]; nowIso: str
   const [store, setStore] = useState<SupermarketSlug | null>(null);
   const [mechanism, setMechanism] = useState<MechanismType | null>(null);
   const [expiringOnly, setExpiringOnly] = useState(false);
+  const [limit, setLimit] = useState(48);
 
   const stores = useMemo(
     () => [...new Set(offers.map((o) => o.source))].sort(),
@@ -34,6 +35,10 @@ export function OfferExplorer({ offers, nowIso }: { offers: Offer[]; nowIso: str
       return true;
     });
   }, [offers, query, store, mechanism, expiringOnly, nowIso]);
+
+  // Reset the render window whenever the result set changes.
+  useEffect(() => setLimit(48), [query, store, mechanism, expiringOnly]);
+  const visible = filtered.slice(0, limit);
 
   return (
     <section>
@@ -110,11 +115,24 @@ export function OfferExplorer({ offers, nowIso }: { offers: Offer[]; nowIso: str
           </p>
         </div>
       ) : (
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {filtered.map((o) => (
-            <OfferCard key={o.id} offer={o} nowIso={nowIso} />
-          ))}
-        </div>
+        <>
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {visible.map((o) => (
+              <OfferCard key={o.id} offer={o} nowIso={nowIso} />
+            ))}
+          </div>
+          {filtered.length > visible.length ? (
+            <div className="mt-8 text-center">
+              <button
+                type="button"
+                onClick={() => setLimit((l) => l + 48)}
+                className="rounded-full bg-ink px-6 py-3 font-display text-sm font-bold text-bg transition-opacity hover:opacity-90"
+              >
+                Toon meer ({filtered.length - visible.length})
+              </button>
+            </div>
+          ) : null}
+        </>
       )}
     </section>
   );

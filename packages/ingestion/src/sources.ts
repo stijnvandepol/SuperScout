@@ -19,7 +19,8 @@ export interface SourcePlugin {
 export const SOURCE_PLUGINS: readonly SourcePlugin[] = [
   { slug: "dirk", label: "Dirk", live: true, create: () => new DirkAdapter() },
   { slug: "jumbo", label: "Jumbo", live: true, create: () => new JumboAdapter() },
-  { slug: "ah", label: "Albert Heijn", live: false, create: () => new AhAdapter() },
+  { slug: "ah", label: "Albert Heijn", live: true, create: () => new AhAdapter() },
+  // Plus (OutSystems csrf/moduleVersion harvest) stays off until verified live.
   { slug: "plus", label: "Plus", live: false, create: () => new PlusAdapter() },
 ];
 

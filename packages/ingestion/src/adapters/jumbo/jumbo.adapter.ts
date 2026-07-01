@@ -4,28 +4,20 @@ import { normalizeJumboPromotion } from "./jumbo.normalize";
 
 const JUMBO_GRAPHQL_URL = "https://www.jumbo.com/api/graphql";
 
-/** Compact nuTab query — just the fields the normalizer consumes. */
+const PROMOTION_FIELDS = `id title subtitle group start { iso } end { iso } image url tags { text }`;
+
+/** nuTab query — promotions live both directly in a section and, for the bulk
+ *  of the catalog, grouped per aisle in `categories`. Fetch both. */
 const NUTAB_QUERY = `query nuTab {
   activeTab: promotionTab(id: "actieprijs") {
     id
-    shortTitle
     runtimes {
       active
-      start { iso }
       sections {
         id
         title
-        promotions {
-          id
-          title
-          subtitle
-          group
-          start { iso }
-          end { iso }
-          image
-          url
-          tags { text }
-        }
+        promotions { ${PROMOTION_FIELDS} }
+        categories { title promotions { ${PROMOTION_FIELDS} } }
       }
     }
   }
@@ -40,7 +32,12 @@ const defaultFetcher: JumboFetcher = async () => {
     headers: {
       "content-type": "application/json",
       accept: "*/*",
+      // Jumbo rejects the query ("No client headers set") without these.
       "apollographql-client-name": "JUMBO_MOBILE-promotion",
+      "apollographql-client-version": "33.10.0",
+      "x-source": "JUMBO_MOBILE-promotion",
+      origin: "capacitor://jumbo",
+      "user-agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15",
     },
     body: JSON.stringify({ operationName: "nuTab", query: NUTAB_QUERY, variables: {} }),
   });
@@ -62,13 +59,21 @@ export class JumboAdapter implements SourceAdapter {
     const offers: Offer[] = [];
     const seen = new Set<string>();
 
+    const add = (offer: Offer) => {
+      if (seen.has(offer.id)) return; // same promo can appear in multiple places
+      seen.add(offer.id);
+      offers.push(offer);
+    };
+
     for (const runtime of data.data.activeTab.runtimes ?? []) {
       for (const section of runtime.sections ?? []) {
         for (const promo of section.promotions ?? []) {
-          const offer = normalizeJumboPromotion(promo, fetchedAt);
-          if (seen.has(offer.id)) continue; // same promo can appear in multiple sections
-          seen.add(offer.id);
-          offers.push(offer);
+          add(normalizeJumboPromotion(promo, fetchedAt));
+        }
+        for (const category of section.categories ?? []) {
+          for (const promo of category.promotions ?? []) {
+            add(normalizeJumboPromotion(promo, fetchedAt, category.title));
+          }
         }
       }
     }

@@ -29,10 +29,18 @@ export interface JumboRawPromotion {
   tags: JumboPromotionTag[];
 }
 
+export interface JumboPromotionCategory {
+  title: string;
+  promotions: JumboRawPromotion[];
+}
+
 export interface JumboPromotionSection {
   id: string;
   title: string;
+  /** Promotions directly in the section (e.g. "Nu in de aanbieding"). */
   promotions: JumboRawPromotion[];
+  /** Promotions grouped per aisle ("Per gangpad") — the bulk of the catalog. */
+  categories?: JumboPromotionCategory[];
 }
 
 export interface JumboPromotionRuntime {

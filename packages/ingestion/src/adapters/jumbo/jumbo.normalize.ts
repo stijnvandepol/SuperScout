@@ -9,7 +9,11 @@ const JUMBO_BASE = "https://www.jumbo.com";
  * nuTab gives no old/new price, only the promotion tag, so the deal lives in
  * `mechanism` + `rawLabel`. The mechanism is delegated to parseJumboMechanism.
  */
-export function normalizeJumboPromotion(raw: JumboRawPromotion, fetchedAt: string): Offer {
+export function normalizeJumboPromotion(
+  raw: JumboRawPromotion,
+  fetchedAt: string,
+  categoryLabel?: string,
+): Offer {
   const rawLabel = raw.tags[0]?.text.trim() || undefined;
   const mechanism: DiscountMechanism = rawLabel
     ? parseJumboMechanism(rawLabel)
@@ -36,6 +40,7 @@ export function normalizeJumboPromotion(raw: JumboRawPromotion, fetchedAt: strin
   const description = raw.subtitle?.replace(/<br\s*\/?>/gi, " ").trim();
   if (description) offer.description = description;
   if (rawLabel) offer.rawLabel = rawLabel;
+  if (categoryLabel) offer.sourceCategoryRaw = categoryLabel;
   if (raw.image) offer.imageUrl = raw.image;
   if (raw.url) offer.url = raw.url.startsWith("http") ? raw.url : `${JUMBO_BASE}${raw.url}`;
 
