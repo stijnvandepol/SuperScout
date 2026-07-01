@@ -1,0 +1,145 @@
+{
+  "data": {
+    "activeTab": {
+      "id": "actieprijs",
+      "shortTitle": "Aanbiedingen",
+      "runtimes": [
+        {
+          "start": {
+            "iso": "2026-07-01T00:00:00+02:00",
+            "__typename": "PromotionDateTime"
+          },
+          "active": true,
+          "sections": [
+            {
+              "id": "demo",
+              "title": "Nu in de aanbieding",
+              "promotions": [
+                {
+                  "id": "3018049",
+                  "title": "Alle Valess vleesvervangers",
+                  "subtitle": "Schaal 160-180 gram",
+                  "group": "Week",
+                  "start": {
+                    "iso": "2026-07-01T00:01:00+02:00",
+                    "__typename": "PromotionDateTime"
+                  },
+                  "end": {
+                    "iso": "2026-07-07T23:59:59+02:00",
+                    "__typename": "PromotionDateTime"
+                  },
+                  "image": "https://www.jumbo.com/INTERSHOP/static/WFS/Jumbo-Grocery-Site/-/Jumbo-Grocery/nl_NL/Images_Aanbiedingen/2026/Weekaanbiedingen/Week%2027/Weekaanbiedingen-Week-27_49.png",
+                  "url": "/aanbiedingen/alle-valess-vleesvervangers/3018049",
+                  "tags": [
+                    {
+                      "text": "2 voor 4,99",
+                      "inverse": false,
+                      "__typename": "PromotionTag"
+                    }
+                  ],
+                  "__typename": "Promotion"
+                },
+                {
+                  "id": "3016562",
+                  "title": "BBQ",
+                  "subtitle": "Alle producten met kies &amp; mix sticker",
+                  "group": "Seizoen",
+                  "start": {
+                    "iso": "2026-03-23T00:01:00+01:00",
+                    "__typename": "PromotionDateTime"
+                  },
+                  "end": {
+                    "iso": "2026-07-28T23:59:59+02:00",
+                    "__typename": "PromotionDateTime"
+                  },
+                  "image": "https://www.jumbo.com/INTERSHOP/static/WFS/Jumbo-Grocery-Site/-/Jumbo-Grocery/nl_NL/Images_Aanbiedingen/2026/Kies%20en%20Mix/km_bbq2026.png",
+                  "url": "/aanbiedingen/bbq/3016562",
+                  "tags": [
+                    {
+                      "text": "4 voor 10,00",
+                      "inverse": false,
+                      "__typename": "PromotionTag"
+                    }
+                  ],
+                  "__typename": "Promotion"
+                },
+                {
+                  "id": "3018563",
+                  "title": "Alle tofu, tempeh of paneer",
+                  "subtitle": "Verpakking 160-395 gram",
+                  "group": "Week",
+                  "start": {
+                    "iso": "2026-07-01T00:01:00+02:00",
+                    "__typename": "PromotionDateTime"
+                  },
+                  "end": {
+                    "iso": "2026-07-07T23:59:59+02:00",
+                    "__typename": "PromotionDateTime"
+                  },
+                  "image": "https://www.jumbo.com/INTERSHOP/static/WFS/Jumbo-Grocery-Site/-/Jumbo-Grocery/nl_NL/Images_Aanbiedingen/2026/Weekaanbiedingen/Week%2027/Weekaanbiedingen-Week-27_47.png",
+                  "url": "/aanbiedingen/alle-tofu-tempeh-of-paneer/3018563",
+                  "tags": [
+                    {
+                      "text": "25% korting",
+                      "inverse": false,
+                      "__typename": "PromotionTag"
+                    }
+                  ],
+                  "__typename": "Promotion"
+                },
+                {
+                  "id": "3018031",
+                  "title": "Alle Knorr Wereldgerechten of maaltijdmixen",
+                  "subtitle": null,
+                  "group": "Week",
+                  "start": {
+                    "iso": "2026-07-01T00:01:00+02:00",
+                    "__typename": "PromotionDateTime"
+                  },
+                  "end": {
+                    "iso": "2026-07-07T23:59:59+02:00",
+                    "__typename": "PromotionDateTime"
+                  },
+                  "image": "https://www.jumbo.com/INTERSHOP/static/WFS/Jumbo-Grocery-Site/-/Jumbo-Grocery/nl_NL/Images_Aanbiedingen/2026/Weekaanbiedingen/Week%2027/Weekaanbiedingen-Week-27_32.png",
+                  "url": "/aanbiedingen/alle-knorr-wereldgerechten-of-maaltijdmixen/3018031",
+                  "tags": [
+                    {
+                      "text": "1+1 gratis",
+                      "inverse": false,
+                      "__typename": "PromotionTag"
+                    }
+                  ],
+                  "__typename": "Promotion"
+                },
+                {
+                  "id": "3018073",
+                  "title": "Alle Grand'Italia",
+                  "subtitle": "M.u.v. Specialita pasta en gevulde Gnocchi's",
+                  "group": "Week",
+                  "start": {
+                    "iso": "2026-07-01T00:01:00+02:00",
+                    "__typename": "PromotionDateTime"
+                  },
+                  "end": {
+                    "iso": "2026-07-07T23:59:59+02:00",
+                    "__typename": "PromotionDateTime"
+                  },
+                  "image": "https://www.jumbo.com/INTERSHOP/static/WFS/Jumbo-Grocery-Site/-/Jumbo-Grocery/nl_NL/Images_Aanbiedingen/2026/Weekaanbiedingen/Week%2027/Weekaanbiedingen-Week-27_22.png",
+                  "url": "/aanbiedingen/alle-granditalia/3018073",
+                  "tags": [
+                    {
+                      "text": "2+1 gratis",
+                      "inverse": false,
+                      "__typename": "PromotionTag"
+                    }
+                  ],
+                  "__typename": "Promotion"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
