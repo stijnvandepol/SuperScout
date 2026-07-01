@@ -8,3 +8,9 @@ export type { JumboFetcher } from "./adapters/jumbo/jumbo.adapter";
 export { normalizeJumboPromotion } from "./adapters/jumbo/jumbo.normalize";
 export { parseJumboMechanism } from "./adapters/jumbo/jumbo.mechanism";
 export type * from "./adapters/jumbo/jumbo.raw";
+
+export { AhAdapter } from "./adapters/ah/ah.adapter";
+export type { AhFetcher } from "./adapters/ah/ah.adapter";
+export { normalizeAhPromotion } from "./adapters/ah/ah.normalize";
+export { parseAhMechanism } from "./adapters/ah/ah.mechanism";
+export type * from "./adapters/ah/ah.raw";

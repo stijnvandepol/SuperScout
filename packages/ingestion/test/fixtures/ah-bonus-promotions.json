@@ -1,0 +1,161 @@
+{
+  "data": {
+    "bonusPromotions": [
+      {
+        "id": "799323",
+        "hqId": 182959,
+        "title": "AH Gerookte zalm 100 gram",
+        "subtitle": null,
+        "category": "Vis",
+        "productCount": 1,
+        "webPath": "/bonus/groep/799323",
+        "promotionType": "NATIONAL",
+        "segmentType": "AH",
+        "periodStart": "2026-06-29",
+        "periodEnd": "2026-07-05",
+        "rawPromotionLabels": [
+          {
+            "__typename": "RawPromotionLabel",
+            "actualCount": null,
+            "amount": null,
+            "count": 2,
+            "defaultDescription": "2e gratis",
+            "deliveryType": null,
+            "freeCount": null,
+            "mechanism": "ONE_FREE",
+            "percentage": null,
+            "price": null,
+            "unit": null
+          }
+        ],
+        "price": null,
+        "exceptionRule": null,
+        "extraDescriptions": [],
+        "images": [
+          {
+            "__typename": "PromotionImage",
+            "url": "https://static.ah.nl/dam/product/AHI_4d37785279754c4d54794357656d3642664147486e67?revLabel=1&rendition=200x200_JPG_Q85&fileType=binary",
+            "title": "AH Gerookte zalm 100 gram",
+            "width": 200,
+            "height": 200
+          },
+          {
+            "__typename": "PromotionImage",
+            "url": "https://static.ah.nl/dam/product/AHI_4d37785279754c4d54794357656d3642664147486e67?revLabel=1&rendition=400x400_JPG_Q85&fileType=binary",
+            "title": "AH Gerookte zalm 100 gram",
+            "width": 400,
+            "height": 400
+          }
+        ]
+      },
+      {
+        "id": "794645",
+        "hqId": 178144,
+        "title": "Alle Hak*",
+        "subtitle": null,
+        "category": "Groente, aardappelen",
+        "productCount": 81,
+        "webPath": "/bonus/groep/794645",
+        "promotionType": "NATIONAL",
+        "segmentType": "AH",
+        "periodStart": "2026-06-29",
+        "periodEnd": "2026-07-05",
+        "rawPromotionLabels": [
+          {
+            "__typename": "RawPromotionLabel",
+            "actualCount": null,
+            "amount": null,
+            "count": 2,
+            "defaultDescription": "2e gratis",
+            "deliveryType": null,
+            "freeCount": null,
+            "mechanism": "ONE_FREE",
+            "percentage": null,
+            "price": null,
+            "unit": null
+          }
+        ],
+        "price": null,
+        "exceptionRule": "*M.u.v. taart & vlaaifruit",
+        "extraDescriptions": [
+          "*M.u.v. taart & vlaaifruit"
+        ],
+        "images": [
+          {
+            "__typename": "PromotionImage",
+            "url": "https://static.ah.nl/mam/bonus/COMBIBEELD_178144_AH_NL_WK27_ALLE_HAK?rendition=200px&fileType=binary&version=EHiW7cA_aaiD7HQVPm8gDA",
+            "title": "Alle Hak*",
+            "width": 200,
+            "height": 200
+          },
+          {
+            "__typename": "PromotionImage",
+            "url": "https://static.ah.nl/mam/bonus/COMBIBEELD_178144_AH_NL_WK27_ALLE_HAK?rendition=708px&fileType=binary&version=EHiW7cA_aaiD7HQVPm8gDA",
+            "title": "Alle Hak*",
+            "width": 708,
+            "height": 708
+          }
+        ]
+      },
+      {
+        "id": "794520",
+        "hqId": 178019,
+        "title": "GRATIS toe te voegen bij Blue Home haarstylingproduct: 3 gratis Care producten",
+        "subtitle": null,
+        "category": "Drogisterij",
+        "productCount": 33,
+        "webPath": "/bonus/groep/794520",
+        "promotionType": "NATIONAL",
+        "segmentType": "AH",
+        "periodStart": "2026-06-22",
+        "periodEnd": "2026-07-26",
+        "rawPromotionLabels": [
+          {
+            "__typename": "RawPromotionLabel",
+            "actualCount": null,
+            "amount": null,
+            "count": null,
+            "defaultDescription": "BONUS",
+            "deliveryType": null,
+            "freeCount": null,
+            "mechanism": "BONUS",
+            "percentage": null,
+            "price": null,
+            "unit": null
+          }
+        ],
+        "price": {
+          "__typename": "PromotionPrice",
+          "now": null,
+          "was": {
+            "__typename": "Money",
+            "amount": 2.09,
+            "formattedV2": "€2.09"
+          },
+          "label": null
+        },
+        "exceptionRule": null,
+        "extraDescriptions": [
+          "Voeg Blue Home en 3 Care artikelen toe",
+          "Korting wordt verrekend bij afrekenen"
+        ],
+        "images": [
+          {
+            "__typename": "PromotionImage",
+            "url": "https://static.ah.nl/mam/bonus/COMBIBEELD_178019_AH_NL_WK26_GRATIS_TOE_TE_VOEGEN_BIJ_BLUE_HOME_HAARSTYLINGPRODUCT_3_GRATIS_CARE_PRODUCTEN?rendition=200px&fileType=binary&version=UW7woamq6Qotof4KnuYAeA",
+            "title": "GRATIS toe te voegen bij Blue Home haarstylingproduct: 3 gratis Care producten",
+            "width": 200,
+            "height": 200
+          },
+          {
+            "__typename": "PromotionImage",
+            "url": "https://static.ah.nl/mam/bonus/COMBIBEELD_178019_AH_NL_WK26_GRATIS_TOE_TE_VOEGEN_BIJ_BLUE_HOME_HAARSTYLINGPRODUCT_3_GRATIS_CARE_PRODUCTEN?rendition=708px&fileType=binary&version=UW7woamq6Qotof4KnuYAeA",
+            "title": "GRATIS toe te voegen bij Blue Home haarstylingproduct: 3 gratis Care producten",
+            "width": 708,
+            "height": 708
+          }
+        ]
+      }
+    ]
+  }
+}
