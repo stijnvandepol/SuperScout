@@ -1,8 +1,13 @@
 import type { Offer } from "@superscout/core";
+import { offerSlug } from "@/lib/format";
 import data from "@/data/offers.json";
 
 /** Seeded from the ingestion pipeline over real captured fixtures. */
 export const OFFERS = data as unknown as Offer[];
+
+export function getBySlug(slug: string): Offer | undefined {
+  return OFFERS.find((o) => offerSlug(o) === slug);
+}
 
 export function stats(offers: Offer[]): { total: number; stores: number } {
   return { total: offers.length, stores: new Set(offers.map((o) => o.source)).size };

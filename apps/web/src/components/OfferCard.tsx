@@ -1,6 +1,7 @@
+import Link from "next/link";
 import type { Offer } from "@superscout/core";
 import { daysUntilExpiry, isExpiringSoon } from "@superscout/core";
-import { formatEuro, stickerLabel, validUntilShort } from "@/lib/format";
+import { formatEuro, offerSlug, stickerLabel, validUntilShort } from "@/lib/format";
 import { StoreBadge } from "./StoreBadge";
 import { DiscountSticker } from "./DiscountSticker";
 
@@ -16,7 +17,10 @@ export function OfferCard({ offer, nowIso }: { offer: Offer; nowIso: string }) {
     : validUntilShort(offer.validUntil);
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-shadow duration-200 hover:shadow-[0_10px_34px_rgba(0,0,0,0.09)]">
+    <Link
+      href={`/aanbieding/${offerSlug(offer)}`}
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-shadow duration-200 hover:shadow-[0_10px_34px_rgba(0,0,0,0.09)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-deal"
+    >
       <div className="relative aspect-[4/3] overflow-hidden bg-surface-2">
         {offer.imageUrl ? (
           // Plain img: sources span several CDNs; next/image optimization comes later.
@@ -82,6 +86,6 @@ export function OfferCard({ offer, nowIso }: { offer: Offer; nowIso: string }) {
           </span>
         </div>
       </div>
-    </article>
+    </Link>
   );
 }
