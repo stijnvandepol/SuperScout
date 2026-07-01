@@ -51,6 +51,8 @@ export function normalizeDirkOffer(raw: DirkRawOffer, fetchedAt: string): Offer 
   if (brand) offer.brand = brand;
   if (sourceCategoryRaw) offer.sourceCategoryRaw = sourceCategoryRaw;
   if (raw.image) offer.imageUrl = DIRK_IMAGE_BASE + encodeURIComponent(raw.image);
+  // Dirk's API carries no per-offer web link; send shoppers to the offers page.
+  offer.url = "https://www.dirk.nl/aanbiedingen";
 
   return offer;
 }

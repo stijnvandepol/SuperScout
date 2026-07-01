@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { OFFERS } from "@/lib/offers";
+import { OFFERS, categoriesPresent } from "@/lib/offers";
 import { offerSlug } from "@/lib/format";
 
 // TODO: read from an env var once the production domain is set.
@@ -21,9 +21,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }),
   );
 
+  const categoryPages: MetadataRoute.Sitemap = categoriesPresent().map((c) => ({
+    url: `${BASE_URL}/categorie/${c.slug}`,
+    changeFrequency: "daily",
+    priority: 0.6,
+  }));
+
   return [
     { url: BASE_URL, changeFrequency: "daily", priority: 1 },
     ...storePages,
+    ...categoryPages,
     ...offerPages,
   ];
 }

@@ -2,7 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Offer } from "@superscout/core";
-import { daysUntilExpiry, isExpiringSoon, relatedOffers } from "@superscout/core";
+import {
+  CATEGORY_LABEL,
+  categorizeOffer,
+  daysUntilExpiry,
+  isExpiringSoon,
+  relatedOffers,
+} from "@superscout/core";
 import { OFFERS, getBySlug } from "@/lib/offers";
 import {
   formatEuro,
@@ -91,8 +97,13 @@ export default async function OfferPage({ params }: Params) {
       </nav>
 
       <p className="font-mono text-[11px] uppercase tracking-widest text-ink-soft">
-        {store.name}
-        {offer.sourceCategoryRaw ? ` · ${offer.sourceCategoryRaw}` : ""}
+        <Link href={`/winkel/${offer.source}`} className="hover:text-ink">
+          {store.name}
+        </Link>
+        {" · "}
+        <Link href={`/categorie/${categorizeOffer(offer)}`} className="hover:text-ink">
+          {CATEGORY_LABEL[categorizeOffer(offer)]}
+        </Link>
       </p>
 
       <div className="mt-4 grid gap-8 md:grid-cols-2">

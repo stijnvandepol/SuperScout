@@ -15,15 +15,13 @@ export function OfferCard({ offer, nowIso }: { offer: Offer; nowIso: string }) {
       ? "verloopt vandaag"
       : `nog ${daysLeft} dagen`
     : validUntilShort(offer.validUntil);
+  const productHref = `/aanbieding/${offerSlug(offer)}`;
 
-  return (
-    <Link
-      href={`/aanbieding/${offerSlug(offer)}`}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-shadow duration-200 hover:shadow-[0_10px_34px_rgba(0,0,0,0.09)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-deal"
-    >
+  // Image + brand/title/price — the part that navigates to the store.
+  const visual = (
+    <>
       <div className="relative aspect-[4/3] overflow-hidden bg-surface-2">
         {offer.imageUrl ? (
-          // Plain img: sources span several CDNs; next/image optimization comes later.
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={offer.imageUrl}
@@ -44,7 +42,7 @@ export function OfferCard({ offer, nowIso }: { offer: Offer; nowIso: string }) {
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-1.5 p-4">
+      <div className="flex flex-1 flex-col gap-1.5 px-4 pb-2 pt-4">
         {offer.brand ? (
           <span className="font-mono text-[11px] uppercase tracking-wide text-ink-soft">
             {offer.brand}
@@ -78,13 +76,45 @@ export function OfferCard({ offer, nowIso }: { offer: Offer; nowIso: string }) {
             je bespaart {formatEuro(pricing.savingsAbsoluteCents)}
           </span>
         ) : null}
+      </div>
+    </>
+  );
 
-        <div className="mt-2 flex items-center justify-between gap-2 border-t border-line pt-2 font-mono text-[11px] text-ink-soft">
-          <span className="truncate">{offer.sourceCategoryRaw ?? "Aanbieding"}</span>
+  const cardClass =
+    "group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-shadow duration-200 hover:shadow-[0_10px_34px_rgba(0,0,0,0.09)]";
+  const focus = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-deal";
+
+  if (offer.url) {
+    return (
+      <article className={cardClass}>
+        <a
+          href={offer.url}
+          target="_blank"
+          rel="noopener noreferrer nofollow sponsored"
+          className={`flex flex-1 flex-col ${focus}`}
+        >
+          {visual}
+        </a>
+        <div className="flex items-center justify-between gap-2 border-t border-line px-4 py-2 font-mono text-[11px] text-ink-soft">
           <span className={`whitespace-nowrap ${soon ? "font-bold text-urgent" : ""}`}>
             {expiryText}
           </span>
+          <Link href={productHref} className={`rounded-full hover:text-ink ${focus}`}>
+            ⇄ vergelijk
+          </Link>
         </div>
+      </article>
+    );
+  }
+
+  return (
+    <Link href={productHref} className={`${cardClass} ${focus}`}>
+      {visual}
+      <div className="flex items-center justify-between gap-2 border-t border-line px-4 py-2 font-mono text-[11px] text-ink-soft">
+        <span className="truncate">{offer.sourceCategoryRaw ?? "Aanbieding"}</span>
+        <span className={`whitespace-nowrap ${soon ? "font-bold text-urgent" : ""}`}>
+          {expiryText}
+        </span>
       </div>
     </Link>
   );

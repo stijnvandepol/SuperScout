@@ -66,6 +66,9 @@ export function normalizePlusOffer(
   const imageUrl = absoluteImageUrl(raw.ImageURL ?? "");
   if (imageUrl) offer.imageUrl = imageUrl;
   if (raw.IsProductOverMajorityAge || raw.Product_IsNIX18) offer.flags.isAgeRestricted = true;
+  // Plus's OutSystems response carries no clean per-offer web link; send
+  // shoppers to the offers page.
+  offer.url = "https://www.plus.nl/aanbiedingen";
 
   return offer;
 }
