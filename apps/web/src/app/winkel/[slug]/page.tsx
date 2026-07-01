@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { SupermarketSlug } from "@superscout/core";
 import { OFFERS, byBiggestDiscount } from "@/lib/offers";
@@ -36,16 +35,7 @@ export default async function StorePage({ params }: Params) {
 
   return (
     <div className="mx-auto max-w-6xl px-5 pb-24">
-      <nav className="flex items-center justify-between py-6">
-        <Link href="/" className="font-display text-xl font-bold tracking-tight">
-          Super<span className="text-deal">Scout</span>
-        </Link>
-        <Link href="/" className="font-mono text-[11px] uppercase tracking-widest text-ink-soft hover:text-ink">
-          ← alle aanbiedingen
-        </Link>
-      </nav>
-
-      <header className="flex items-center gap-3 py-6">
+      <header className="flex items-center gap-3 py-8">
         <span
           className="inline-flex h-10 items-center rounded-lg px-3 font-display text-lg font-bold"
           style={{ background: meta.bg, color: meta.fg }}

@@ -4,21 +4,23 @@ export interface StoreMeta {
   name: string;
   bg: string;
   fg: string;
+  /** Where "Open bij {store}" sends the shopper (opens the app via universal links). */
+  offersUrl: string;
 }
 
-/** Brand colours for the store chips (kept neutral of any single chain's dominance). */
+/** Brand colours + offers link per chain (kept neutral of any single chain's dominance). */
 export const STORE_META: Record<SupermarketSlug, StoreMeta> = {
-  ah: { name: "Albert Heijn", bg: "#00a0e2", fg: "#ffffff" },
-  jumbo: { name: "Jumbo", bg: "#eeb500", fg: "#1a1500" },
-  lidl: { name: "Lidl", bg: "#0050aa", fg: "#ffffff" },
-  aldi: { name: "ALDI", bg: "#1e3a8a", fg: "#ffffff" },
-  plus: { name: "PLUS", bg: "#00814b", fg: "#ffffff" },
-  dirk: { name: "Dirk", bg: "#e30613", fg: "#ffffff" },
-  hoogvliet: { name: "Hoogvliet", bg: "#e2001a", fg: "#ffffff" },
-  dekamarkt: { name: "DekaMarkt", bg: "#004b93", fg: "#ffffff" },
-  vomar: { name: "Vomar", bg: "#d4021d", fg: "#ffffff" },
-  coop: { name: "Coop", bg: "#e2001a", fg: "#ffffff" },
-  spar: { name: "Spar", bg: "#009640", fg: "#ffffff" },
+  ah: { name: "Albert Heijn", bg: "#00a0e2", fg: "#ffffff", offersUrl: "https://www.ah.nl/bonus" },
+  jumbo: { name: "Jumbo", bg: "#eeb500", fg: "#1a1500", offersUrl: "https://www.jumbo.com/aanbiedingen" },
+  lidl: { name: "Lidl", bg: "#0050aa", fg: "#ffffff", offersUrl: "https://www.lidl.nl/c/aanbiedingen/s10005610" },
+  aldi: { name: "ALDI", bg: "#1e3a8a", fg: "#ffffff", offersUrl: "https://www.aldi.nl/aanbiedingen.html" },
+  plus: { name: "PLUS", bg: "#00814b", fg: "#ffffff", offersUrl: "https://www.plus.nl/aanbiedingen" },
+  dirk: { name: "Dirk", bg: "#e30613", fg: "#ffffff", offersUrl: "https://www.dirk.nl/aanbiedingen" },
+  hoogvliet: { name: "Hoogvliet", bg: "#e2001a", fg: "#ffffff", offersUrl: "https://www.hoogvliet.com/aanbiedingen" },
+  dekamarkt: { name: "DekaMarkt", bg: "#004b93", fg: "#ffffff", offersUrl: "https://www.dekamarkt.nl/aanbiedingen" },
+  vomar: { name: "Vomar", bg: "#d4021d", fg: "#ffffff", offersUrl: "https://www.vomar.nl/aanbiedingen" },
+  coop: { name: "Coop", bg: "#e2001a", fg: "#ffffff", offersUrl: "https://www.coop.nl/aanbiedingen" },
+  spar: { name: "Spar", bg: "#009640", fg: "#ffffff", offersUrl: "https://www.spar.nl/aanbiedingen" },
 };
 
 export const MECHANISM_LABEL: Record<MechanismType, string> = {

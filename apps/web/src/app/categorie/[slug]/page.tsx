@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CATEGORY_LABEL, type CategorySlug } from "@superscout/core";
 import { byBiggestDiscount, categoriesPresent, offersInCategory } from "@/lib/offers";
@@ -31,16 +30,7 @@ export default async function CategoryPage({ params }: Params) {
 
   return (
     <div className="mx-auto max-w-6xl px-5 pb-24">
-      <nav className="flex items-center justify-between py-6">
-        <Link href="/" className="font-display text-xl font-bold tracking-tight">
-          Super<span className="text-deal">Scout</span>
-        </Link>
-        <Link href="/" className="font-mono text-[11px] uppercase tracking-widest text-ink-soft hover:text-ink">
-          ← alle aanbiedingen
-        </Link>
-      </nav>
-
-      <header className="py-6">
+      <header className="py-8">
         <p className="font-mono text-[11px] uppercase tracking-widest text-ink-soft">Categorie</p>
         <h1 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">{label}</h1>
         <p className="mt-2 font-mono text-sm text-ink-soft">{offers.length} aanbiedingen · deze week</p>

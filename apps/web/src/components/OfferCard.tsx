@@ -4,6 +4,7 @@ import { daysUntilExpiry, isExpiringSoon } from "@superscout/core";
 import { formatEuro, offerSlug, stickerLabel, validUntilShort } from "@/lib/format";
 import { StoreBadge } from "./StoreBadge";
 import { DiscountSticker } from "./DiscountSticker";
+import { AddToBasketButton } from "./AddToBasketButton";
 
 export function OfferCard({ offer, nowIso }: { offer: Offer; nowIso: string }) {
   const { pricing } = offer;
@@ -95,13 +96,18 @@ export function OfferCard({ offer, nowIso }: { offer: Offer; nowIso: string }) {
         >
           {visual}
         </a>
-        <div className="flex items-center justify-between gap-2 border-t border-line px-4 py-2 font-mono text-[11px] text-ink-soft">
-          <span className={`whitespace-nowrap ${soon ? "font-bold text-urgent" : ""}`}>
-            {expiryText}
-          </span>
-          <Link href={productHref} className={`rounded-full hover:text-ink ${focus}`}>
-            ⇄ vergelijk
-          </Link>
+        <div className="flex items-center justify-between gap-2 border-t border-line px-3 py-2 font-mono text-[11px] text-ink-soft">
+          <span className={`truncate ${soon ? "font-bold text-urgent" : ""}`}>{expiryText}</span>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <AddToBasketButton id={offer.id} variant="mini" />
+            <Link
+              href={productHref}
+              aria-label="Vergelijk deze aanbieding"
+              className={`rounded-full px-1 text-sm hover:text-ink ${focus}`}
+            >
+              ⇄
+            </Link>
+          </div>
         </div>
       </article>
     );

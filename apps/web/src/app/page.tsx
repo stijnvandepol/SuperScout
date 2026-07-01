@@ -14,16 +14,7 @@ export default function Home() {
 
   return (
     <div className="mx-auto max-w-6xl px-5">
-      <nav className="flex items-center justify-between py-6">
-        <span className="font-display text-xl font-bold tracking-tight">
-          Super<span className="text-deal">Scout</span>
-        </span>
-        <span className="font-mono text-[11px] uppercase tracking-widest text-ink-soft">
-          NL · deze week
-        </span>
-      </nav>
-
-      <header className="pb-8 pt-6 sm:pt-10">
+      <header className="pb-8 pt-8 sm:pt-12">
         <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-ink-soft">
           Alle aanbiedingen · één plek
         </p>

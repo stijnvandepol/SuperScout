@@ -20,6 +20,7 @@ import {
 import { OfferCard } from "@/components/OfferCard";
 import { StoreBadge } from "@/components/StoreBadge";
 import { DiscountSticker } from "@/components/DiscountSticker";
+import { AddToBasketButton } from "@/components/AddToBasketButton";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -87,16 +88,7 @@ export default async function OfferPage({ params }: Params) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
 
-      <nav className="flex items-center justify-between py-6">
-        <Link href="/" className="font-display text-xl font-bold tracking-tight">
-          Super<span className="text-deal">Scout</span>
-        </Link>
-        <Link href="/" className="font-mono text-[11px] uppercase tracking-widest text-ink-soft hover:text-ink">
-          ← alle aanbiedingen
-        </Link>
-      </nav>
-
-      <p className="font-mono text-[11px] uppercase tracking-widest text-ink-soft">
+      <p className="pt-6 font-mono text-[11px] uppercase tracking-widest text-ink-soft">
         <Link href={`/winkel/${offer.source}`} className="hover:text-ink">
           {store.name}
         </Link>
@@ -194,12 +186,7 @@ export default async function OfferPage({ params }: Params) {
                 Naar de winkel
               </a>
             ) : null}
-            <button
-              type="button"
-              className="rounded-full border border-line px-6 py-3 font-display text-sm font-bold transition-colors hover:border-ink"
-            >
-              ♥ Bewaar
-            </button>
+            <AddToBasketButton id={offer.id} />
           </div>
 
           <p className="mt-6 font-mono text-[11px] text-ink-soft">
