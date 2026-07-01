@@ -1,0 +1,441 @@
+[
+  {
+    "id": "jumbo:3018049",
+    "source": "jumbo",
+    "sourceOfferId": "3018049",
+    "title": "Alle Valess vleesvervangers",
+    "pricing": {
+      "currentPriceCents": null,
+      "originalPriceCents": null,
+      "savingsAbsoluteCents": null,
+      "savingsPercent": null
+    },
+    "mechanism": {
+      "type": "multi_buy",
+      "buyQuantity": 2,
+      "totalPriceCents": 499
+    },
+    "validFrom": "2026-07-01T00:01:00+02:00",
+    "validUntil": "2026-07-07T23:59:59+02:00",
+    "flags": {},
+    "fetchedAt": "2026-07-01T12:00:00.000Z",
+    "description": "Schaal 160-180 gram",
+    "rawLabel": "2 voor 4,99",
+    "imageUrl": "https://www.jumbo.com/INTERSHOP/static/WFS/Jumbo-Grocery-Site/-/Jumbo-Grocery/nl_NL/Images_Aanbiedingen/2026/Weekaanbiedingen/Week%2027/Weekaanbiedingen-Week-27_49.png",
+    "url": "https://www.jumbo.com/aanbiedingen/alle-valess-vleesvervangers/3018049"
+  },
+  {
+    "id": "jumbo:3016562",
+    "source": "jumbo",
+    "sourceOfferId": "3016562",
+    "title": "BBQ",
+    "pricing": {
+      "currentPriceCents": null,
+      "originalPriceCents": null,
+      "savingsAbsoluteCents": null,
+      "savingsPercent": null
+    },
+    "mechanism": {
+      "type": "multi_buy",
+      "buyQuantity": 4,
+      "totalPriceCents": 1000
+    },
+    "validFrom": "2026-03-23T00:01:00+01:00",
+    "validUntil": "2026-07-28T23:59:59+02:00",
+    "flags": {},
+    "fetchedAt": "2026-07-01T12:00:00.000Z",
+    "description": "Alle producten met kies &amp; mix sticker",
+    "rawLabel": "4 voor 10,00",
+    "imageUrl": "https://www.jumbo.com/INTERSHOP/static/WFS/Jumbo-Grocery-Site/-/Jumbo-Grocery/nl_NL/Images_Aanbiedingen/2026/Kies%20en%20Mix/km_bbq2026.png",
+    "url": "https://www.jumbo.com/aanbiedingen/bbq/3016562"
+  },
+  {
+    "id": "jumbo:3018563",
+    "source": "jumbo",
+    "sourceOfferId": "3018563",
+    "title": "Alle tofu, tempeh of paneer",
+    "pricing": {
+      "currentPriceCents": null,
+      "originalPriceCents": null,
+      "savingsAbsoluteCents": null,
+      "savingsPercent": null
+    },
+    "mechanism": {
+      "type": "percentage_off",
+      "percent": 25
+    },
+    "validFrom": "2026-07-01T00:01:00+02:00",
+    "validUntil": "2026-07-07T23:59:59+02:00",
+    "flags": {},
+    "fetchedAt": "2026-07-01T12:00:00.000Z",
+    "description": "Verpakking 160-395 gram",
+    "rawLabel": "25% korting",
+    "imageUrl": "https://www.jumbo.com/INTERSHOP/static/WFS/Jumbo-Grocery-Site/-/Jumbo-Grocery/nl_NL/Images_Aanbiedingen/2026/Weekaanbiedingen/Week%2027/Weekaanbiedingen-Week-27_47.png",
+    "url": "https://www.jumbo.com/aanbiedingen/alle-tofu-tempeh-of-paneer/3018563"
+  },
+  {
+    "id": "jumbo:3018031",
+    "source": "jumbo",
+    "sourceOfferId": "3018031",
+    "title": "Alle Knorr Wereldgerechten of maaltijdmixen",
+    "pricing": {
+      "currentPriceCents": null,
+      "originalPriceCents": null,
+      "savingsAbsoluteCents": null,
+      "savingsPercent": null
+    },
+    "mechanism": {
+      "type": "buy_x_get_y_free",
+      "buyQuantity": 1,
+      "freeQuantity": 1
+    },
+    "validFrom": "2026-07-01T00:01:00+02:00",
+    "validUntil": "2026-07-07T23:59:59+02:00",
+    "flags": {},
+    "fetchedAt": "2026-07-01T12:00:00.000Z",
+    "rawLabel": "1+1 gratis",
+    "imageUrl": "https://www.jumbo.com/INTERSHOP/static/WFS/Jumbo-Grocery-Site/-/Jumbo-Grocery/nl_NL/Images_Aanbiedingen/2026/Weekaanbiedingen/Week%2027/Weekaanbiedingen-Week-27_32.png",
+    "url": "https://www.jumbo.com/aanbiedingen/alle-knorr-wereldgerechten-of-maaltijdmixen/3018031"
+  },
+  {
+    "id": "jumbo:3018073",
+    "source": "jumbo",
+    "sourceOfferId": "3018073",
+    "title": "Alle Grand'Italia",
+    "pricing": {
+      "currentPriceCents": null,
+      "originalPriceCents": null,
+      "savingsAbsoluteCents": null,
+      "savingsPercent": null
+    },
+    "mechanism": {
+      "type": "buy_x_get_y_free",
+      "buyQuantity": 2,
+      "freeQuantity": 1
+    },
+    "validFrom": "2026-07-01T00:01:00+02:00",
+    "validUntil": "2026-07-07T23:59:59+02:00",
+    "flags": {},
+    "fetchedAt": "2026-07-01T12:00:00.000Z",
+    "description": "M.u.v. Specialita pasta en gevulde Gnocchi's",
+    "rawLabel": "2+1 gratis",
+    "imageUrl": "https://www.jumbo.com/INTERSHOP/static/WFS/Jumbo-Grocery-Site/-/Jumbo-Grocery/nl_NL/Images_Aanbiedingen/2026/Weekaanbiedingen/Week%2027/Weekaanbiedingen-Week-27_22.png",
+    "url": "https://www.jumbo.com/aanbiedingen/alle-granditalia/3018073"
+  },
+  {
+    "id": "ah:799323",
+    "source": "ah",
+    "sourceOfferId": "799323",
+    "title": "AH Gerookte zalm 100 gram",
+    "pricing": {
+      "currentPriceCents": null,
+      "originalPriceCents": null,
+      "savingsAbsoluteCents": null,
+      "savingsPercent": null
+    },
+    "mechanism": {
+      "type": "buy_x_get_y_free",
+      "buyQuantity": 1,
+      "freeQuantity": 1
+    },
+    "validFrom": "2026-06-29",
+    "validUntil": "2026-07-05",
+    "flags": {},
+    "fetchedAt": "2026-07-01T12:00:00.000Z",
+    "rawLabel": "2e gratis",
+    "sourceCategoryRaw": "Vis",
+    "imageUrl": "https://static.ah.nl/dam/product/AHI_4d37785279754c4d54794357656d3642664147486e67?revLabel=1&rendition=400x400_JPG_Q85&fileType=binary",
+    "url": "https://www.ah.nl/bonus/groep/799323"
+  },
+  {
+    "id": "ah:794645",
+    "source": "ah",
+    "sourceOfferId": "794645",
+    "title": "Alle Hak*",
+    "pricing": {
+      "currentPriceCents": null,
+      "originalPriceCents": null,
+      "savingsAbsoluteCents": null,
+      "savingsPercent": null
+    },
+    "mechanism": {
+      "type": "buy_x_get_y_free",
+      "buyQuantity": 1,
+      "freeQuantity": 1
+    },
+    "validFrom": "2026-06-29",
+    "validUntil": "2026-07-05",
+    "flags": {},
+    "fetchedAt": "2026-07-01T12:00:00.000Z",
+    "rawLabel": "2e gratis",
+    "sourceCategoryRaw": "Groente, aardappelen",
+    "imageUrl": "https://static.ah.nl/mam/bonus/COMBIBEELD_178144_AH_NL_WK27_ALLE_HAK?rendition=708px&fileType=binary&version=EHiW7cA_aaiD7HQVPm8gDA",
+    "url": "https://www.ah.nl/bonus/groep/794645"
+  },
+  {
+    "id": "ah:794520",
+    "source": "ah",
+    "sourceOfferId": "794520",
+    "title": "GRATIS toe te voegen bij Blue Home haarstylingproduct: 3 gratis Care producten",
+    "pricing": {
+      "currentPriceCents": null,
+      "originalPriceCents": 209,
+      "savingsAbsoluteCents": null,
+      "savingsPercent": null
+    },
+    "mechanism": {
+      "type": "unknown"
+    },
+    "validFrom": "2026-06-22",
+    "validUntil": "2026-07-26",
+    "flags": {},
+    "fetchedAt": "2026-07-01T12:00:00.000Z",
+    "rawLabel": "BONUS",
+    "sourceCategoryRaw": "Drogisterij",
+    "imageUrl": "https://static.ah.nl/mam/bonus/COMBIBEELD_178019_AH_NL_WK26_GRATIS_TOE_TE_VOEGEN_BIJ_BLUE_HOME_HAARSTYLINGPRODUCT_3_GRATIS_CARE_PRODUCTEN?rendition=708px&fileType=binary&version=UW7woamq6Qotof4KnuYAeA",
+    "url": "https://www.ah.nl/bonus/groep/794520"
+  },
+  {
+    "id": "plus:4436-177",
+    "source": "plus",
+    "sourceOfferId": "4436-177",
+    "title": "Verse watermeloen- en ananasblokjes en fruitsalade ananas/druif",
+    "pricing": {
+      "currentPriceCents": 389,
+      "originalPriceCents": 778,
+      "savingsAbsoluteCents": 389,
+      "savingsPercent": 50
+    },
+    "mechanism": {
+      "type": "buy_x_get_y_free",
+      "buyQuantity": 1,
+      "freeQuantity": 1
+    },
+    "validFrom": "2026-07-01",
+    "validUntil": "2026-07-07",
+    "flags": {},
+    "fetchedAt": "2026-07-01T12:00:00.000Z",
+    "rawLabel": "1+1 GRATIS",
+    "description": "Bijv. Verse watermeloen blokjes",
+    "brand": "PLUS",
+    "sourceCategoryRaw": "Aardappelen, groente, fruit",
+    "imageUrl": "https://images.ctfassets.net/s0lodsnpsezb/4436_177_M/7d77d4ccd8c377ca676d8d4e09457845/4436_177.png"
+  },
+  {
+    "id": "plus:4436-176",
+    "source": "plus",
+    "sourceOfferId": "4436-176",
+    "title": "Frambozen",
+    "pricing": {
+      "currentPriceCents": 299,
+      "originalPriceCents": 499,
+      "savingsAbsoluteCents": 200,
+      "savingsPercent": 40
+    },
+    "mechanism": {
+      "type": "price_drop"
+    },
+    "validFrom": "2026-07-01",
+    "validUntil": "2026-07-07",
+    "flags": {},
+    "fetchedAt": "2026-07-01T12:00:00.000Z",
+    "description": "Per 225 g",
+    "brand": "PLUS",
+    "sourceCategoryRaw": "Aardappelen, groente, fruit",
+    "imageUrl": "https://images.ctfassets.net/s0lodsnpsezb/170036_M/3db1f055e646727c9065a6e0da5f2159/170036.png"
+  },
+  {
+    "id": "plus:4436-146",
+    "source": "plus",
+    "sourceOfferId": "4436-146",
+    "title": "Boter",
+    "pricing": {
+      "currentPriceCents": 499,
+      "originalPriceCents": 518,
+      "savingsAbsoluteCents": 19,
+      "savingsPercent": 4
+    },
+    "mechanism": {
+      "type": "multi_buy",
+      "buyQuantity": 2,
+      "totalPriceCents": 499
+    },
+    "validFrom": "2026-07-01",
+    "validUntil": "2026-07-07",
+    "flags": {},
+    "fetchedAt": "2026-07-01T12:00:00.000Z",
+    "rawLabel": "2 VOOR 4.99",
+    "description": "Alle varianten à 200-250 gram",
+    "brand": "Campina",
+    "sourceCategoryRaw": "Zuivel, eieren, boter",
+    "imageUrl": "https://images.ctfassets.net/s0lodsnpsezb/4436_146_M/0472f0bd20a9ce3e3b22ec3c14726805/4436_146.png"
+  },
+  {
+    "id": "plus:4436-128",
+    "source": "plus",
+    "sourceOfferId": "4436-128",
+    "title": "Vleesvervangers",
+    "pricing": {
+      "currentPriceCents": 149,
+      "originalPriceCents": 199,
+      "savingsAbsoluteCents": 50,
+      "savingsPercent": 25
+    },
+    "mechanism": {
+      "type": "percentage_off",
+      "percent": 25
+    },
+    "validFrom": "2026-07-01",
+    "validUntil": "2026-07-07",
+    "flags": {},
+    "fetchedAt": "2026-07-01T12:00:00.000Z",
+    "rawLabel": "25 % KORTING",
+    "description": "Bijv. Plantaardig gekruid rulgehakt",
+    "brand": "Alle PLUS en Beyond Meat",
+    "sourceCategoryRaw": "Vlees, kip, vis, vega",
+    "imageUrl": "https://images.ctfassets.net/s0lodsnpsezb/4436_128_M/00cfe4c0de45390597285b8c73671811/4436_128.png"
+  },
+  {
+    "id": "plus:4436-145",
+    "source": "plus",
+    "sourceOfferId": "4436-145",
+    "title": "Duvel, Chouffe, Liefmans, Brouwerij 't I",
+    "pricing": {
+      "currentPriceCents": null,
+      "originalPriceCents": null,
+      "savingsAbsoluteCents": null,
+      "savingsPercent": null
+    },
+    "mechanism": {
+      "type": "free_delivery",
+      "minSpendCents": 1000
+    },
+    "validFrom": "2026-07-01",
+    "validUntil": "2026-07-07",
+    "flags": {},
+    "fetchedAt": "2026-07-01T12:00:00.000Z",
+    "rawLabel": "GRATIS BEZORGING BIJ 10.00 EURO",
+    "brand": "Duvel, Chouffe, Liefmans, Brouwerij 't I",
+    "sourceCategoryRaw": "Gratis bezorging",
+    "imageUrl": "https://images.ctfassets.net/s0lodsnpsezb/4436_145_M/7fe43d09a68bcfc4adc3a677df8a24a0/4436_145.png"
+  },
+  {
+    "id": "plus:4436-69",
+    "source": "plus",
+    "sourceOfferId": "4436-69",
+    "title": "Wijn top 5 juli",
+    "pricing": {
+      "currentPriceCents": 549,
+      "originalPriceCents": 649,
+      "savingsAbsoluteCents": 100,
+      "savingsPercent": 15
+    },
+    "mechanism": {
+      "type": "amount_off",
+      "amountCents": 100
+    },
+    "validFrom": "2026-07-01",
+    "validUntil": "2026-07-31",
+    "flags": {},
+    "fetchedAt": "2026-07-01T12:00:00.000Z",
+    "rawLabel": "1.00 KORTING",
+    "description": "Bijv. Grande Réserve Chardonnay",
+    "brand": "Wijn top 5 juli",
+    "sourceCategoryRaw": "Wijn, bier, sterke drank",
+    "imageUrl": "https://images.ctfassets.net/s0lodsnpsezb/4436_69_M/074ed237555939b927088d9f89ac5a6c/4436_69.png"
+  },
+  {
+    "id": "dirk:137274",
+    "source": "dirk",
+    "sourceOfferId": "137274",
+    "title": "Bonduelle",
+    "pricing": {
+      "currentPriceCents": 99,
+      "originalPriceCents": 279,
+      "savingsAbsoluteCents": 180,
+      "savingsPercent": 65
+    },
+    "mechanism": {
+      "type": "price_drop"
+    },
+    "rawLabel": "ACTIE_",
+    "validFrom": "2026-07-01T00:00:00.000Z",
+    "validUntil": "2026-07-07T23:59:00.000Z",
+    "flags": {},
+    "fetchedAt": "2026-07-01T12:00:00.000Z",
+    "description": "Blik 300 - 400 gram.",
+    "brand": "Bonduelle",
+    "sourceCategoryRaw": "Aardappelen, groente & fruit",
+    "imageUrl": "https://web-fileserver.dirk.nl/offers/4%2F7%2F2%2F7%2F3%2F1%2FBonduelle%20V2_639178257799454239.png"
+  },
+  {
+    "id": "dirk:137396",
+    "source": "dirk",
+    "sourceOfferId": "137396",
+    "title": "Blauwe bessen",
+    "pricing": {
+      "currentPriceCents": 299,
+      "originalPriceCents": null,
+      "savingsAbsoluteCents": null,
+      "savingsPercent": null
+    },
+    "mechanism": {
+      "type": "price_drop"
+    },
+    "rawLabel": "VR, ZA & ZO_actie",
+    "validFrom": "2026-07-01T00:00:00.000Z",
+    "validUntil": "2026-07-05T23:59:00.000Z",
+    "flags": {},
+    "fetchedAt": "2026-07-01T12:00:00.000Z",
+    "description": "Per bak.",
+    "brand": "1 de Beste",
+    "sourceCategoryRaw": "Aardappelen, groente & fruit",
+    "imageUrl": "https://web-fileserver.dirk.nl/offers/6%2F9%2F3%2F7%2F3%2F1%2FBlauwe%20bessen_639178350437484805.png"
+  },
+  {
+    "id": "dirk:137395",
+    "source": "dirk",
+    "sourceOfferId": "137395",
+    "title": "1 de Beste Watermeloen of Ananas",
+    "pricing": {
+      "currentPriceCents": 179,
+      "originalPriceCents": 229,
+      "savingsAbsoluteCents": 50,
+      "savingsPercent": 22
+    },
+    "mechanism": {
+      "type": "price_drop"
+    },
+    "rawLabel": "VR, ZA & ZO_actie",
+    "validFrom": "2026-07-01T00:00:00.000Z",
+    "validUntil": "2026-07-05T23:59:00.000Z",
+    "flags": {},
+    "fetchedAt": "2026-07-01T12:00:00.000Z",
+    "description": "Schaal 250 gram.",
+    "imageUrl": "https://web-fileserver.dirk.nl/offers/5%2F9%2F3%2F7%2F3%2F1%2FWatermeloen%20of%20ananas_639178259111003113.png"
+  },
+  {
+    "id": "dirk:137307",
+    "source": "dirk",
+    "sourceOfferId": "137307",
+    "title": "1 de Beste Bami nasi- of macaroni spaghettigroente",
+    "pricing": {
+      "currentPriceCents": 149,
+      "originalPriceCents": null,
+      "savingsAbsoluteCents": null,
+      "savingsPercent": null
+    },
+    "mechanism": {
+      "type": "price_drop"
+    },
+    "rawLabel": "ACTIE_",
+    "validFrom": "2026-07-01T00:00:00.000Z",
+    "validUntil": "2026-07-07T23:59:00.000Z",
+    "flags": {},
+    "fetchedAt": "2026-07-01T12:00:00.000Z",
+    "description": "Zak 450 gram.",
+    "brand": "1 de Beste",
+    "sourceCategoryRaw": "Aardappelen, groente & fruit",
+    "imageUrl": "https://web-fileserver.dirk.nl/offers/7%2F0%2F3%2F7%2F3%2F1%2FBami%20nasi-%20of%20macaroni%20spaghettigroente_639178258815478592.png"
+  }
+]

@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+/* ── Design tokens ──────────────────────────────────────────────
+   Palette grounded in the Dutch price-tag / kassabon world:
+   clean cool-fresh ground, warm near-black ink, marigold as the one
+   signature "deal" colour, fresh green for savings, tomato for urgency. */
+:root {
+  --bg: #f5f7f2;
+  --surface: #ffffff;
+  --surface-2: #eef1e9;
+  --ink: #14170e;
+  --ink-soft: #5c6152;
+  --line: #e3e6dc;
+  --deal: #ffbe0f;
+  --deal-ink: #1c1500;
+  --fresh: #0d8a46;
+  --urgent: #e5431c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --bg: #0e110c;
+    --surface: #171c14;
+    --surface-2: #1f251c;
+    --ink: #f1f4ea;
+    --ink-soft: #a4ab98;
+    --line: #2a3126;
+    --deal: #ffc733;
+    --deal-ink: #1c1500;
+    --fresh: #33c06e;
+    --urgent: #ff6a45;
+  }
+}
+
+.dark {
+  --bg: #0e110c;
+  --surface: #171c14;
+  --surface-2: #1f251c;
+  --ink: #f1f4ea;
+  --ink-soft: #a4ab98;
+  --line: #2a3126;
+  --deal: #ffc733;
+  --deal-ink: #1c1500;
+  --fresh: #33c06e;
+  --urgent: #ff6a45;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+  --color-deal: var(--deal);
+  --color-deal-ink: var(--deal-ink);
+  --color-fresh: var(--fresh);
+  --color-urgent: var(--urgent);
+
+  --font-display: var(--f-display), "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--f-body), "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--f-mono), "Space Mono", ui-monospace, monospace;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
