@@ -1,11 +1,19 @@
 import type { Offer } from "@superscout/core";
+import { daysUntilExpiry, isExpiringSoon } from "@superscout/core";
 import { formatEuro, stickerLabel, validUntilShort } from "@/lib/format";
 import { StoreBadge } from "./StoreBadge";
 import { DiscountSticker } from "./DiscountSticker";
 
-export function OfferCard({ offer }: { offer: Offer }) {
+export function OfferCard({ offer, nowIso }: { offer: Offer; nowIso: string }) {
   const { pricing } = offer;
   const hasPrice = pricing.currentPriceCents !== null;
+  const soon = isExpiringSoon(offer.validUntil, nowIso);
+  const daysLeft = daysUntilExpiry(offer.validUntil, nowIso);
+  const expiryText = soon
+    ? daysLeft <= 1
+      ? "verloopt vandaag"
+      : `nog ${daysLeft} dagen`
+    : validUntilShort(offer.validUntil);
 
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-shadow duration-200 hover:shadow-[0_10px_34px_rgba(0,0,0,0.09)]">
@@ -69,7 +77,9 @@ export function OfferCard({ offer }: { offer: Offer }) {
 
         <div className="mt-2 flex items-center justify-between gap-2 border-t border-line pt-2 font-mono text-[11px] text-ink-soft">
           <span className="truncate">{offer.sourceCategoryRaw ?? "Aanbieding"}</span>
-          <span className="whitespace-nowrap">{validUntilShort(offer.validUntil)}</span>
+          <span className={`whitespace-nowrap ${soon ? "font-bold text-urgent" : ""}`}>
+            {expiryText}
+          </span>
         </div>
       </div>
     </article>

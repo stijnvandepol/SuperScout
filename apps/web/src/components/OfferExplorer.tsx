@@ -2,13 +2,15 @@
 
 import { useMemo, useState } from "react";
 import type { MechanismType, Offer, SupermarketSlug } from "@superscout/core";
+import { isExpiringSoon } from "@superscout/core";
 import { MECHANISM_LABEL, STORE_META } from "@/lib/format";
 import { OfferCard } from "./OfferCard";
 
-export function OfferExplorer({ offers }: { offers: Offer[] }) {
+export function OfferExplorer({ offers, nowIso }: { offers: Offer[]; nowIso: string }) {
   const [query, setQuery] = useState("");
   const [store, setStore] = useState<SupermarketSlug | null>(null);
   const [mechanism, setMechanism] = useState<MechanismType | null>(null);
+  const [expiringOnly, setExpiringOnly] = useState(false);
 
   const stores = useMemo(
     () => [...new Set(offers.map((o) => o.source))].sort(),
@@ -24,13 +26,14 @@ export function OfferExplorer({ offers }: { offers: Offer[] }) {
     return offers.filter((o) => {
       if (store && o.source !== store) return false;
       if (mechanism && o.mechanism.type !== mechanism) return false;
+      if (expiringOnly && !isExpiringSoon(o.validUntil, nowIso)) return false;
       if (needle) {
         const hay = `${o.title} ${o.brand ?? ""} ${o.sourceCategoryRaw ?? ""} ${o.rawLabel ?? ""}`.toLowerCase();
         if (!hay.includes(needle)) return false;
       }
       return true;
     });
-  }, [offers, query, store, mechanism]);
+  }, [offers, query, store, mechanism, expiringOnly, nowIso]);
 
   return (
     <section>
@@ -82,6 +85,17 @@ export function OfferExplorer({ offers }: { offers: Offer[] }) {
             {MECHANISM_LABEL[m]}
           </Chip>
         ))}
+        <button
+          type="button"
+          onClick={() => setExpiringOnly((v) => !v)}
+          className={`rounded-full px-3.5 py-1.5 font-mono text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-urgent ${
+            expiringOnly
+              ? "bg-urgent text-white"
+              : "border border-urgent/40 bg-surface text-urgent hover:bg-urgent/5"
+          }`}
+        >
+          Bijna verlopen
+        </button>
       </div>
 
       <p className="mt-6 font-mono text-xs text-ink-soft">
@@ -98,7 +112,7 @@ export function OfferExplorer({ offers }: { offers: Offer[] }) {
       ) : (
         <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
           {filtered.map((o) => (
-            <OfferCard key={o.id} offer={o} />
+            <OfferCard key={o.id} offer={o} nowIso={nowIso} />
           ))}
         </div>
       )}

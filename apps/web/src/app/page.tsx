@@ -3,6 +3,10 @@ import { OfferExplorer } from "@/components/OfferExplorer";
 
 export default function Home() {
   const { total, stores } = stats(OFFERS);
+  // Reference "now" resolved once on the server so client + SSR agree (no
+  // hydration mismatch). For a static build this is build time — production
+  // freshness will come from ISR/revalidation later.
+  const nowIso = new Date().toISOString();
 
   return (
     <div className="mx-auto max-w-6xl px-5">
@@ -32,7 +36,7 @@ export default function Home() {
       </header>
 
       <div className="pb-24">
-        <OfferExplorer offers={OFFERS} />
+        <OfferExplorer offers={OFFERS} nowIso={nowIso} />
       </div>
     </div>
   );
