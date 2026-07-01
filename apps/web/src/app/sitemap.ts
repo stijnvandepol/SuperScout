@@ -13,8 +13,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
+  const storePages: MetadataRoute.Sitemap = [...new Set(OFFERS.map((o) => o.source))].map(
+    (source) => ({
+      url: `${BASE_URL}/winkel/${source}`,
+      changeFrequency: "daily",
+      priority: 0.6,
+    }),
+  );
+
   return [
     { url: BASE_URL, changeFrequency: "daily", priority: 1 },
+    ...storePages,
     ...offerPages,
   ];
 }

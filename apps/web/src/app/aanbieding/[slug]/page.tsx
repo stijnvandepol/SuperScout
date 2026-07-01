@@ -164,7 +164,11 @@ export default async function OfferPage({ params }: Params) {
             </div>
             <div className="flex justify-between gap-4">
               <dt className="font-mono text-xs uppercase tracking-wide text-ink-soft">Winkel</dt>
-              <dd className="text-right">{store.name}</dd>
+              <dd className="text-right">
+                <Link href={`/winkel/${offer.source}`} className="underline-offset-2 hover:underline">
+                  {store.name}
+                </Link>
+              </dd>
             </div>
           </dl>
 
