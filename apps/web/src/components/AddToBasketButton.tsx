@@ -19,7 +19,7 @@ export function AddToBasketButton({ id, variant = "full" }: { id: string; varian
         onClick={() => toggleBasket(id)}
         aria-pressed={inBasket}
         aria-label={inBasket ? "Uit mandje" : "In mandje"}
-        className={`rounded-full border px-2 py-0.5 font-mono text-[10px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fresh ${
+        className={`rounded-full border px-2.5 py-1 font-mono text-[11px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fresh ${
           inBasket ? "border-fresh bg-fresh/10 text-fresh" : "border-line text-ink-soft hover:text-ink"
         }`}
       >

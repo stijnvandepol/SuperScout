@@ -68,3 +68,12 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Horizontally-scrollable rows (rails, filter chips) without a visible bar. */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

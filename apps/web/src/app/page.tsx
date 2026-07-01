@@ -35,40 +35,35 @@ export default function Home() {
       </header>
 
       <section className="border-y border-line py-6">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
-          <div>
-            <p className="mb-2 font-mono text-[11px] uppercase tracking-widest text-ink-soft">
-              Categorieën
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((c) => (
-                <Link
-                  key={c.slug}
-                  href={`/categorie/${c.slug}`}
-                  className="rounded-full border border-line bg-surface px-3.5 py-1.5 font-mono text-xs font-bold text-ink-soft transition-colors hover:text-ink"
-                >
-                  {c.label} <span className="text-ink-soft/60">{c.count}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
+        <p className="mb-2 font-mono text-[11px] uppercase tracking-widest text-ink-soft">
+          Categorieën
+        </p>
+        <div className="-mx-5 flex gap-2 overflow-x-auto px-5 no-scrollbar sm:mx-0 sm:flex-wrap sm:px-0">
+          {categories.map((c) => (
+            <Link
+              key={c.slug}
+              href={`/categorie/${c.slug}`}
+              className="shrink-0 whitespace-nowrap rounded-full border border-line bg-surface px-3.5 py-2 font-mono text-xs font-bold text-ink-soft transition-colors hover:text-ink"
+            >
+              {c.label} <span className="text-ink-soft/60">{c.count}</span>
+            </Link>
+          ))}
         </div>
-        <div className="mt-5">
-          <p className="mb-2 font-mono text-[11px] uppercase tracking-widest text-ink-soft">
-            Winkels
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {storeSlugs.map((s) => (
-              <Link
-                key={s}
-                href={`/winkel/${s}`}
-                className="rounded-full px-3.5 py-1.5 font-mono text-xs font-bold"
-                style={{ background: STORE_META[s].bg, color: STORE_META[s].fg }}
-              >
-                {STORE_META[s].name}
-              </Link>
-            ))}
-          </div>
+
+        <p className="mb-2 mt-5 font-mono text-[11px] uppercase tracking-widest text-ink-soft">
+          Winkels
+        </p>
+        <div className="-mx-5 flex gap-2 overflow-x-auto px-5 no-scrollbar sm:mx-0 sm:flex-wrap sm:px-0">
+          {storeSlugs.map((s) => (
+            <Link
+              key={s}
+              href={`/winkel/${s}`}
+              className="shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 font-mono text-xs font-bold"
+              style={{ background: STORE_META[s].bg, color: STORE_META[s].fg }}
+            >
+              {STORE_META[s].name}
+            </Link>
+          ))}
         </div>
       </section>
 

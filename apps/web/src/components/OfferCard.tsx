@@ -103,7 +103,7 @@ export function OfferCard({ offer, nowIso }: { offer: Offer; nowIso: string }) {
             <Link
               href={productHref}
               aria-label="Vergelijk deze aanbieding"
-              className={`rounded-full px-1 text-sm hover:text-ink ${focus}`}
+              className={`rounded-full border border-line px-2 py-1 text-sm hover:text-ink ${focus}`}
             >
               ⇄
             </Link>

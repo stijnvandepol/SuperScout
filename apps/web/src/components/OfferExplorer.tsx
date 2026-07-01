@@ -61,7 +61,7 @@ export function OfferExplorer({ offers, nowIso }: { offers: Offer[]; nowIso: str
       </div>
 
       {/* Filters */}
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="-mx-5 mt-4 flex gap-2 overflow-x-auto px-5 no-scrollbar sm:mx-0 sm:flex-wrap sm:px-0">
         <Chip active={store === null} onClick={() => setStore(null)}>
           Alle winkels
         </Chip>
@@ -71,7 +71,7 @@ export function OfferExplorer({ offers, nowIso }: { offers: Offer[]; nowIso: str
           </Chip>
         ))}
       </div>
-      <div className="mt-2 flex flex-wrap gap-2">
+      <div className="-mx-5 mt-2 flex gap-2 overflow-x-auto px-5 no-scrollbar sm:mx-0 sm:flex-wrap sm:px-0">
         <Chip active={mechanism === null} onClick={() => setMechanism(null)} subtle>
           Alle acties
         </Chip>
@@ -88,7 +88,7 @@ export function OfferExplorer({ offers, nowIso }: { offers: Offer[]; nowIso: str
         <button
           type="button"
           onClick={() => setExpiringOnly((v) => !v)}
-          className={`rounded-full px-3.5 py-1.5 font-mono text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-urgent ${
+          className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 font-mono text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-urgent ${
             expiringOnly
               ? "bg-urgent text-white"
               : "border border-urgent/40 bg-surface text-urgent hover:bg-urgent/5"
@@ -132,7 +132,7 @@ function Chip({
   children: React.ReactNode;
 }) {
   const base =
-    "rounded-full px-3.5 py-1.5 font-mono text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-deal";
+    "shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 font-mono text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-deal";
   if (active) {
     return (
       <button
