@@ -1,0 +1,12 @@
+**/node_modules
+**/.next
+**/dist
+**/coverage
+.git
+.github
+**/*.log
+*.tsbuildinfo
+# Never send raw MITM captures into the build context
+flows*
+*.har
+docs

@@ -1,0 +1,52 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+# Never let two deploys of main overlap.
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test & build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Build the web app first: it generates next-env.d.ts and .next/types
+      # that the web typecheck depends on, and proves the production build.
+      - name: Build web
+        run: pnpm --filter @superscout/web build
+
+      - name: Typecheck
+        run: pnpm -r typecheck
+
+      - name: Test
+        run: pnpm -r test
+
+  deploy:
+    name: Deploy to Ubuntu
+    needs: test
+    runs-on: [self-hosted, linux]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image & (re)start container
+        run: docker compose up -d --build
+
+      - name: Remove dangling images
+        run: docker image prune -f
