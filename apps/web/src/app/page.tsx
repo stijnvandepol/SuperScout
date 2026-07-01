@@ -11,6 +11,11 @@ export default function Home() {
   const { total, stores } = stats(offers);
   const categories = categoriesPresent();
   const storeSlugs = [...new Set(offers.map((o) => o.source))].sort();
+  const storeNames = storeSlugs.map((s) => STORE_META[s].name);
+  const storeList =
+    storeNames.length > 1
+      ? `${storeNames.slice(0, -1).join(", ")} & ${storeNames[storeNames.length - 1]}`
+      : (storeNames[0] ?? "");
   // Reference "now" resolved once on the server so client + SSR agree (no
   // hydration mismatch). For a static build this is build time — production
   // freshness will come from ISR/revalidation later.
@@ -30,7 +35,7 @@ export default function Home() {
           <span className="text-ink-soft"> in seconden.</span>
         </h1>
         <p className="mt-5 font-mono text-sm text-ink-soft">
-          {total} aanbiedingen · {stores} winkels · Albert Heijn, Jumbo, Plus &amp; Dirk
+          {total} aanbiedingen · {stores} winkels · {storeList}
         </p>
       </header>
 
