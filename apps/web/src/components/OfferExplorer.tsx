@@ -1,41 +1,40 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { CategorySlug, MechanismType, Offer, SupermarketSlug } from "@superscout/core";
+import type { CategorySlug, Offer, SupermarketSlug } from "@superscout/core";
 import { categorizeOffer, CATEGORIES, CATEGORY_LABEL, isExpiringSoon } from "@superscout/core";
-import { MECHANISM_LABEL, STORE_META } from "@/lib/format";
+import { STORE_META } from "@/lib/format";
 import { OfferCard } from "./OfferCard";
 
-export function OfferExplorer({ offers, nowIso }: { offers: Offer[]; nowIso: string }) {
+export function OfferExplorer({
+  offers,
+  nowIso,
+  stat,
+}: {
+  offers: Offer[];
+  nowIso: string;
+  stat?: string;
+}) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<CategorySlug | null>(null);
   const [store, setStore] = useState<SupermarketSlug | null>(null);
-  const [mechanism, setMechanism] = useState<MechanismType | null>(null);
   const [expiringOnly, setExpiringOnly] = useState(false);
   const [limit, setLimit] = useState(48);
 
   // Precompute each offer's category once.
   const catOf = useMemo(() => new Map(offers.map((o) => [o.id, categorizeOffer(o)])), [offers]);
 
-  const stores = useMemo(
-    () => [...new Set(offers.map((o) => o.source))].sort(),
-    [offers],
-  );
+  const stores = useMemo(() => [...new Set(offers.map((o) => o.source))].sort(), [offers]);
   const categories = useMemo(() => {
     const present = new Set(catOf.values());
     return CATEGORIES.filter((c) => present.has(c.slug));
   }, [catOf]);
-  const mechanisms = useMemo(
-    () => [...new Set(offers.map((o) => o.mechanism.type))].sort(),
-    [offers],
-  );
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return offers.filter((o) => {
       if (category && catOf.get(o.id) !== category) return false;
       if (store && o.source !== store) return false;
-      if (mechanism && o.mechanism.type !== mechanism) return false;
       if (expiringOnly && !isExpiringSoon(o.validUntil, nowIso)) return false;
       if (needle) {
         const hay = `${o.title} ${o.brand ?? ""} ${o.sourceCategoryRaw ?? ""} ${o.rawLabel ?? ""}`.toLowerCase();
@@ -43,15 +42,15 @@ export function OfferExplorer({ offers, nowIso }: { offers: Offer[]; nowIso: str
       }
       return true;
     });
-  }, [offers, catOf, query, category, store, mechanism, expiringOnly, nowIso]);
+  }, [offers, catOf, query, category, store, expiringOnly, nowIso]);
 
   // Reset the render window whenever the result set changes.
-  useEffect(() => setLimit(48), [query, category, store, mechanism, expiringOnly]);
+  useEffect(() => setLimit(48), [query, category, store, expiringOnly]);
   const visible = filtered.slice(0, limit);
 
   return (
     <section>
-      {/* Search — the hero's job */}
+      {/* Search */}
       <div className="relative">
         <svg
           aria-hidden="true"
@@ -68,14 +67,46 @@ export function OfferExplorer({ offers, nowIso }: { offers: Offer[]; nowIso: str
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Zoek op product, merk of winkel…"
+          placeholder="Zoek een product…"
           aria-label="Zoek aanbiedingen"
           className="w-full rounded-2xl border border-line bg-surface py-4 pl-14 pr-5 font-display text-lg outline-none transition-colors placeholder:text-ink-soft/70 focus:border-deal focus:ring-4 focus:ring-deal/20"
         />
       </div>
 
-      {/* Filters — categories, then stores, then action type */}
+      {/* Store logos — tap to filter to a supermarket */}
       <div className="-mx-5 mt-4 flex gap-2 overflow-x-auto px-5 no-scrollbar sm:mx-0 sm:flex-wrap sm:px-0">
+        <button
+          type="button"
+          onClick={() => setStore(null)}
+          aria-pressed={store === null}
+          className={`shrink-0 rounded-full border px-4 py-2 font-display text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${
+            store === null ? "border-ink bg-ink text-bg" : "border-line bg-surface text-ink-soft hover:text-ink"
+          }`}
+        >
+          Alle
+        </button>
+        {stores.map((s) => {
+          const active = store === s;
+          return (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setStore(active ? null : s)}
+              aria-pressed={active}
+              aria-label={STORE_META[s].name}
+              className={`shrink-0 rounded-full px-4 py-2 font-display text-sm font-bold shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${
+                active ? "ring-2 ring-ink ring-offset-2 ring-offset-bg" : store ? "opacity-45 hover:opacity-100" : ""
+              }`}
+              style={{ background: STORE_META[s].bg, color: STORE_META[s].fg }}
+            >
+              {STORE_META[s].name}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Categories */}
+      <div className="-mx-5 mt-2 flex gap-2 overflow-x-auto px-5 no-scrollbar sm:mx-0 sm:flex-wrap sm:px-0">
         <Chip active={category === null} onClick={() => setCategory(null)}>
           Alles
         </Chip>
@@ -89,57 +120,33 @@ export function OfferExplorer({ offers, nowIso }: { offers: Offer[]; nowIso: str
           </Chip>
         ))}
       </div>
-      <div className="-mx-5 mt-2 flex gap-2 overflow-x-auto px-5 no-scrollbar sm:mx-0 sm:flex-wrap sm:px-0">
-        <Chip active={store === null} onClick={() => setStore(null)} subtle>
-          Alle winkels
-        </Chip>
-        {stores.map((s) => (
-          <Chip key={s} active={store === s} onClick={() => setStore(store === s ? null : s)}>
-            {STORE_META[s].name}
-          </Chip>
-        ))}
-      </div>
-      <div className="-mx-5 mt-2 flex gap-2 overflow-x-auto px-5 no-scrollbar sm:mx-0 sm:flex-wrap sm:px-0">
-        <Chip active={mechanism === null} onClick={() => setMechanism(null)} subtle>
-          Alle acties
-        </Chip>
-        {mechanisms.map((m) => (
-          <Chip
-            key={m}
-            active={mechanism === m}
-            onClick={() => setMechanism(mechanism === m ? null : m)}
-            subtle
-          >
-            {MECHANISM_LABEL[m]}
-          </Chip>
-        ))}
+
+      <div className="mt-5 flex items-center justify-between gap-3">
+        <p className="font-mono text-xs text-ink-soft">
+          {stat && !query && !category && !store && !expiringOnly
+            ? stat
+            : `${filtered.length} ${filtered.length === 1 ? "aanbieding" : "aanbiedingen"}`}
+        </p>
         <button
           type="button"
           onClick={() => setExpiringOnly((v) => !v)}
-          className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 font-mono text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-urgent ${
-            expiringOnly
-              ? "bg-urgent text-white"
-              : "border border-urgent/40 bg-surface text-urgent hover:bg-urgent/5"
+          aria-pressed={expiringOnly}
+          className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 font-mono text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-urgent ${
+            expiringOnly ? "bg-urgent text-white" : "border border-urgent/40 bg-surface text-urgent hover:bg-urgent/5"
           }`}
         >
           Bijna verlopen
         </button>
       </div>
 
-      <p className="mt-6 font-mono text-xs text-ink-soft">
-        {filtered.length} van {offers.length} aanbiedingen
-      </p>
-
       {filtered.length === 0 ? (
-        <div className="mt-10 rounded-2xl border border-dashed border-line py-16 text-center">
+        <div className="mt-8 rounded-2xl border border-dashed border-line py-16 text-center">
           <p className="font-display text-lg">Niets gevonden</p>
-          <p className="mt-1 font-mono text-xs text-ink-soft">
-            Pas je zoekopdracht of filters aan.
-          </p>
+          <p className="mt-1 font-mono text-xs text-ink-soft">Pas je zoekopdracht of filters aan.</p>
         </div>
       ) : (
         <>
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
             {visible.map((o) => (
               <OfferCard key={o.id} offer={o} nowIso={nowIso} />
             ))}
@@ -163,33 +170,24 @@ export function OfferExplorer({ offers, nowIso }: { offers: Offer[]; nowIso: str
 
 function Chip({
   active,
-  subtle = false,
   onClick,
   children,
 }: {
   active: boolean;
-  subtle?: boolean;
   onClick: () => void;
   children: React.ReactNode;
 }) {
   const base =
     "shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 font-mono text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-deal";
-  if (active) {
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        className={`${base} ${subtle ? "bg-ink text-bg" : "bg-deal text-deal-ink"}`}
-      >
-        {children}
-      </button>
-    );
-  }
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`${base} border border-line bg-surface text-ink-soft hover:text-ink`}
+      className={
+        active
+          ? `${base} bg-deal text-deal-ink`
+          : `${base} border border-line bg-surface text-ink-soft hover:text-ink`
+      }
     >
       {children}
     </button>

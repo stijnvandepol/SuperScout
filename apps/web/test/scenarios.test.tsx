@@ -16,7 +16,7 @@ const setBasket = (ids: string[]) =>
 describe("Gebruikersscenario's", () => {
   test("01 — bezoeker ziet alle aanbiedingen bij binnenkomst", () => {
     explorer();
-    expect(screen.getByText("5 van 5 aanbiedingen")).toBeInTheDocument();
+    expect(screen.getByText("5 aanbiedingen")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Bananen" })).toBeInTheDocument();
   });
 
@@ -26,7 +26,7 @@ describe("Gebruikersscenario's", () => {
     await user.type(search(), "valess");
     expect(screen.getByRole("heading", { name: "Valess vleesvervangers" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Bananen" })).not.toBeInTheDocument();
-    expect(screen.getByText("1 van 5 aanbiedingen")).toBeInTheDocument();
+    expect(screen.getByText("1 aanbieding")).toBeInTheDocument();
   });
 
   test("03 — zoeken op merk filtert", async () => {
@@ -34,7 +34,7 @@ describe("Gebruikersscenario's", () => {
     explorer();
     await user.type(search(), "chiquita");
     expect(screen.getByRole("heading", { name: "Bananen" })).toBeInTheDocument();
-    expect(screen.getByText("1 van 5 aanbiedingen")).toBeInTheDocument();
+    expect(screen.getByText("1 aanbieding")).toBeInTheDocument();
   });
 
   test("04 — geen resultaat toont lege staat", async () => {
@@ -48,7 +48,7 @@ describe("Gebruikersscenario's", () => {
     const user = userEvent.setup();
     explorer();
     await user.click(screen.getByRole("button", { name: "Dirk" }));
-    expect(screen.getByText("2 van 5 aanbiedingen")).toBeInTheDocument();
+    expect(screen.getByText("2 aanbiedingen")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Elstar appels" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Gerookte zalm" })).not.toBeInTheDocument();
   });
@@ -58,25 +58,26 @@ describe("Gebruikersscenario's", () => {
     explorer();
     const dirk = screen.getByRole("button", { name: "Dirk" });
     await user.click(dirk);
-    expect(screen.getByText("2 van 5 aanbiedingen")).toBeInTheDocument();
+    expect(screen.getByText("2 aanbiedingen")).toBeInTheDocument();
     await user.click(dirk);
-    expect(screen.getByText("5 van 5 aanbiedingen")).toBeInTheDocument();
+    expect(screen.getByText("5 aanbiedingen")).toBeInTheDocument();
   });
 
-  test("07 — filteren op mechanisme '1+1 & gratis'", async () => {
+  test("07 — filteren op categorie 'Bier, wijn & sterk'", async () => {
     const user = userEvent.setup();
     explorer();
-    await user.click(screen.getByRole("button", { name: "1+1 & gratis" }));
-    expect(screen.getByText("1 van 5 aanbiedingen")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Gerookte zalm" })).toBeInTheDocument();
-  });
-
-  test("08 — filteren op '% korting'", async () => {
-    const user = userEvent.setup();
-    explorer();
-    await user.click(screen.getByRole("button", { name: "% korting" }));
+    await user.click(screen.getByRole("button", { name: "Bier, wijn & sterk" }));
+    expect(screen.getByText("1 aanbieding")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Rode wijn" })).toBeInTheDocument();
-    expect(screen.getByText("1 van 5 aanbiedingen")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Bananen" })).not.toBeInTheDocument();
+  });
+
+  test("08 — filteren op categorie 'Groente & fruit'", async () => {
+    const user = userEvent.setup();
+    explorer();
+    await user.click(screen.getByRole("button", { name: "Groente & fruit" }));
+    expect(screen.getByRole("heading", { name: "Bananen" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Rode wijn" })).not.toBeInTheDocument();
   });
 
   test("09 — 'Bijna verlopen' toont alleen bijna-verlopen acties", async () => {
@@ -85,7 +86,7 @@ describe("Gebruikersscenario's", () => {
     await user.click(screen.getByRole("button", { name: "Bijna verlopen" }));
     expect(screen.getByRole("heading", { name: "Rode wijn" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Bananen" })).not.toBeInTheDocument();
-    expect(screen.getByText("1 van 5 aanbiedingen")).toBeInTheDocument();
+    expect(screen.getByText("1 aanbieding")).toBeInTheDocument();
   });
 
   test("10 — winkel + zoeken gecombineerd", async () => {
@@ -94,7 +95,7 @@ describe("Gebruikersscenario's", () => {
     await user.click(screen.getByRole("button", { name: "Dirk" }));
     await user.type(search(), "appels");
     expect(screen.getByRole("heading", { name: "Elstar appels" })).toBeInTheDocument();
-    expect(screen.getByText("1 van 5 aanbiedingen")).toBeInTheDocument();
+    expect(screen.getByText("1 aanbieding")).toBeInTheDocument();
   });
 
   test("11 — product toevoegen aan mandje", async () => {
