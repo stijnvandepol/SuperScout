@@ -2,6 +2,7 @@ import type { Browser } from "playwright";
 import type { SourceAdapter } from "@superscout/core";
 import { PlusAdapter } from "../adapters/plus/plus.adapter";
 import type { PlusPromotionListResponse } from "../adapters/plus/plus.raw";
+import { LidlAdapter } from "../adapters/lidl/lidl.adapter";
 import { interceptJson } from "./intercept";
 
 /**
@@ -19,5 +20,7 @@ export function browserSources(browser: Browser): SourceAdapter[] {
         "DataActionGetPromotionList_Optimization",
       ),
     ),
+    // Lidl: server-rendered offers page, scraped from the DOM.
+    new LidlAdapter(browser),
   ];
 }

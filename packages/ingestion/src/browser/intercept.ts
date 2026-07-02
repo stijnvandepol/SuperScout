@@ -54,3 +54,30 @@ export async function interceptJson<T>(
     await page.close();
   }
 }
+
+/**
+ * Load a server-rendered offers page, auto-scroll to trigger lazy loading, then
+ * run an in-page extractor. For chains that render offers into the DOM instead
+ * of exposing a clean JSON API.
+ */
+export async function scrapePage<T>(
+  browser: Browser,
+  pageUrl: string,
+  extractor: () => T[],
+  options: InterceptOptions = {},
+): Promise<T[]> {
+  const { timeoutMs = 45000 } = options;
+  const page = await browser.newPage({ userAgent: UA_IPHONE, locale: "nl-NL" });
+  try {
+    await page.goto(pageUrl, { waitUntil: "domcontentloaded", timeout: timeoutMs });
+    // Auto-scroll to load lazy tiles.
+    for (let i = 0; i < 12; i++) {
+      await page.mouse.wheel(0, 2000);
+      await page.waitForTimeout(400);
+    }
+    await page.waitForTimeout(800);
+    return await page.evaluate(extractor);
+  } finally {
+    await page.close();
+  }
+}
