@@ -37,9 +37,10 @@ FROM mcr.microsoft.com/playwright:v1.61.1-noble AS ingest
 ENV NODE_ENV=production
 RUN corepack enable
 WORKDIR /app
+# Full workspace manifests so --frozen-lockfile validates (lockfile spans apps/* too).
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
 COPY packages ./packages
-# Install only what the ingestion worker needs (incl. playwright JS).
+COPY apps ./apps
 RUN pnpm install --frozen-lockfile
 COPY --from=build /app/packages/ingestion/dist/ingest.cjs ./packages/ingestion/dist/ingest.cjs
 CMD ["node", "packages/ingestion/dist/ingest.cjs"]
