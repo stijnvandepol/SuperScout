@@ -3,6 +3,7 @@ import type { SourceAdapter } from "@superscout/core";
 import { PlusAdapter } from "../adapters/plus/plus.adapter";
 import type { PlusPromotionListResponse } from "../adapters/plus/plus.raw";
 import { LidlAdapter } from "../adapters/lidl/lidl.adapter";
+import { AldiAdapter } from "../adapters/aldi/aldi.adapter";
 import { interceptJson } from "./intercept";
 
 /**
@@ -22,5 +23,7 @@ export function browserSources(browser: Browser): SourceAdapter[] {
     ),
     // Lidl: server-rendered offers page, scraped from the DOM.
     new LidlAdapter(browser),
+    // Aldi: server-rendered offers page, scraped from the DOM.
+    new AldiAdapter(browser),
   ];
 }
