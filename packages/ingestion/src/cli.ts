@@ -10,9 +10,12 @@
  */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
+import type { Browser } from "playwright";
 import { InMemoryOfferStore, isActive } from "@superscout/core";
 import { runIngestion } from "./runner";
-import { liveAdapters } from "./sources";
+import { apiAdapters } from "./sources";
+import { browserSources } from "./browser/browser-sources";
+import { launchBrowser } from "./browser/intercept";
 
 const OUT = process.env.OFFERS_OUT ?? "/data/offers.json";
 const INGEST_HOUR = Number(process.env.INGEST_HOUR ?? 5);
@@ -20,27 +23,44 @@ const INGEST_HOUR = Number(process.env.INGEST_HOUR ?? 5);
 async function ingestOnce(): Promise<void> {
   const nowIso = new Date().toISOString();
   const store = new InMemoryOfferStore();
-  const report = await runIngestion(liveAdapters(), store, { timeoutMs: 30_000 });
+
+  const adapters = apiAdapters();
+  let browser: Browser | null = null;
+  try {
+    browser = await launchBrowser();
+    adapters.push(...browserSources(browser));
+  } catch (e) {
+    console.error("[ingest] browser unavailable, skipping browser-driven chains:", e);
+  }
+
+  let all;
+  try {
+    const report = await runIngestion(adapters, store, { timeoutMs: 60_000 });
+    logReport(report);
+    all = await store.all();
+  } finally {
+    if (browser) await browser.close();
+  }
 
   // Only keep offers that are actually valid today (drop next-week/expired).
-  const all = await store.all();
   const offers = all.filter((o) => isActive(o.validFrom, o.validUntil, nowIso));
-
-  const summary = report.results
-    .map((r) => `${r.source}=${r.ok ? r.offerCount : `FAIL(${r.error ?? "?"})`}`)
-    .join(" ");
 
   if (offers.length === 0) {
     // Never overwrite good data with an empty pull (all sources failed).
-    console.error(`[ingest] ${nowIso} no active offers, keeping previous file. ${summary}`);
+    console.error(`[ingest] ${nowIso} no active offers, keeping previous file.`);
     return;
   }
 
   mkdirSync(dirname(OUT), { recursive: true });
   writeFileSync(OUT, JSON.stringify(offers), "utf-8");
-  console.log(
-    `[ingest] ${nowIso} wrote ${offers.length}/${all.length} active offers -> ${OUT}. ${summary}`,
-  );
+  console.log(`[ingest] ${nowIso} wrote ${offers.length}/${all.length} active offers -> ${OUT}.`);
+}
+
+function logReport(report: { results: { source: string; ok: boolean; offerCount: number; error?: string }[] }): void {
+  const summary = report.results
+    .map((r) => `${r.source}=${r.ok ? r.offerCount : `FAIL(${r.error ?? "?"})`}`)
+    .join(" ");
+  console.log(`[ingest] sources: ${summary}`);
 }
 
 /** Milliseconds until the next occurrence of `hour:00` UTC. */

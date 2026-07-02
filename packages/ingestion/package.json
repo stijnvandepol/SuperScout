@@ -9,10 +9,11 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "build:cli": "esbuild src/cli.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/ingest.cjs"
+    "build:cli": "esbuild src/cli.ts --bundle --platform=node --target=node22 --format=cjs --external:playwright --external:playwright-core --outfile=dist/ingest.cjs"
   },
   "dependencies": {
-    "@superscout/core": "workspace:*"
+    "@superscout/core": "workspace:*",
+    "playwright": "1.61.1"
   },
   "devDependencies": {
     "esbuild": "^0.25.0"

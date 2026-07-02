@@ -31,10 +31,15 @@ USER nextjs
 EXPOSE 3000
 CMD ["node", "apps/web/server.js"]
 
-# ---- Ingestion worker ----
-FROM base AS ingest
+# ---- Ingestion worker (needs a headless browser for JS/bot-protected chains) ----
+# Playwright base image ships Chromium + system deps matching playwright 1.61.1.
+FROM mcr.microsoft.com/playwright:v1.61.1-noble AS ingest
 ENV NODE_ENV=production
-RUN addgroup -S nodejs && adduser -S worker -G nodejs
-COPY --from=build --chown=worker:nodejs /app/packages/ingestion/dist/ingest.cjs ./ingest.cjs
-USER worker
-CMD ["node", "ingest.cjs"]
+RUN corepack enable
+WORKDIR /app
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
+COPY packages ./packages
+# Install only what the ingestion worker needs (incl. playwright JS).
+RUN pnpm install --frozen-lockfile
+COPY --from=build /app/packages/ingestion/dist/ingest.cjs ./packages/ingestion/dist/ingest.cjs
+CMD ["node", "packages/ingestion/dist/ingest.cjs"]
