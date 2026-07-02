@@ -1,22 +1,30 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { MechanismType, Offer, SupermarketSlug } from "@superscout/core";
-import { isExpiringSoon } from "@superscout/core";
+import type { CategorySlug, MechanismType, Offer, SupermarketSlug } from "@superscout/core";
+import { categorizeOffer, CATEGORIES, CATEGORY_LABEL, isExpiringSoon } from "@superscout/core";
 import { MECHANISM_LABEL, STORE_META } from "@/lib/format";
 import { OfferCard } from "./OfferCard";
 
 export function OfferExplorer({ offers, nowIso }: { offers: Offer[]; nowIso: string }) {
   const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<CategorySlug | null>(null);
   const [store, setStore] = useState<SupermarketSlug | null>(null);
   const [mechanism, setMechanism] = useState<MechanismType | null>(null);
   const [expiringOnly, setExpiringOnly] = useState(false);
   const [limit, setLimit] = useState(48);
 
+  // Precompute each offer's category once.
+  const catOf = useMemo(() => new Map(offers.map((o) => [o.id, categorizeOffer(o)])), [offers]);
+
   const stores = useMemo(
     () => [...new Set(offers.map((o) => o.source))].sort(),
     [offers],
   );
+  const categories = useMemo(() => {
+    const present = new Set(catOf.values());
+    return CATEGORIES.filter((c) => present.has(c.slug));
+  }, [catOf]);
   const mechanisms = useMemo(
     () => [...new Set(offers.map((o) => o.mechanism.type))].sort(),
     [offers],
@@ -25,6 +33,7 @@ export function OfferExplorer({ offers, nowIso }: { offers: Offer[]; nowIso: str
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return offers.filter((o) => {
+      if (category && catOf.get(o.id) !== category) return false;
       if (store && o.source !== store) return false;
       if (mechanism && o.mechanism.type !== mechanism) return false;
       if (expiringOnly && !isExpiringSoon(o.validUntil, nowIso)) return false;
@@ -34,10 +43,10 @@ export function OfferExplorer({ offers, nowIso }: { offers: Offer[]; nowIso: str
       }
       return true;
     });
-  }, [offers, query, store, mechanism, expiringOnly, nowIso]);
+  }, [offers, catOf, query, category, store, mechanism, expiringOnly, nowIso]);
 
   // Reset the render window whenever the result set changes.
-  useEffect(() => setLimit(48), [query, store, mechanism, expiringOnly]);
+  useEffect(() => setLimit(48), [query, category, store, mechanism, expiringOnly]);
   const visible = filtered.slice(0, limit);
 
   return (
@@ -65,9 +74,23 @@ export function OfferExplorer({ offers, nowIso }: { offers: Offer[]; nowIso: str
         />
       </div>
 
-      {/* Filters */}
+      {/* Filters — categories, then stores, then action type */}
       <div className="-mx-5 mt-4 flex gap-2 overflow-x-auto px-5 no-scrollbar sm:mx-0 sm:flex-wrap sm:px-0">
-        <Chip active={store === null} onClick={() => setStore(null)}>
+        <Chip active={category === null} onClick={() => setCategory(null)}>
+          Alles
+        </Chip>
+        {categories.map((c) => (
+          <Chip
+            key={c.slug}
+            active={category === c.slug}
+            onClick={() => setCategory(category === c.slug ? null : c.slug)}
+          >
+            {CATEGORY_LABEL[c.slug]}
+          </Chip>
+        ))}
+      </div>
+      <div className="-mx-5 mt-2 flex gap-2 overflow-x-auto px-5 no-scrollbar sm:mx-0 sm:flex-wrap sm:px-0">
+        <Chip active={store === null} onClick={() => setStore(null)} subtle>
           Alle winkels
         </Chip>
         {stores.map((s) => (

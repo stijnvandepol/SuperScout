@@ -158,12 +158,12 @@ describe("Gebruikersscenario's", () => {
     expect(await screen.findByText("Je mandje is leeg")).toBeInTheDocument();
   });
 
-  test("19 — kaart met winkel-URL linkt extern naar de winkel", () => {
+  test("19 — kaart opent onze eigen productpagina (niet direct de winkel)", () => {
     const { container } = render(<OfferCard offer={OFFERS[0]!} nowIso={NOW} />);
-    const store = container.querySelector<HTMLAnchorElement>('a[href="https://www.dirk.nl/aanbiedingen"]');
-    expect(store).not.toBeNull();
-    expect(store?.target).toBe("_blank");
+    // The card is a single tap target to our product page; the store link lives
+    // on that page, so there is no external link on the card itself.
     expect(container.querySelector('a[href="/aanbieding/dirk-1"]')).not.toBeNull();
+    expect(container.querySelector('a[target="_blank"]')).toBeNull();
   });
 
   test("20 — kaart zonder winkel-URL linkt naar de vergelijkpagina", () => {

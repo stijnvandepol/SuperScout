@@ -177,15 +177,16 @@ export default async function OfferPage({ params }: Params) {
             </div>
           </dl>
 
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             {offer.url ? (
               <a
                 href={offer.url}
                 target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-full bg-ink px-6 py-3 font-display text-sm font-bold text-bg transition-opacity hover:opacity-90"
+                rel="noopener noreferrer nofollow sponsored"
+                className="rounded-full px-6 py-3 text-center font-display text-sm font-bold shadow-sm transition-opacity hover:opacity-90"
+                style={{ background: store.bg, color: store.fg }}
               >
-                Naar de winkel
+                Bekijk bij {store.name} →
               </a>
             ) : null}
             <AddToBasketButton id={offer.id} />

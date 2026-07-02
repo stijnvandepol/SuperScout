@@ -12,6 +12,18 @@ const SEED = seed as unknown as Offer[];
 const TTL_MS = 60_000;
 let cache: { at: number; offers: Offer[] } | null = null;
 
+/**
+ * Backfill chains that are missing from the live file with the bundled seed.
+ * The ingestion worker skips browser-driven chains (Plus/Lidl/Aldi/Hoogvliet)
+ * if Chromium can't start in the container, which would silently drop those
+ * stores; this guarantees every chain in the snapshot still shows.
+ */
+function mergeWithSeed(live: Offer[]): Offer[] {
+  const liveSources = new Set(live.map((o) => o.source));
+  const fill = SEED.filter((o) => !liveSources.has(o.source));
+  return fill.length ? [...live, ...fill] : live;
+}
+
 function loadRaw(): Offer[] {
   const path = process.env.OFFERS_PATH;
   if (!path) return SEED;
@@ -19,7 +31,7 @@ function loadRaw(): Offer[] {
   const now = Date.now();
   if (cache && now - cache.at < TTL_MS) return cache.offers;
   try {
-    const offers = JSON.parse(readFileSync(path, "utf-8")) as Offer[];
+    const offers = mergeWithSeed(JSON.parse(readFileSync(path, "utf-8")) as Offer[]);
     cache = { at: now, offers };
     return offers;
   } catch {

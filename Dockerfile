@@ -35,6 +35,9 @@ CMD ["node", "apps/web/server.js"]
 # Playwright base image ships Chromium + system deps matching playwright 1.61.1.
 FROM mcr.microsoft.com/playwright:v1.61.1-noble AS ingest
 ENV NODE_ENV=production
+# Point our own (pnpm-installed) Playwright at the browsers baked into the image
+# so it doesn't look in ~/.cache and fail to launch Chromium.
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 RUN corepack enable
 WORKDIR /app
 # Full workspace manifests so --frozen-lockfile validates (lockfile spans apps/* too).

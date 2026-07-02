@@ -85,43 +85,18 @@ export function OfferCard({ offer, nowIso }: { offer: Offer; nowIso: string }) {
     "group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-shadow duration-200 hover:shadow-[0_10px_34px_rgba(0,0,0,0.09)]";
   const focus = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-deal";
 
-  if (offer.url) {
-    return (
-      <article className={cardClass}>
-        <a
-          href={offer.url}
-          target="_blank"
-          rel="noopener noreferrer nofollow sponsored"
-          className={`flex flex-1 flex-col ${focus}`}
-        >
-          {visual}
-        </a>
-        <div className="flex items-center justify-between gap-2 border-t border-line px-3 py-2 font-mono text-[11px] text-ink-soft">
-          <span className={`truncate ${soon ? "font-bold text-urgent" : ""}`}>{expiryText}</span>
-          <div className="flex shrink-0 items-center gap-1.5">
-            <AddToBasketButton id={offer.id} variant="mini" />
-            <Link
-              href={productHref}
-              aria-label="Vergelijk deze aanbieding"
-              className={`rounded-full border border-line px-2 py-1 text-sm hover:text-ink ${focus}`}
-            >
-              ⇄
-            </Link>
-          </div>
-        </div>
-      </article>
-    );
-  }
-
+  // One clear tap target: the card opens our own product page. From there the
+  // shopper goes to the store. (The store link is not on the card itself, so
+  // there is no nested-anchor / accidental-external-tap confusion.)
   return (
-    <Link href={productHref} className={`${cardClass} ${focus}`}>
-      {visual}
-      <div className="flex items-center justify-between gap-2 border-t border-line px-4 py-2 font-mono text-[11px] text-ink-soft">
-        <span className="truncate">{offer.sourceCategoryRaw ?? "Aanbieding"}</span>
-        <span className={`whitespace-nowrap ${soon ? "font-bold text-urgent" : ""}`}>
-          {expiryText}
-        </span>
+    <article className={cardClass}>
+      <Link href={productHref} className={`flex flex-1 flex-col ${focus}`}>
+        {visual}
+      </Link>
+      <div className="flex items-center justify-between gap-2 border-t border-line px-3 py-2 font-mono text-[11px] text-ink-soft">
+        <span className={`truncate ${soon ? "font-bold text-urgent" : ""}`}>{expiryText}</span>
+        <AddToBasketButton id={offer.id} variant="mini" />
       </div>
-    </Link>
+    </article>
   );
 }
