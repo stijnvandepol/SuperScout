@@ -5,6 +5,7 @@ import type { PlusPromotionListResponse } from "../adapters/plus/plus.raw";
 import { LidlAdapter } from "../adapters/lidl/lidl.adapter";
 import { AldiAdapter } from "../adapters/aldi/aldi.adapter";
 import { HoogvlietAdapter } from "../adapters/hoogvliet/hoogvliet.adapter";
+import { DekamarktAdapter } from "../adapters/dekamarkt/dekamarkt.adapter";
 import { interceptJson } from "./intercept";
 
 /**
@@ -28,5 +29,7 @@ export function browserSources(browser: Browser): SourceAdapter[] {
     new AldiAdapter(browser),
     // Hoogvliet: Intershop aanbiedingen catalog, scraped from the DOM.
     new HoogvlietAdapter(browser),
+    // DekaMarkt: server-rendered aanbiedingen page, scraped from the DOM.
+    new DekamarktAdapter(browser),
   ];
 }
