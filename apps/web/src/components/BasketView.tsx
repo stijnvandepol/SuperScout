@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Offer, SupermarketSlug } from "@superscout/core";
 import { getBasket, onBasketChange, removeFromBasket } from "@/lib/basket";
 import { formatEuro, offerSlug, STORE_META } from "@/lib/format";
+import { ShareBasketButton } from "./ShareBasketButton";
 
 export function BasketView({ allOffers }: { allOffers: Offer[] }) {
   const [ids, setIds] = useState<string[] | null>(null);
@@ -46,6 +47,13 @@ export function BasketView({ allOffers }: { allOffers: Offer[] }) {
 
   return (
     <div className="mt-6 space-y-8">
+      <div className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface p-3.5">
+        <p className="font-mono text-xs text-ink-soft">
+          Stuur je lijstje door — wat te halen bij welke winkel.
+        </p>
+        <ShareBasketButton ids={items.map((o) => o.id)} />
+      </div>
+
       {[...groups.entries()].map(([source, offers]) => {
         const meta = STORE_META[source];
         const subtotal = offers.reduce((s, o) => s + (o.pricing.currentPriceCents ?? 0), 0);
@@ -88,7 +96,7 @@ export function BasketView({ allOffers }: { allOffers: Offer[] }) {
                     type="button"
                     onClick={() => removeFromBasket(o.id)}
                     aria-label={`${o.title} uit mandje`}
-                    className="rounded-full border border-line px-2 py-1 font-mono text-[11px] text-ink-soft transition-colors hover:border-urgent hover:text-urgent"
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line font-mono text-sm text-ink-soft transition-colors hover:border-urgent hover:text-urgent"
                   >
                     ✕
                   </button>

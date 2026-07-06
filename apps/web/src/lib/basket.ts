@@ -35,6 +35,11 @@ export function removeFromBasket(id: string): void {
   save(getBasket().filter((x) => x !== id));
 }
 
+/** Replace the whole basket (used when importing a shared list). */
+export function setBasket(ids: string[]): void {
+  save([...new Set(ids)]);
+}
+
 /** Subscribe to basket changes; returns an unsubscribe fn. */
 export function onBasketChange(handler: () => void): () => void {
   window.addEventListener(EVENT, handler);
