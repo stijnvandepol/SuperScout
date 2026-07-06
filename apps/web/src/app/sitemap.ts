@@ -28,10 +28,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
+  const infoPages: MetadataRoute.Sitemap = ["product", "privacy", "voorwaarden", "ethiek"].map(
+    (slug) => ({
+      url: `${BASE_URL}/${slug}`,
+      changeFrequency: "monthly",
+      priority: 0.3,
+    }),
+  );
+
   return [
     { url: BASE_URL, changeFrequency: "daily", priority: 1 },
     ...storePages,
     ...categoryPages,
     ...offerPages,
+    ...infoPages,
   ];
 }

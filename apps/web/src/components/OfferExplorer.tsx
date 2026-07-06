@@ -25,6 +25,13 @@ export function OfferExplorer({
   const [sort, setSort] = useState<SortKey>("relevant");
   const [limit, setLimit] = useState(48);
 
+  // Support /?q=… deep links (search engines' sitelinks searchbox) without
+  // making the statically-rendered page dynamic.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("q");
+    if (q) setQuery(q);
+  }, []);
+
   // Precompute each offer's category once.
   const catOf = useMemo(() => new Map(offers.map((o) => [o.id, categorizeOffer(o)])), [offers]);
 

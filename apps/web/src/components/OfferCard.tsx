@@ -28,6 +28,7 @@ export function OfferCard({ offer, nowIso }: { offer: Offer; nowIso: string }) {
             src={offer.imageUrl}
             alt={offer.title}
             loading="lazy"
+            referrerPolicy="no-referrer"
             className="h-full w-full object-contain p-4 mix-blend-multiply transition-transform duration-300 group-hover:scale-[1.03]"
           />
         ) : (

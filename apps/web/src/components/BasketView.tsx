@@ -73,7 +73,7 @@ export function BasketView({ allOffers }: { allOffers: Offer[] }) {
                   <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-surface-2">
                     {o.imageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={o.imageUrl} alt="" className="h-full w-full object-contain p-1 mix-blend-multiply" />
+                      <img src={o.imageUrl} alt="" referrerPolicy="no-referrer" className="h-full w-full object-contain p-1 mix-blend-multiply" />
                     ) : null}
                   </div>
                   <div className="min-w-0 flex-1">

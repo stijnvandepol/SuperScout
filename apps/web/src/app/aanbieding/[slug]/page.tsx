@@ -109,6 +109,7 @@ export default async function OfferPage({ params }: Params) {
             <img
               src={offer.imageUrl}
               alt={offer.title}
+              referrerPolicy="no-referrer"
               className="h-full w-full object-contain p-8 mix-blend-multiply"
             />
           ) : (
