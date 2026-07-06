@@ -10,7 +10,7 @@ const LINKS = [
 export function SiteFooter() {
   return (
     <footer className="border-t border-line">
-      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-5 py-8 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mx-auto flex max-w-6xl flex-col gap-4 px-5 pt-8 pb-28 sm:flex-row sm:items-center sm:justify-between md:pb-8">
         <nav aria-label="Over deze site" className="flex flex-wrap gap-x-5 gap-y-2">
           {LINKS.map((l) => (
             <Link
