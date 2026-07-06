@@ -172,4 +172,19 @@ describe("Gebruikersscenario's", () => {
     expect(container.querySelector('a[target="_blank"]')).toBeNull();
     expect(container.querySelector('a[href="/aanbieding/dirk-5"]')).not.toBeNull();
   });
+
+  test("21 — sorteren op prijs laag → hoog zet de goedkoopste bovenaan", async () => {
+    const user = userEvent.setup();
+    explorer();
+    await user.selectOptions(screen.getByLabelText("Sorteren"), "price-asc");
+    // Bananen (0,99) is cheapest; priceless 1+1/multi_buy offers sort last.
+    expect(screen.getAllByRole("heading")[0]).toHaveTextContent("Bananen");
+  });
+
+  test("22 — sorteren op prijs hoog → laag zet de duurste bovenaan", async () => {
+    const user = userEvent.setup();
+    explorer();
+    await user.selectOptions(screen.getByLabelText("Sorteren"), "price-desc");
+    expect(screen.getAllByRole("heading")[0]).toHaveTextContent("Rode wijn");
+  });
 });

@@ -6,6 +6,8 @@ import { categorizeOffer, CATEGORIES, CATEGORY_LABEL, isExpiringSoon } from "@su
 import { STORE_META } from "@/lib/format";
 import { OfferCard } from "./OfferCard";
 
+type SortKey = "relevant" | "price-asc" | "price-desc" | "discount";
+
 export function OfferExplorer({
   offers,
   nowIso,
@@ -19,6 +21,7 @@ export function OfferExplorer({
   const [category, setCategory] = useState<CategorySlug | null>(null);
   const [store, setStore] = useState<SupermarketSlug | null>(null);
   const [expiringOnly, setExpiringOnly] = useState(false);
+  const [sort, setSort] = useState<SortKey>("relevant");
   const [limit, setLimit] = useState(48);
 
   // Precompute each offer's category once.
@@ -44,9 +47,25 @@ export function OfferExplorer({
     });
   }, [offers, catOf, query, category, store, expiringOnly, nowIso]);
 
-  // Reset the render window whenever the result set changes.
-  useEffect(() => setLimit(48), [query, category, store, expiringOnly]);
-  const visible = filtered.slice(0, limit);
+  const sorted = useMemo(() => {
+    const price = (o: Offer) => o.pricing.currentPriceCents;
+    const arr = [...filtered];
+    switch (sort) {
+      case "price-asc":
+        // Offers without a unit price (1+1, "2 voor…") sort last.
+        return arr.sort((a, b) => (price(a) ?? Infinity) - (price(b) ?? Infinity));
+      case "price-desc":
+        return arr.sort((a, b) => (price(b) ?? -1) - (price(a) ?? -1));
+      case "discount":
+        return arr.sort((a, b) => (b.pricing.savingsPercent ?? 0) - (a.pricing.savingsPercent ?? 0));
+      default:
+        return arr;
+    }
+  }, [filtered, sort]);
+
+  // Reset the render window whenever the result set or ordering changes.
+  useEffect(() => setLimit(48), [query, category, store, expiringOnly, sort]);
+  const visible = sorted.slice(0, limit);
 
   return (
     <section>
@@ -121,22 +140,38 @@ export function OfferExplorer({
         ))}
       </div>
 
-      <div className="mt-5 flex items-center justify-between gap-3">
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
         <p className="font-mono text-xs text-ink-soft">
           {stat && !query && !category && !store && !expiringOnly
             ? stat
             : `${filtered.length} ${filtered.length === 1 ? "aanbieding" : "aanbiedingen"}`}
         </p>
-        <button
-          type="button"
-          onClick={() => setExpiringOnly((v) => !v)}
-          aria-pressed={expiringOnly}
-          className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 font-mono text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-urgent ${
-            expiringOnly ? "bg-urgent text-white" : "border border-urgent/40 bg-surface text-urgent hover:bg-urgent/5"
-          }`}
-        >
-          Bijna verlopen
-        </button>
+        <div className="flex items-center gap-2">
+          <label className="sr-only" htmlFor="sort">
+            Sorteren
+          </label>
+          <select
+            id="sort"
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortKey)}
+            className="shrink-0 rounded-full border border-line bg-surface px-3.5 py-1.5 font-mono text-xs font-bold text-ink-soft outline-none transition-colors hover:text-ink focus-visible:ring-2 focus-visible:ring-deal"
+          >
+            <option value="relevant">Sorteer: relevantie</option>
+            <option value="price-asc">Prijs: laag → hoog</option>
+            <option value="price-desc">Prijs: hoog → laag</option>
+            <option value="discount">Hoogste korting</option>
+          </select>
+          <button
+            type="button"
+            onClick={() => setExpiringOnly((v) => !v)}
+            aria-pressed={expiringOnly}
+            className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 font-mono text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-urgent ${
+              expiringOnly ? "bg-urgent text-white" : "border border-urgent/40 bg-surface text-urgent hover:bg-urgent/5"
+            }`}
+          >
+            Bijna verlopen
+          </button>
+        </div>
       </div>
 
       {filtered.length === 0 ? (
