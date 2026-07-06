@@ -6,7 +6,7 @@ import { OfferCard } from "@/components/OfferCard";
 import { BasketView } from "@/components/BasketView";
 import { AddToBasketButton } from "@/components/AddToBasketButton";
 import { getBasket } from "@/lib/basket";
-import { NOW, OFFERS } from "./fixtures";
+import { makeOffer, NOW, OFFERS } from "./fixtures";
 
 const explorer = () => render(<OfferExplorer offers={OFFERS} nowIso={NOW} />);
 const search = () => screen.getByLabelText("Zoek aanbiedingen");
@@ -186,5 +186,25 @@ describe("Gebruikersscenario's", () => {
     explorer();
     await user.selectOptions(screen.getByLabelText("Sorteren"), "price-desc");
     expect(screen.getAllByRole("heading")[0]).toHaveTextContent("Rode wijn");
+  });
+
+  const sligro = makeOffer({
+    id: "sligro:9",
+    source: "sligro",
+    title: "Sligro koffie",
+    pricing: { currentPriceCents: 999, originalPriceCents: null, savingsAbsoluteCents: null, savingsPercent: null },
+  });
+
+  test("23 — kaart van een groothandel toont 'excl. btw'", () => {
+    render(<OfferCard offer={sligro} nowIso={NOW} />);
+    expect(screen.getByText("excl. btw")).toBeInTheDocument();
+  });
+
+  test("24 — filter 'Excl. btw' toont alleen groothandel-aanbiedingen", async () => {
+    const user = userEvent.setup();
+    render(<OfferExplorer offers={[sligro, OFFERS[0]!]} nowIso={NOW} />);
+    await user.click(screen.getByRole("button", { name: "Excl. btw" }));
+    expect(screen.getByRole("heading", { name: "Sligro koffie" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Bananen" })).not.toBeInTheDocument();
   });
 });

@@ -6,6 +6,13 @@ export interface StoreMeta {
   fg: string;
   /** Where "Open bij {store}" sends the shopper (opens the app via universal links). */
   offersUrl: string;
+  /** Wholesalers (Sligro/Makro) list prices excluding VAT — flag it everywhere. */
+  exVat?: boolean;
+}
+
+/** Whether a chain's prices are shown excluding VAT (B2B wholesale). */
+export function isExVat(source: SupermarketSlug): boolean {
+  return STORE_META[source].exVat === true;
 }
 
 /** Brand colours + offers link per chain (kept neutral of any single chain's dominance). */
@@ -23,6 +30,7 @@ export const STORE_META: Record<SupermarketSlug, StoreMeta> = {
   spar: { name: "Spar", bg: "#009640", fg: "#ffffff", offersUrl: "https://www.spar.nl/aanbiedingen" },
   ekoplaza: { name: "Ekoplaza", bg: "#4b9b3f", fg: "#ffffff", offersUrl: "https://www.ekoplaza.nl/aanbiedingen" },
   poiesz: { name: "Poiesz", bg: "#5a9e2f", fg: "#ffffff", offersUrl: "https://webwinkel.poiesz-supermarkten.nl/aanbiedingen" },
+  sligro: { name: "Sligro", bg: "#e64415", fg: "#ffffff", offersUrl: "https://www.sligro.nl/aanbiedingen.html", exVat: true },
 };
 
 export const MECHANISM_LABEL: Record<MechanismType, string> = {

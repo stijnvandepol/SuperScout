@@ -14,6 +14,7 @@ import { getBySlug, getOffers } from "@/lib/offers";
 export const revalidate = 1800;
 import {
   formatEuro,
+  isExVat,
   mechanismDescription,
   offerSlug,
   STORE_META,
@@ -154,6 +155,12 @@ export default async function OfferPage({ params }: Params) {
               je bespaart {formatEuro(pricing.savingsAbsoluteCents)}
               {pricing.savingsPercent !== null ? ` (${pricing.savingsPercent}%)` : ""}
             </span>
+          ) : null}
+
+          {isExVat(offer.source) ? (
+            <p className="mt-3 w-fit rounded-md bg-ink/[0.06] px-2 py-1 font-mono text-xs font-bold text-ink-soft">
+              Prijs is exclusief btw · groothandel
+            </p>
           ) : null}
 
           <dl className="mt-8 space-y-3 border-t border-line pt-6 text-sm">

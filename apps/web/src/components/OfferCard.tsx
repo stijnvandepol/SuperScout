@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Offer } from "@superscout/core";
 import { daysUntilExpiry, isExpiringSoon } from "@superscout/core";
-import { formatEuro, offerSlug, stickerLabel, validUntilShort } from "@/lib/format";
+import { formatEuro, isExVat, offerSlug, stickerLabel, validUntilShort } from "@/lib/format";
 import { StoreBadge } from "./StoreBadge";
 import { DiscountSticker } from "./DiscountSticker";
 import { AddToBasketButton } from "./AddToBasketButton";
@@ -72,11 +72,18 @@ export function OfferCard({ offer, nowIso }: { offer: Offer; nowIso: string }) {
           )}
         </div>
 
-        {pricing.savingsAbsoluteCents !== null ? (
-          <span className="w-fit rounded-md bg-fresh/10 px-1.5 py-0.5 font-mono text-[11px] font-bold text-fresh">
-            je bespaart {formatEuro(pricing.savingsAbsoluteCents)}
-          </span>
-        ) : null}
+        <div className="flex flex-wrap items-center gap-1.5">
+          {pricing.savingsAbsoluteCents !== null ? (
+            <span className="w-fit rounded-md bg-fresh/10 px-1.5 py-0.5 font-mono text-[11px] font-bold text-fresh">
+              je bespaart {formatEuro(pricing.savingsAbsoluteCents)}
+            </span>
+          ) : null}
+          {isExVat(offer.source) ? (
+            <span className="w-fit rounded-md bg-ink/[0.06] px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wide text-ink-soft">
+              excl. btw
+            </span>
+          ) : null}
+        </div>
       </div>
     </>
   );

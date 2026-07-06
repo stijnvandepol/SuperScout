@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { CategorySlug, Offer, SupermarketSlug } from "@superscout/core";
 import { categorizeOffer, CATEGORIES, CATEGORY_LABEL, isExpiringSoon } from "@superscout/core";
-import { STORE_META } from "@/lib/format";
+import { isExVat, STORE_META } from "@/lib/format";
 import { OfferCard } from "./OfferCard";
 
 type SortKey = "relevant" | "price-asc" | "price-desc" | "discount";
@@ -21,6 +21,7 @@ export function OfferExplorer({
   const [category, setCategory] = useState<CategorySlug | null>(null);
   const [store, setStore] = useState<SupermarketSlug | null>(null);
   const [expiringOnly, setExpiringOnly] = useState(false);
+  const [exVatOnly, setExVatOnly] = useState(false);
   const [sort, setSort] = useState<SortKey>("relevant");
   const [limit, setLimit] = useState(48);
 
@@ -39,13 +40,16 @@ export function OfferExplorer({
       if (category && catOf.get(o.id) !== category) return false;
       if (store && o.source !== store) return false;
       if (expiringOnly && !isExpiringSoon(o.validUntil, nowIso)) return false;
+      if (exVatOnly && !isExVat(o.source)) return false;
       if (needle) {
         const hay = `${o.title} ${o.brand ?? ""} ${o.sourceCategoryRaw ?? ""} ${o.rawLabel ?? ""}`.toLowerCase();
         if (!hay.includes(needle)) return false;
       }
       return true;
     });
-  }, [offers, catOf, query, category, store, expiringOnly, nowIso]);
+  }, [offers, catOf, query, category, store, expiringOnly, exVatOnly, nowIso]);
+
+  const hasExVat = useMemo(() => offers.some((o) => isExVat(o.source)), [offers]);
 
   const sorted = useMemo(() => {
     const price = (o: Offer) => o.pricing.currentPriceCents;
@@ -64,7 +68,7 @@ export function OfferExplorer({
   }, [filtered, sort]);
 
   // Reset the render window whenever the result set or ordering changes.
-  useEffect(() => setLimit(48), [query, category, store, expiringOnly, sort]);
+  useEffect(() => setLimit(48), [query, category, store, expiringOnly, exVatOnly, sort]);
   const visible = sorted.slice(0, limit);
 
   return (
@@ -142,11 +146,11 @@ export function OfferExplorer({
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
         <p className="font-mono text-xs text-ink-soft">
-          {stat && !query && !category && !store && !expiringOnly
+          {stat && !query && !category && !store && !expiringOnly && !exVatOnly
             ? stat
             : `${filtered.length} ${filtered.length === 1 ? "aanbieding" : "aanbiedingen"}`}
         </p>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <label className="sr-only" htmlFor="sort">
             Sorteren
           </label>
@@ -171,6 +175,19 @@ export function OfferExplorer({
           >
             Bijna verlopen
           </button>
+          {hasExVat ? (
+            <button
+              type="button"
+              onClick={() => setExVatOnly((v) => !v)}
+              aria-pressed={exVatOnly}
+              title="Toon alleen groothandel-aanbiedingen (prijzen excl. btw)"
+              className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 font-mono text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${
+                exVatOnly ? "bg-ink text-bg" : "border border-line bg-surface text-ink-soft hover:text-ink"
+              }`}
+            >
+              Excl. btw
+            </button>
+          ) : null}
         </div>
       </div>
 

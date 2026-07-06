@@ -7,6 +7,7 @@ import { AldiAdapter } from "../adapters/aldi/aldi.adapter";
 import { HoogvlietAdapter } from "../adapters/hoogvliet/hoogvliet.adapter";
 import { DekamarktAdapter } from "../adapters/dekamarkt/dekamarkt.adapter";
 import { PoieszAdapter } from "../adapters/poiesz/poiesz.adapter";
+import { SligroAdapter } from "../adapters/sligro/sligro.adapter";
 import { interceptJson } from "./intercept";
 
 /**
@@ -34,5 +35,7 @@ export function browserSources(browser: Browser): SourceAdapter[] {
     new DekamarktAdapter(browser),
     // Poiesz: client-rendered aanbiedingen page, scraped from the DOM.
     new PoieszAdapter(browser),
+    // Sligro: B2B wholesaler, client-rendered aanbiedingen page (prices ex-VAT).
+    new SligroAdapter(browser),
   ];
 }
