@@ -51,7 +51,7 @@ export function BasketView({ allOffers }: { allOffers: Offer[] }) {
         <p className="font-mono text-xs text-ink-soft">
           Stuur je lijstje door — wat te halen bij welke winkel.
         </p>
-        <ShareBasketButton ids={items.map((o) => o.id)} />
+        <ShareBasketButton offers={items} />
       </div>
 
       {[...groups.entries()].map(([source, offers]) => {

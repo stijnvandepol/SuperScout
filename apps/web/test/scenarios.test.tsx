@@ -5,6 +5,7 @@ import { OfferExplorer } from "@/components/OfferExplorer";
 import { OfferCard } from "@/components/OfferCard";
 import { BasketView } from "@/components/BasketView";
 import { AddToBasketButton } from "@/components/AddToBasketButton";
+import { formatBasketText } from "@/components/ShareBasketButton";
 import { getBasket } from "@/lib/basket";
 import { makeOffer, NOW, OFFERS } from "./fixtures";
 
@@ -206,5 +207,15 @@ describe("Gebruikersscenario's", () => {
     await user.click(screen.getByRole("button", { name: "Excl. btw" }));
     expect(screen.getByRole("heading", { name: "Sligro koffie" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Bananen" })).not.toBeInTheDocument();
+  });
+
+  test("25 — deel-tekst groepeert per winkel met prijzen en totaal", () => {
+    const text = formatBasketText([OFFERS[0]!, OFFERS[1]!]); // Bananen (Dirk €0,99), Gerookte zalm (AH, 2e gratis)
+    expect(text).toContain("🛒 Dirk");
+    expect(text).toContain("• Bananen — €0,99");
+    expect(text).toContain("🛒 Albert Heijn");
+    expect(text).toContain("• Gerookte zalm — 2e gratis");
+    expect(text).toContain("💶 Totaal (indicatief): €0,99");
+    expect(text).toContain("superscout.nl");
   });
 });
