@@ -15,6 +15,7 @@ export const SUPERMARKETS = {
   coop: { name: "Coop" },
   spar: { name: "Spar" },
   ekoplaza: { name: "Ekoplaza" },
+  poiesz: { name: "Poiesz" },
 } as const;
 
 export type SupermarketSlug = keyof typeof SUPERMARKETS;

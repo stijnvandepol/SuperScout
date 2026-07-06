@@ -16,6 +16,8 @@ export interface InterceptOptions {
   settleMs?: number;
   /** Overall navigation timeout (ms). */
   timeoutMs?: number;
+  /** For scrapePage: wait until this selector appears before extracting. */
+  waitForSelector?: string;
 }
 
 /**
@@ -66,16 +68,20 @@ export async function scrapePage<T>(
   extractor: () => T[],
   options: InterceptOptions = {},
 ): Promise<T[]> {
-  const { timeoutMs = 45000 } = options;
+  const { timeoutMs = 45000, waitForSelector } = options;
   const page = await browser.newPage({ userAgent: UA_IPHONE, locale: "nl-NL" });
   try {
     await page.goto(pageUrl, { waitUntil: "domcontentloaded", timeout: timeoutMs });
+    if (waitForSelector) {
+      // Client-rendered pages fetch offers after load; wait for the tiles.
+      await page.waitForSelector(waitForSelector, { timeout: 15000 }).catch(() => {});
+    }
     // Auto-scroll to load lazy tiles.
     for (let i = 0; i < 12; i++) {
       await page.mouse.wheel(0, 2000);
       await page.waitForTimeout(400);
     }
-    await page.waitForTimeout(800);
+    await page.waitForTimeout(1000);
     return await page.evaluate(extractor);
   } finally {
     await page.close();
