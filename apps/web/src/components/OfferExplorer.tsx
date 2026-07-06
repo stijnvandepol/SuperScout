@@ -96,100 +96,71 @@ export function OfferExplorer({
         />
       </div>
 
-      {/* Store logos — tap to filter to a supermarket */}
+      {/* Filters — compact dropdowns keep the page calm (no chip walls) */}
       <div className="-mx-5 mt-4 flex gap-2 overflow-x-auto px-5 no-scrollbar sm:mx-0 sm:flex-wrap sm:px-0">
+        <FilterSelect
+          label="Winkel"
+          value={store ?? ""}
+          onChange={(v) => setStore((v || null) as SupermarketSlug | null)}
+        >
+          <option value="">Alle winkels</option>
+          {stores.map((s) => (
+            <option key={s} value={s}>
+              {STORE_META[s].name}
+            </option>
+          ))}
+        </FilterSelect>
+
+        <FilterSelect
+          label="Categorie"
+          value={category ?? ""}
+          onChange={(v) => setCategory((v || null) as CategorySlug | null)}
+        >
+          <option value="">Alle categorieën</option>
+          {categories.map((c) => (
+            <option key={c.slug} value={c.slug}>
+              {CATEGORY_LABEL[c.slug]}
+            </option>
+          ))}
+        </FilterSelect>
+
+        <FilterSelect label="Sorteren" value={sort} onChange={(v) => setSort(v as SortKey)}>
+          <option value="relevant">Sorteer: relevantie</option>
+          <option value="price-asc">Prijs: laag → hoog</option>
+          <option value="price-desc">Prijs: hoog → laag</option>
+          <option value="discount">Hoogste korting</option>
+        </FilterSelect>
+
         <button
           type="button"
-          onClick={() => setStore(null)}
-          aria-pressed={store === null}
-          className={`shrink-0 rounded-full border px-4 py-2 font-display text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${
-            store === null ? "border-ink bg-ink text-bg" : "border-line bg-surface text-ink-soft hover:text-ink"
+          onClick={() => setExpiringOnly((v) => !v)}
+          aria-pressed={expiringOnly}
+          className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 font-mono text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-urgent ${
+            expiringOnly ? "bg-urgent text-white" : "border border-urgent/40 bg-surface text-urgent hover:bg-urgent/5"
           }`}
         >
-          Alle
+          Bijna verlopen
         </button>
-        {stores.map((s) => {
-          const active = store === s;
-          return (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setStore(active ? null : s)}
-              aria-pressed={active}
-              aria-label={STORE_META[s].name}
-              className={`shrink-0 rounded-full px-4 py-2 font-display text-sm font-bold shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${
-                active ? "ring-2 ring-ink ring-offset-2 ring-offset-bg" : store ? "opacity-45 hover:opacity-100" : ""
-              }`}
-              style={{ background: STORE_META[s].bg, color: STORE_META[s].fg }}
-            >
-              {STORE_META[s].name}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Categories */}
-      <div className="-mx-5 mt-2 flex gap-2 overflow-x-auto px-5 no-scrollbar sm:mx-0 sm:flex-wrap sm:px-0">
-        <Chip active={category === null} onClick={() => setCategory(null)}>
-          Alles
-        </Chip>
-        {categories.map((c) => (
-          <Chip
-            key={c.slug}
-            active={category === c.slug}
-            onClick={() => setCategory(category === c.slug ? null : c.slug)}
-          >
-            {CATEGORY_LABEL[c.slug]}
-          </Chip>
-        ))}
-      </div>
-
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
-        <p className="font-mono text-xs text-ink-soft">
-          {stat && !query && !category && !store && !expiringOnly && !exVatOnly
-            ? stat
-            : `${filtered.length} ${filtered.length === 1 ? "aanbieding" : "aanbiedingen"}`}
-        </p>
-        <div className="flex flex-wrap items-center gap-2">
-          <label className="sr-only" htmlFor="sort">
-            Sorteren
-          </label>
-          <select
-            id="sort"
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortKey)}
-            className="shrink-0 rounded-full border border-line bg-surface px-3.5 py-1.5 font-mono text-xs font-bold text-ink-soft outline-none transition-colors hover:text-ink focus-visible:ring-2 focus-visible:ring-deal"
-          >
-            <option value="relevant">Sorteer: relevantie</option>
-            <option value="price-asc">Prijs: laag → hoog</option>
-            <option value="price-desc">Prijs: hoog → laag</option>
-            <option value="discount">Hoogste korting</option>
-          </select>
+        {hasExVat ? (
           <button
             type="button"
-            onClick={() => setExpiringOnly((v) => !v)}
-            aria-pressed={expiringOnly}
-            className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 font-mono text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-urgent ${
-              expiringOnly ? "bg-urgent text-white" : "border border-urgent/40 bg-surface text-urgent hover:bg-urgent/5"
+            onClick={() => setExVatOnly((v) => !v)}
+            aria-pressed={exVatOnly}
+            title="Toon alleen groothandel-aanbiedingen (prijzen excl. btw)"
+            className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 font-mono text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${
+              exVatOnly ? "bg-ink text-bg" : "border border-line bg-surface text-ink-soft hover:text-ink"
             }`}
           >
-            Bijna verlopen
+            Excl. btw
           </button>
-          {hasExVat ? (
-            <button
-              type="button"
-              onClick={() => setExVatOnly((v) => !v)}
-              aria-pressed={exVatOnly}
-              title="Toon alleen groothandel-aanbiedingen (prijzen excl. btw)"
-              className={`shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 font-mono text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${
-                exVatOnly ? "bg-ink text-bg" : "border border-line bg-surface text-ink-soft hover:text-ink"
-              }`}
-            >
-              Excl. btw
-            </button>
-          ) : null}
-        </div>
+        ) : null}
       </div>
+
+      <p className="mt-4 font-mono text-xs text-ink-soft">
+        {stat && !query && !category && !store && !expiringOnly && !exVatOnly
+          ? stat
+          : `${filtered.length} ${filtered.length === 1 ? "aanbieding" : "aanbiedingen"}`}
+      </p>
 
       {filtered.length === 0 ? (
         <div className="mt-8 rounded-2xl border border-dashed border-line py-16 text-center">
@@ -220,28 +191,41 @@ export function OfferExplorer({
   );
 }
 
-function Chip({
-  active,
-  onClick,
+function FilterSelect({
+  label,
+  value,
+  onChange,
   children,
 }: {
-  active: boolean;
-  onClick: () => void;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
   children: React.ReactNode;
 }) {
-  const base =
-    "shrink-0 whitespace-nowrap rounded-full px-3.5 py-2 font-mono text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-deal";
+  const id = `filter-${label.toLowerCase()}`;
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={
-        active
-          ? `${base} bg-deal text-deal-ink`
-          : `${base} border border-line bg-surface text-ink-soft hover:text-ink`
-      }
-    >
-      {children}
-    </button>
+    <div className="relative shrink-0">
+      <label className="sr-only" htmlFor={id}>
+        {label}
+      </label>
+      <select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full cursor-pointer appearance-none rounded-full border border-line bg-surface py-2 pl-4 pr-9 font-mono text-xs font-bold text-ink outline-none transition-colors hover:border-ink/30 focus-visible:ring-2 focus-visible:ring-deal"
+      >
+        {children}
+      </select>
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 20 20"
+        className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-soft"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+      >
+        <path d="m5 7.5 5 5 5-5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </div>
   );
 }

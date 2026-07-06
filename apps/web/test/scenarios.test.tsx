@@ -47,26 +47,26 @@ describe("Gebruikersscenario's", () => {
   test("05 — filteren op winkel Dirk toont alleen Dirk", async () => {
     const user = userEvent.setup();
     explorer();
-    await user.click(screen.getByRole("button", { name: "Dirk" }));
+    await user.selectOptions(screen.getByLabelText("Winkel"), "dirk");
     expect(screen.getByText("2 aanbiedingen")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Elstar appels" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Gerookte zalm" })).not.toBeInTheDocument();
   });
 
-  test("06 — nogmaals op winkelfilter klikken heft het op", async () => {
+  test("06 — winkelfilter terug op 'Alle winkels' heft het op", async () => {
     const user = userEvent.setup();
     explorer();
-    const dirk = screen.getByRole("button", { name: "Dirk" });
-    await user.click(dirk);
+    const winkel = screen.getByLabelText("Winkel");
+    await user.selectOptions(winkel, "dirk");
     expect(screen.getByText("2 aanbiedingen")).toBeInTheDocument();
-    await user.click(dirk);
+    await user.selectOptions(winkel, "");
     expect(screen.getByText("5 aanbiedingen")).toBeInTheDocument();
   });
 
   test("07 — filteren op categorie 'Bier, wijn & sterk'", async () => {
     const user = userEvent.setup();
     explorer();
-    await user.click(screen.getByRole("button", { name: "Bier, wijn & sterk" }));
+    await user.selectOptions(screen.getByLabelText("Categorie"), "bier-wijn");
     expect(screen.getByText("1 aanbieding")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Rode wijn" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Bananen" })).not.toBeInTheDocument();
@@ -75,7 +75,7 @@ describe("Gebruikersscenario's", () => {
   test("08 — filteren op categorie 'Groente & fruit'", async () => {
     const user = userEvent.setup();
     explorer();
-    await user.click(screen.getByRole("button", { name: "Groente & fruit" }));
+    await user.selectOptions(screen.getByLabelText("Categorie"), "groente-fruit");
     expect(screen.getByRole("heading", { name: "Bananen" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Rode wijn" })).not.toBeInTheDocument();
   });
@@ -92,7 +92,7 @@ describe("Gebruikersscenario's", () => {
   test("10 — winkel + zoeken gecombineerd", async () => {
     const user = userEvent.setup();
     explorer();
-    await user.click(screen.getByRole("button", { name: "Dirk" }));
+    await user.selectOptions(screen.getByLabelText("Winkel"), "dirk");
     await user.type(search(), "appels");
     expect(screen.getByRole("heading", { name: "Elstar appels" })).toBeInTheDocument();
     expect(screen.getByText("1 aanbieding")).toBeInTheDocument();

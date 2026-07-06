@@ -35,7 +35,9 @@ export function normalizeSligroOffer(raw: SligroRawOffer, fetchedAt: string): Of
   };
 
   if (raw.unit?.trim()) offer.rawLabel = raw.unit.trim();
-  if (raw.image) offer.imageUrl = raw.image;
+  // Sligro's grid serves a 100x100 "small" thumbnail (blurry when enlarged);
+  // the "medium" rendition is 319x319 and sharp.
+  if (raw.image) offer.imageUrl = raw.image.replace(/\/small\.(png|jpe?g|webp)(\?|$)/i, "/medium.$1$2");
   offer.url = raw.url ? `https://www.sligro.nl${raw.url}` : "https://www.sligro.nl/aanbiedingen.html";
 
   return offer;

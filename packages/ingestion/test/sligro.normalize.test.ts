@@ -35,4 +35,12 @@ describe("normalizeSligroOffer", () => {
     expect(o.pricing.originalPriceCents).toBeNull();
     expect(o.mechanism).toEqual({ type: "unknown" });
   });
+
+  test("upgrades the blurry 'small' image to the sharp 'medium' rendition", () => {
+    const img = "https://www.sligro.nl/image-service/_jcr_content.product.087.image/1/small.png";
+    const o = normalizeSligroOffer(raw({ image: img }), FETCHED);
+    expect(o.imageUrl).toBe(
+      "https://www.sligro.nl/image-service/_jcr_content.product.087.image/1/medium.png",
+    );
+  });
 });
