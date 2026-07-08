@@ -1,8 +1,12 @@
+import type { Metadata } from "next";
 import { getOffers, stats } from "@/lib/offers";
 import { OfferExplorer } from "@/components/OfferExplorer";
 
 // Re-read live offers periodically (ISR).
 export const revalidate = 1800;
+
+// Filtered/searched variants (?q=…) all canonicalise to the clean homepage.
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 export default function Home() {
   const offers = getOffers();

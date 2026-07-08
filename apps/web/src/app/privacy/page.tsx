@@ -4,6 +4,7 @@ export const metadata: Metadata = {
   title: "Privacy",
   description:
     "SuperScout verwerkt geen persoonsgegevens: geen account, geen cookies, geen tracking. Lees hoe je privacy is geregeld.",
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {

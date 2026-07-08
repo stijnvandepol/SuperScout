@@ -4,6 +4,8 @@ import "./globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { BottomNav } from "@/components/BottomNav";
+import { JsonLd } from "@/components/JsonLd";
+import { SITE_URL } from "@/lib/seo";
 
 const display = Space_Grotesk({
   subsets: ["latin"],
@@ -13,7 +15,6 @@ const display = Space_Grotesk({
 const body = Hanken_Grotesk({ subsets: ["latin"], variable: "--f-body" });
 const mono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"], variable: "--f-mono" });
 
-const SITE_URL = "https://superscout.nl";
 const TITLE = "SuperScout — alle supermarktaanbiedingen van deze week op één plek";
 const DESCRIPTION =
   "Vergelijk de aanbiedingen van deze week van Albert Heijn, Jumbo, Lidl, ALDI, PLUS, Dirk, Hoogvliet, DekaMarkt, Poiesz en Sligro in één zoekopdracht. Dagelijks ververst, zonder account en zonder tracking.";
@@ -37,8 +38,6 @@ export const metadata: Metadata = {
     "Dirk aanbiedingen",
     "boodschappen besparen",
   ],
-  // Each page's canonical resolves to its own URL via metadataBase.
-  alternates: { canonical: "./" },
   robots: {
     index: true,
     follow: true,
@@ -102,10 +101,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="nl" className={`${display.variable} ${body.variable} ${mono.variable}`}>
       <body>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD).replace(/</g, "\\u003c") }}
-        />
+        <JsonLd data={JSON_LD} />
         <SiteHeader />
         <main className="pb-24 md:pb-16">{children}</main>
         <SiteFooter />

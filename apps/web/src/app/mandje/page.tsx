@@ -5,8 +5,10 @@ import { getOffers } from "@/lib/offers";
 export const revalidate = 1800;
 
 export const metadata: Metadata = {
-  title: "Mijn mandje — SuperScout",
+  title: "Mijn mandje",
   description: "Je verzamelde aanbiedingen per winkel, klaar om te bestellen in de app.",
+  // Personal, empty-by-default utility page — no search value.
+  robots: { index: false, follow: true },
 };
 
 export default function MandjePage() {

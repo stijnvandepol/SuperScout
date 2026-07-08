@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: "Over SuperScout — dé aanbiedingen-vergelijker van Nederland",
   description:
     "Alle aanbiedingen van 10 Nederlandse supermarkten in één zoekopdracht. Dagelijks vers, gratis, zonder account en zonder tracking. Ontdek hoe SuperScout werkt.",
+  alternates: { canonical: "/product" },
 };
 
 const FEATURES = [

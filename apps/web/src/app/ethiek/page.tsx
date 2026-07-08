@@ -4,6 +4,7 @@ export const metadata: Metadata = {
   title: "Ethiek & transparantie",
   description:
     "Hoe SuperScout aan zijn data komt, waarom alle winkels gelijk worden behandeld en welke keuzes we bewust maken.",
+  alternates: { canonical: "/ethiek" },
 };
 
 export default function EthiekPage() {

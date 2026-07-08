@@ -1,43 +1,43 @@
 import type { MetadataRoute } from "next";
 import { categoriesPresent, getOffers } from "@/lib/offers";
 import { offerSlug } from "@/lib/format";
+import { SITE_URL } from "@/lib/seo";
 
-// TODO: read from an env var once the production domain is set.
-const BASE_URL = "https://superscout.nl";
+// Regenerates as the offer set changes.
+export const revalidate = 1800;
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const offers = getOffers();
+
   const offerPages: MetadataRoute.Sitemap = offers.map((offer) => ({
-    url: `${BASE_URL}/aanbieding/${offerSlug(offer)}`,
+    url: `${SITE_URL}/aanbieding/${offerSlug(offer)}`,
     lastModified: offer.fetchedAt,
     changeFrequency: "daily",
-    priority: 0.7,
+    // Product image feeds Google Images (valuable for a deals site).
+    ...(offer.imageUrl ? { images: [offer.imageUrl] } : {}),
   }));
 
   const storePages: MetadataRoute.Sitemap = [...new Set(offers.map((o) => o.source))].map(
-    (source) => ({
-      url: `${BASE_URL}/winkel/${source}`,
-      changeFrequency: "daily",
-      priority: 0.6,
-    }),
+    (source) => ({ url: `${SITE_URL}/winkel/${source}`, changeFrequency: "daily" }),
   );
 
   const categoryPages: MetadataRoute.Sitemap = categoriesPresent().map((c) => ({
-    url: `${BASE_URL}/categorie/${c.slug}`,
+    url: `${SITE_URL}/categorie/${c.slug}`,
     changeFrequency: "daily",
-    priority: 0.6,
   }));
 
   const infoPages: MetadataRoute.Sitemap = ["product", "privacy", "voorwaarden", "ethiek"].map(
-    (slug) => ({
-      url: `${BASE_URL}/${slug}`,
-      changeFrequency: "monthly",
-      priority: 0.3,
-    }),
+    (slug) => ({ url: `${SITE_URL}/${slug}`, changeFrequency: "monthly" }),
   );
 
+  const indexPages: MetadataRoute.Sitemap = ["categorieen", "winkels"].map((slug) => ({
+    url: `${SITE_URL}/${slug}`,
+    changeFrequency: "daily",
+  }));
+
   return [
-    { url: BASE_URL, changeFrequency: "daily", priority: 1 },
+    { url: SITE_URL, changeFrequency: "daily", priority: 1 },
+    ...indexPages,
     ...storePages,
     ...categoryPages,
     ...offerPages,

@@ -6,8 +6,10 @@ import { getOffers } from "@/lib/offers";
 export const revalidate = 1800;
 
 export const metadata: Metadata = {
-  title: "Alle winkels — SuperScout",
-  description: "Bekijk de actuele aanbiedingen per supermarkt: Albert Heijn, Jumbo, Plus en Dirk.",
+  title: "Alle supermarkten",
+  description:
+    "Bekijk de actuele aanbiedingen per supermarkt: Albert Heijn, Jumbo, Lidl, ALDI, PLUS, Dirk, Hoogvliet, DekaMarkt, Poiesz en Sligro.",
+  alternates: { canonical: "/winkels" },
 };
 
 export default function StoresPage() {

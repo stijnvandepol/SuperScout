@@ -1,10 +1,15 @@
 import type { MetadataRoute } from "next";
-
-const BASE_URL = "https://superscout.nl";
+import { SITE_URL } from "@/lib/seo";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: { userAgent: "*", allow: "/" },
-    sitemap: `${BASE_URL}/sitemap.xml`,
+    rules: {
+      userAgent: "*",
+      allow: "/",
+      // Personal utility page, no crawl value.
+      disallow: "/mandje",
+    },
+    sitemap: `${SITE_URL}/sitemap.xml`,
+    host: SITE_URL,
   };
 }

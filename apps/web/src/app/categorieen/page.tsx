@@ -5,8 +5,10 @@ import { categoriesPresent } from "@/lib/offers";
 export const revalidate = 1800;
 
 export const metadata: Metadata = {
-  title: "Alle categorieën — SuperScout",
-  description: "Blader door alle productcategorieën met actuele supermarktaanbiedingen.",
+  title: "Alle categorieën aanbiedingen",
+  description:
+    "Blader door alle productcategorieën met actuele supermarktaanbiedingen van deze week — van groente & fruit tot koffie, frisdrank en verzorging.",
+  alternates: { canonical: "/categorieen" },
 };
 
 export default function CategoriesPage() {

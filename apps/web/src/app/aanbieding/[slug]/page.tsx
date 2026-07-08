@@ -24,6 +24,8 @@ import { OfferCard } from "@/components/OfferCard";
 import { StoreBadge } from "@/components/StoreBadge";
 import { DiscountSticker } from "@/components/DiscountSticker";
 import { AddToBasketButton } from "@/components/AddToBasketButton";
+import { JsonLd } from "@/components/JsonLd";
+import { breadcrumbJsonLd, offerJsonLd, SITE_URL } from "@/lib/seo";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -47,11 +49,13 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     title,
     description,
+    alternates: { canonical: `/aanbieding/${slug}` },
     openGraph: {
       title,
       description,
       type: "website",
       locale: "nl_NL",
+      url: `/aanbieding/${slug}`,
       images: offer.imageUrl ? [offer.imageUrl] : [],
     },
   };
@@ -69,26 +73,20 @@ export default async function OfferPage({ params }: Params) {
   const days = daysUntilExpiry(offer.validUntil, nowIso);
   const { pricing } = offer;
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Offer",
-    name: offer.title,
-    ...(offer.brand ? { brand: offer.brand } : {}),
-    ...(offer.imageUrl ? { image: offer.imageUrl } : {}),
-    ...(pricing.currentPriceCents !== null
-      ? { price: (pricing.currentPriceCents / 100).toFixed(2), priceCurrency: "EUR" }
-      : {}),
-    availability: "https://schema.org/InStock",
-    validThrough: offer.validUntil,
-    seller: { "@type": "Organization", name: store.name },
-  };
+  const canonical = `/aanbieding/${offerSlug(offer)}`;
+  const url = `${SITE_URL}${canonical}`;
+  const category = categorizeOffer(offer);
 
   return (
     <div className="mx-auto max-w-6xl px-5 pb-24">
-      <script
-        type="application/ld+json"
-        // Escape "<" so a stray "</script>" in source data can't break out of the tag.
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      <JsonLd data={offerJsonLd(offer, url)} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: store.name, path: `/winkel/${offer.source}` },
+          { name: CATEGORY_LABEL[category], path: `/categorie/${category}` },
+          { name: offer.title, path: canonical },
+        ])}
       />
 
       <p className="pt-6 font-mono text-[11px] uppercase tracking-widest text-ink-soft">

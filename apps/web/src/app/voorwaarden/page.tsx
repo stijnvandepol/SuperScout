@@ -4,6 +4,7 @@ export const metadata: Metadata = {
   title: "Algemene voorwaarden",
   description:
     "De spelregels van SuperScout: een gratis, informatieve aanbiedingen-vergelijker. De winkel is altijd leidend voor de definitieve prijs.",
+  alternates: { canonical: "/voorwaarden" },
 };
 
 export default function VoorwaardenPage() {
