@@ -15,6 +15,20 @@ export function isExVat(source: SupermarketSlug): boolean {
   return STORE_META[source].exVat === true;
 }
 
+/** Locally-hosted store icons (their own favicons), used as the store badge. */
+export const STORE_ICON: Partial<Record<SupermarketSlug, string>> = {
+  ah: "/store-icons/ah.png",
+  jumbo: "/store-icons/jumbo.png",
+  lidl: "/store-icons/lidl.png",
+  aldi: "/store-icons/aldi.png",
+  plus: "/store-icons/plus.ico",
+  dirk: "/store-icons/dirk.png",
+  hoogvliet: "/store-icons/hoogvliet.png",
+  dekamarkt: "/store-icons/dekamarkt.png",
+  poiesz: "/store-icons/poiesz.png",
+  sligro: "/store-icons/sligro.png",
+};
+
 /** Brand colours + offers link per chain (kept neutral of any single chain's dominance). */
 export const STORE_META: Record<SupermarketSlug, StoreMeta> = {
   ah: { name: "Albert Heijn", bg: "#00a0e2", fg: "#ffffff", offersUrl: "https://www.ah.nl/bonus" },

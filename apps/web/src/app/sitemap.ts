@@ -13,8 +13,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${SITE_URL}/aanbieding/${offerSlug(offer)}`,
     lastModified: offer.fetchedAt,
     changeFrequency: "daily",
-    // Product image feeds Google Images (valuable for a deals site).
-    ...(offer.imageUrl ? { images: [offer.imageUrl] } : {}),
+    // NB: no <image:loc> — the chains' image URLs carry unescaped "&" query
+    // params that Next does not XML-escape, which corrupts the whole sitemap.
   }));
 
   const storePages: MetadataRoute.Sitemap = [...new Set(offers.map((o) => o.source))].map(
