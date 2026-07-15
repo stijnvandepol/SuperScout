@@ -23,13 +23,25 @@ export default function OpenGraphImage() {
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <div
             style={{
-              width: 28,
-              height: 28,
-              borderRadius: 8,
-              background: "#f5a800",
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              background: "#ffbe0f",
               display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
-          />
+          >
+            <svg width="36" height="36" viewBox="0 0 32 32">
+              <g stroke="#1c1500" fill="none">
+                <circle cx="14" cy="13.5" r="6.75" strokeWidth="2.6" />
+                <path d="M19 18.5 24.5 24" strokeWidth="3.2" strokeLinecap="round" />
+                <path d="M11.6 16.2 16.4 10.8" strokeWidth="1.9" strokeLinecap="round" />
+              </g>
+              <circle cx="11.9" cy="11.4" r="1.45" fill="#1c1500" />
+              <circle cx="16.1" cy="15.6" r="1.45" fill="#1c1500" />
+            </svg>
+          </div>
           <div style={{ display: "flex", fontSize: 40, fontWeight: 700, color: "#16180f" }}>
             Super<span style={{ color: "#f5a800" }}>Scout</span>
           </div>
