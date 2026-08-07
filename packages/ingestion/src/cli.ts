@@ -8,17 +8,58 @@
  *   INGEST_HOUR  UTC hour of the daily run (default 5 ≈ 07:00 NL summer)
  *   INGEST_ONCE  set to "1" to run a single pass and exit
  */
-import { mkdirSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import type { Browser } from "playwright";
-import { InMemoryOfferStore, isActive } from "@superscout/core";
+import type { Offer, PriceObservation } from "@superscout/core";
+import {
+  InMemoryOfferStore,
+  isActive,
+  newObservations,
+  observationsFrom,
+  parseObservations,
+  serialiseObservations,
+} from "@superscout/core";
 import { runIngestion } from "./runner";
 import { apiAdapters } from "./sources";
 import { browserSources } from "./browser/browser-sources";
 import { launchBrowser } from "./browser/intercept";
 
 const OUT = process.env.OFFERS_OUT ?? "/data/offers.json";
+const HISTORY_OUT = process.env.PRICE_HISTORY_OUT ?? "/data/price-history.jsonl";
 const INGEST_HOUR = Number(process.env.INGEST_HOUR ?? 5);
+
+/**
+ * Append today's prices to the running history.
+ *
+ * Deliberately best-effort: this is a long game whose payoff is a year away,
+ * and it must never be the reason a day's offers fail to publish. Idempotent,
+ * so a restart or a second run on the same day changes nothing.
+ */
+function recordPrices(offers: Offer[], nowIso: string): void {
+  try {
+    let existing: PriceObservation[] = [];
+    try {
+      existing = parseObservations(readFileSync(HISTORY_OUT, "utf-8"));
+    } catch {
+      // No history yet — the first run creates it.
+    }
+
+    const fresh = newObservations(existing, observationsFrom(offers, nowIso));
+    if (fresh.length === 0) {
+      console.log(`[ingest] price history already current (${existing.length} observations).`);
+      return;
+    }
+
+    mkdirSync(dirname(HISTORY_OUT), { recursive: true });
+    appendFileSync(HISTORY_OUT, `${serialiseObservations(fresh)}\n`, "utf-8");
+    console.log(
+      `[ingest] recorded ${fresh.length} prices -> ${HISTORY_OUT} (${existing.length + fresh.length} total).`,
+    );
+  } catch (e) {
+    console.error("[ingest] price history append failed (offers still written):", e);
+  }
+}
 
 async function ingestOnce(): Promise<void> {
   const nowIso = new Date().toISOString();
@@ -54,6 +95,8 @@ async function ingestOnce(): Promise<void> {
   mkdirSync(dirname(OUT), { recursive: true });
   writeFileSync(OUT, JSON.stringify(offers), "utf-8");
   console.log(`[ingest] ${nowIso} wrote ${offers.length}/${all.length} active offers -> ${OUT}.`);
+
+  recordPrices(offers, nowIso);
 }
 
 function logReport(report: { results: { source: string; ok: boolean; offerCount: number; error?: string }[] }): void {

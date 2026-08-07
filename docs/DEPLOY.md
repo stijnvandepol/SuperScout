@@ -69,6 +69,24 @@ docker compose up --build      # bouwt en start op http://localhost:3000
 docker compose down            # stopt
 ```
 
+## Prijshistorie
+
+De ingest-worker schrijft naast `offers.json` ook `/data/price-history.jsonl` — één regel per product per dag, alleen voor aanbiedingen met een echte stuksprijs (~70% van de set; Jumbo publiceert vrijwel nooit een stuksprijs en levert dus weinig aan).
+
+- Staat op hetzelfde persistente volume als de offers. **De hele waarde is opgebouwde tijd**, dus dit bestand mag nooit met een container weggegooid worden — `docker compose down -v` wist 'm.
+- Groeit met ongeveer **4 MB per jaar**. Append-only, dus een onderbroken write kost hooguit de laatste regel.
+- Idempotent: een tweede run op dezelfde dag voegt niets toe.
+- De web-app leest 'm via `PRICE_HISTORY_PATH`. Ontbreekt het bestand, dan tonen de aanbiedingspagina's simpelweg geen prijsblok — er verschijnt nooit een lege "binnenkort beschikbaar".
+
+Een aanbieding krijgt pas een prijsblok bij minimaal 3 metingen over minstens 14 dagen. De eerste twee weken na uitrol is er dus nog niets te zien; dat is opzet.
+
+Handmatige back-up van het volume:
+
+```bash
+docker run --rm -v superscout_offers-data:/data -v "$PWD":/backup alpine \
+  cp /data/price-history.jsonl /backup/price-history-$(date +%F).jsonl
+```
+
 ## Let op
 
 - De app draait nu op een **statische seed** (`apps/web/src/data/offers.json`); een deploy ververst de aanbiedingen dus niet vanzelf. Live-ingestie (periodiek de adapters draaien) is een aparte stap.

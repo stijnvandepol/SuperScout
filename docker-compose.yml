@@ -8,6 +8,7 @@ services:
     container_name: superscout-web
     environment:
       - OFFERS_PATH=/data/offers.json
+      - PRICE_HISTORY_PATH=/data/price-history.jsonl
       # SEO/webmaster wiring — all optional, read at render time.
       # Empty values omit the tag / 404 the key file, which is the safe default.
       - GOOGLE_SITE_VERIFICATION=${GOOGLE_SITE_VERIFICATION:-}
@@ -34,6 +35,9 @@ services:
     container_name: superscout-ingestion
     environment:
       - OFFERS_OUT=/data/offers.json
+      # Append-only price log on the same persistent volume. Its whole value is
+      # accumulated time, so it must outlive every container rebuild.
+      - PRICE_HISTORY_OUT=/data/price-history.jsonl
       # Runs once on start, then every morning at this UTC hour (5 ≈ 07:00 NL).
       - INGEST_HOUR=5
     volumes:

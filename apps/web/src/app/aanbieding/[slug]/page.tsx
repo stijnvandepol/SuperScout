@@ -11,6 +11,7 @@ import {
   relatedOffers,
 } from "@superscout/core";
 import { getBySlug, getOffers } from "@/lib/offers";
+import { insightFor } from "@/lib/price-history";
 
 export const revalidate = 1800;
 import {
@@ -199,6 +200,7 @@ export default async function OfferPage({ params }: Params) {
             <AddToBasketButton id={offer.id} />
           </div>
 
+          <PriceHistoryNote offer={offer} />
         </div>
       </div>
 
@@ -209,6 +211,48 @@ export default async function OfferPage({ params }: Params) {
         <RelatedSection title={`Meer van ${offer.brand}`} offers={sameBrand} nowIso={nowIso} />
       ) : null}
       <RelatedSection title="Gerelateerde aanbiedingen" offers={related} nowIso={nowIso} />
+    </div>
+  );
+}
+
+/**
+ * What the recorded price history says about this price.
+ *
+ * Renders nothing until there is enough history to make a real claim — the
+ * page previously carried a "Prijsontwikkeling — binnenkort beschikbaar"
+ * placeholder, and an empty promise is worse than silence. `insightFor`
+ * returns null below three observations spanning two weeks.
+ */
+function PriceHistoryNote({ offer }: { offer: Offer }) {
+  const insight = insightFor(offer);
+  if (!insight) return null;
+
+  const months = Math.max(1, Math.round(insight.spanDays / 30));
+  const period = months === 1 ? "de afgelopen maand" : `de afgelopen ${months} maanden`;
+
+  return (
+    <div className="mt-6 rounded-xl border border-line bg-surface-2 p-4">
+      <p className="font-mono text-[11px] uppercase tracking-widest text-ink-soft">
+        Prijsontwikkeling
+      </p>
+      <p className="mt-2 text-sm leading-relaxed">
+        {insight.isLowestEver ? (
+          <>
+            <strong className="text-fresh">Laagste prijs die we hebben gemeten.</strong> In {period}{" "}
+            zagen we dit product {insight.promotions}× in de aanbieding, tussen{" "}
+            {formatEuro(insight.lowestCents)} en {formatEuro(insight.highestCents)}.
+          </>
+        ) : (
+          <>
+            In {period} zagen we dit {insight.promotions}× in de aanbieding, tussen{" "}
+            {formatEuro(insight.lowestCents)} en {formatEuro(insight.highestCents)} — gemiddeld{" "}
+            {formatEuro(insight.averageCents)}.{" "}
+            {insight.belowAverage
+              ? "Deze actie zit onder dat gemiddelde."
+              : "Deze actie zit daar niet onder; wachten kan lonen."}
+          </>
+        )}
+      </p>
     </div>
   );
 }
