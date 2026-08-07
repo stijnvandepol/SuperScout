@@ -1,0 +1,80 @@
+name: Weekly content
+
+# The generator existed but nothing ran it, which makes it a tool you have to
+# remember rather than a habit that maintains itself. This opens an issue every
+# Monday morning with the week's copy ready to paste — see docs/MARKETING.md.
+on:
+  schedule:
+    # 06:15 UTC Monday ≈ 08:15 NL, after the daily ingest at 05:00 UTC.
+    - cron: "15 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  generate:
+    name: Draft this week's posts
+    runs-on: [self-hosted, linux]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build generator
+        run: pnpm --filter @superscout/ingestion build:content
+
+      # The live offer file lives in the ingestion container's volume, so read
+      # it from there. Falls back to the bundled seed if the container is down,
+      # which still produces usable copy rather than failing the run.
+      - name: Export live offers
+        id: offers
+        run: |
+          if docker cp superscout-ingestion:/data/offers.json ./live-offers.json 2>/dev/null; then
+            echo "path=./live-offers.json" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Live offers unavailable, using bundled seed."
+            echo "path=apps/web/src/data/offers.json" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate copy
+        run: |
+          BIN=packages/ingestion/dist/content.cjs
+          OFFERS="${{ steps.offers.outputs.path }}"
+          {
+            echo "Kopieer en plaats. Zie \`docs/MARKETING.md\` voor de kanaalvolgorde."
+            echo
+            echo "## Reddit / Tweakers"
+            echo
+            echo '```markdown'
+            node "$BIN" --format markdown --offers "$OFFERS"
+            echo '```'
+            echo
+            echo "## Instagram / TikTok"
+            echo
+            echo '```'
+            node "$BIN" --format social --offers "$OFFERS"
+            echo '```'
+          } > issue-body.md
+
+      - name: Open the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --title "Weekcontent — week $(date -u +%V), $(date -u +%Y)" \
+            --body-file issue-body.md \
+            --label content 2>/dev/null \
+          || gh issue create \
+            --title "Weekcontent — week $(date -u +%V), $(date -u +%Y)" \
+            --body-file issue-body.md

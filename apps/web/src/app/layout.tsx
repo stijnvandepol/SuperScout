@@ -61,7 +61,13 @@ export const metadata: Metadata = {
   },
   // NB: no `alternates.canonical` here — layout metadata cascades to every
   // child route, which would silently canonicalise /privacy, /ethiek etc. to
-  // the homepage and get them dropped. Each page declares its own.
+  // the homepage and get them dropped. `types` is safe to cascade: a reader
+  // finding the site feed from any page is the intended behaviour.
+  alternates: {
+    types: {
+      "application/rss+xml": [{ url: "/feed.xml", title: "SuperScout — alle aanbiedingen" }],
+    },
+  },
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,

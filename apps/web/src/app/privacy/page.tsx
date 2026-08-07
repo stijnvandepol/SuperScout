@@ -68,6 +68,29 @@ export default function PrivacyPage() {
         </section>
 
         <section>
+          <h2 className="font-display text-lg font-bold text-ink">Cloudflare zit ertussen</h2>
+          <p className="mt-2">
+            SuperScout draait achter <strong className="text-ink">Cloudflare</strong>, dat het
+            verkeer afhandelt en de site beschermt tegen misbruik. Cloudflare ziet daarbij het
+            IP-adres van elke bezoeker en legt dat kortstondig vast — dat hoort bij hoe zo'n
+            beveiligingslaag werkt en gebeurt voordat het verzoek ons bereikt. Wij gebruiken die
+            gegevens niet en koppelen ze aan niets. We noemen het hier omdat “geen tracking” gaat
+            over wat wíj doen, en je hoort te weten wie er nog meer in de keten zit.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="font-display text-lg font-bold text-ink">Wat we wél bewaren: prijzen</h2>
+          <p className="mt-2">
+            We leggen dagelijks vast wat producten in de aanbieding kosten, zodat we later kunnen
+            laten zien of een actieprijs echt scherp is. Dat gaat uitsluitend over{" "}
+            <strong className="text-ink">producten en prijzen</strong> — nooit over personen, en
+            het is op geen enkele manier aan een bezoeker gekoppeld. Wie wat bekijkt, bewaren we
+            niet; dat kunnen we ook niet, want we meten het niet.
+          </p>
+        </section>
+
+        <section>
           <h2 className="font-display text-lg font-bold text-ink">Vragen?</h2>
           <p className="mt-2">
             Neem contact op via{" "}

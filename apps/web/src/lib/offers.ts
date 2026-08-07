@@ -73,8 +73,28 @@ export interface CategorySummary {
   count: number;
 }
 
-/** Categories that actually have offers, in taxonomy order, with counts. */
+/**
+ * Below this an own category page is thinner than it is useful.
+ *
+ * A page with two products reads as thin content to search engines and as a
+ * dead end to shoppers. Such categories drop out of the index pages, the
+ * footer and the sitemap; the page itself still resolves (an existing link
+ * must not 404) but tells crawlers not to index it.
+ */
+export const MIN_CATEGORY_OFFERS = 5;
+
+/** Whether a category is substantial enough to link to and index. */
+export function isIndexableCategory(count: number): boolean {
+  return count >= MIN_CATEGORY_OFFERS;
+}
+
+/** Categories worth linking to, in taxonomy order, with counts. */
 export function categoriesPresent(): CategorySummary[] {
+  return allCategoriesPresent().filter((c) => isIndexableCategory(c.count));
+}
+
+/** Every category with at least one offer, including the thin ones. */
+export function allCategoriesPresent(): CategorySummary[] {
   const counts = new Map<CategorySlug, number>();
   for (const offer of getOffers()) {
     const slug = categorizeOffer(offer);

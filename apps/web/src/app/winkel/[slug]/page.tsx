@@ -33,7 +33,16 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     title,
     description,
-    alternates: { canonical },
+    alternates: {
+      canonical,
+      // Overrides the layout's site-wide feed: on a store page the useful
+      // subscription is that chain, not everything.
+      types: {
+        "application/rss+xml": [
+          { url: `${canonical}/feed.xml`, title: `${meta.name} aanbiedingen` },
+        ],
+      },
+    },
     openGraph: { title, description, type: "website", locale: "nl_NL", url: canonical },
   };
 }
@@ -93,7 +102,7 @@ export default async function StorePage({ params }: Params) {
         <OfferGrid offers={offers} nowIso={nowIso} />
       </div>
 
-      <StoreProse store={meta.name} offers={offers} faq={faq} />
+      <StoreProse store={meta.name} slug={slug} offers={offers} faq={faq} />
     </div>
   );
 }
@@ -154,10 +163,12 @@ function storeFaq(store: string, slug: SupermarketSlug, offers: Offer[]) {
  *  that let Google reach the category and deal-type hubs from every store. */
 function StoreProse({
   store,
+  slug,
   offers,
   faq,
 }: {
   store: string;
+  slug: string;
   offers: Offer[];
   faq: { q: string; aText: string }[];
 }) {
@@ -226,6 +237,17 @@ function StoreProse({
           ))}
         </dl>
         <p className="mt-8 text-[15px] leading-relaxed text-ink-soft">
+          Wil je hier niet elke week naar terug? Abonneer je op de{" "}
+          <a
+            href={`/winkel/${slug}/feed.xml`}
+            className="font-medium text-ink underline decoration-deal decoration-2 underline-offset-2"
+          >
+            RSS-feed van {store}
+          </a>{" "}
+          — nieuwe acties komen dan vanzelf binnen in je reader, zonder account en zonder dat wij
+          iets van je hoeven te weten.
+        </p>
+        <p className="mt-4 text-[15px] leading-relaxed text-ink-soft">
           SuperScout is niet verbonden aan {store}. Alle prijzen en voorwaarden komen van {store}{" "}
           zelf en worden dagelijks opnieuw opgehaald. Vergelijk ze met de{" "}
           <Link

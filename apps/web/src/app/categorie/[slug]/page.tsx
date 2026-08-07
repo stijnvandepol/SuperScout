@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CATEGORY_LABEL, type CategorySlug } from "@superscout/core";
-import { byBiggestDiscount, categoriesPresent, offersInCategory } from "@/lib/offers";
+import { allCategoriesPresent, byBiggestDiscount, isIndexableCategory, offersInCategory } from "@/lib/offers";
 import { offerSlug } from "@/lib/format";
 import { OfferGrid } from "@/components/OfferGrid";
 import { JsonLd } from "@/components/JsonLd";
@@ -12,7 +12,9 @@ export const revalidate = 1800;
 type Params = { params: Promise<{ slug: string }> };
 
 export function generateStaticParams() {
-  return categoriesPresent().map((c) => ({ slug: c.slug }));
+  // Thin categories are still prerendered so an existing link never 404s;
+  // they simply carry a noindex below.
+  return allCategoriesPresent().map((c) => ({ slug: c.slug }));
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -27,6 +29,9 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     title,
     description,
     alternates: { canonical },
+    // A handful of products is not a page worth ranking; asking Google to
+    // index it invites a thin-content judgement on the whole section.
+    ...(isIndexableCategory(count) ? {} : { robots: { index: false, follow: true } }),
     openGraph: { title, description, type: "website", locale: "nl_NL", url: canonical },
   };
 }
