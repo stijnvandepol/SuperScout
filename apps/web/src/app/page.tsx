@@ -4,13 +4,15 @@ import { byBiggestDiscount, getOffers, stats } from "@/lib/offers";
 import { offerSlug } from "@/lib/format";
 import { OfferExplorer } from "@/components/OfferExplorer";
 import { JsonLd } from "@/components/JsonLd";
-import { faqJsonLd, itemListJsonLd, SITE_URL } from "@/lib/seo";
+import { faqJsonLd, itemListJsonLd, SITE_FEED_ALTERNATE, SITE_URL } from "@/lib/seo";
 
 // Re-read live offers periodically (ISR).
 export const revalidate = 1800;
 
 // Filtered/searched variants (?q=…) all canonicalise to the clean homepage.
-export const metadata: Metadata = { alternates: { canonical: "/" } };
+export const metadata: Metadata = {
+  alternates: { canonical: "/", types: SITE_FEED_ALTERNATE },
+};
 
 /** ISO 8601 week number — offers roll over weekly, so the hero names the week. */
 function isoWeek(date: Date): number {

@@ -1,3 +1,4 @@
+import { SITE_FEED_ALTERNATE } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { categoriesPresent } from "@/lib/offers";
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
   title: "Alle categorieën aanbiedingen",
   description:
     "Blader door alle productcategorieën met actuele supermarktaanbiedingen van deze week — van groente & fruit tot koffie, frisdrank en verzorging.",
-  alternates: { canonical: "/categorieen" },
+  alternates: { canonical: "/categorieen", types: SITE_FEED_ALTERNATE },
 };
 
 export default function CategoriesPage() {

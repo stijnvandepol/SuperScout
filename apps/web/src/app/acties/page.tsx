@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getOffers } from "@/lib/offers";
 import { DEAL_TYPES } from "@/lib/deal-types";
 import { JsonLd } from "@/components/JsonLd";
-import { breadcrumbJsonLd } from "@/lib/seo";
+import { breadcrumbJsonLd, SITE_FEED_ALTERNATE } from "@/lib/seo";
 
 export const revalidate = 1800;
 
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: "Soorten aanbiedingen — 1+1 gratis, % korting en stapelacties",
   description:
     "Blader per actievorm door de supermarktaanbiedingen van deze week: 1+1 gratis, procenten korting, stapelacties en directe prijsverlagingen bij alle grote ketens.",
-  alternates: { canonical: "/acties" },
+  alternates: { canonical: "/acties", types: SITE_FEED_ALTERNATE },
 };
 
 export default function DealTypesPage() {

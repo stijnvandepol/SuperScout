@@ -1,9 +1,21 @@
+import type { Metadata } from "next";
 import type { Offer } from "@superscout/core";
 import { CATEGORY_LABEL, categorizeOffer } from "@superscout/core";
 import { STORE_META } from "@/lib/format";
 
 export const SITE_URL = "https://superscout.nl";
 export const SITE_NAME = "SuperScout";
+
+/**
+ * Feed autodiscovery, to be spread into any page that declares `alternates`.
+ *
+ * Next replaces the whole `alternates` object when a page defines one, so a
+ * page setting only `canonical` silently drops the layout's feed link. The
+ * homepage did exactly that, which is the one page readers actually probe.
+ */
+export const SITE_FEED_ALTERNATE: NonNullable<Metadata["alternates"]>["types"] = {
+  "application/rss+xml": [{ url: "/feed.xml", title: "SuperScout — alle aanbiedingen" }],
+};
 
 /** schema.org BreadcrumbList for a page's trail. Paths are site-relative. */
 export function breadcrumbJsonLd(trail: { name: string; path: string }[]) {

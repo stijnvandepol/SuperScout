@@ -1,3 +1,4 @@
+import { SITE_FEED_ALTERNATE } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { STORE_META } from "@/lib/format";
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
   title: "Alle supermarkten",
   description:
     "Bekijk de actuele aanbiedingen per supermarkt: Albert Heijn, Jumbo, Lidl, ALDI, PLUS, Dirk, Hoogvliet, DekaMarkt, Poiesz en Sligro.",
-  alternates: { canonical: "/winkels" },
+  alternates: { canonical: "/winkels", types: SITE_FEED_ALTERNATE },
 };
 
 export default function StoresPage() {
