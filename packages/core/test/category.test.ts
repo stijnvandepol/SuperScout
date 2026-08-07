@@ -59,6 +59,72 @@ describe("categorizeOffer", () => {
   });
 
   test("is 'overig' when nothing matches", () => {
-    expect(categorizeOffer(offer(undefined, "Alle Grand'Italia"))).toBe("overig");
+    expect(categorizeOffer(offer(undefined, "OP=OP"))).toBe("overig");
+  });
+
+  // Every case below was an actual misclassification on live offer data: a
+  // short category noun that also opens an unrelated word. They are the reason
+  // the lexicon has a whole-word tier.
+  const compoundTraps: Array<[string, CategorySlug]> = [
+    ["Alle Rummo pasta", "pasta-rijst"], // not bier-wijn via "rum"
+    ["Bloemkool", "groente-fruit"], // not sauzen-conserven via "bloem"
+    ["Hamburgers", "vlees-vis"], // not kaas-vleeswaren via "ham"
+    ["Kerstboom", "non-food"], // not groente-fruit via "kers"
+    ["Vlaai", "brood"], // not zuivel via "vla"
+    ["6 porties vla", "zuivel"], // the real "vla" still works
+    ["Mini-jamón serrano", "kaas-vleeswaren"], // not ontbijt via "jam"
+  ];
+
+  test.each(compoundTraps)("does not mis-split %s", (title, expected) => {
+    expect(categorizeOffer(offer(undefined, title))).toBe(expected);
+  });
+
+  // Dutch compounds routinely put the noun at the end, where a prefix match
+  // cannot see it.
+  const trailingNouns: Array<[string, CategorySlug]> = [
+    ["Inktvisringen", "vlees-vis"],
+    ["Ansjovisfilets", "vlees-vis"],
+    ["IJsbergsla", "groente-fruit"],
+    ["Zalmfilet met huid", "vlees-vis"],
+  ];
+
+  test.each(trailingNouns)("finds the noun inside %s", (title, expected) => {
+    expect(categorizeOffer(offer(undefined, title))).toBe(expected);
+  });
+
+  test("keeps hyphenated vocabulary intact while exposing its parts", () => {
+    expect(categorizeOffer(offer(undefined, "Make-up remover"))).toBe("drogisterij");
+    expect(categorizeOffer(offer(undefined, "WC-eend toiletreiniger"))).toBe("huishouden");
+    // "tonic" alone reads as frisdrank; the "gin" half has to win.
+    expect(categorizeOffer(offer(undefined, "Gin-tonic"))).toBe("bier-wijn");
+  });
+
+  test("classifies ice cream ahead of dairy and sweets", () => {
+    expect(categorizeOffer(offer("Diepvries", "Alle Magnum ijs"))).toBe("ijs");
+    expect(categorizeOffer(offer("Diepvries", "Ben & Jerry's pints"))).toBe("ijs");
+    expect(categorizeOffer(offer(undefined, "Slagroom"))).toBe("zuivel");
+  });
+
+  test("routes seasonal and household goods to non-food", () => {
+    expect(categorizeOffer(offer("Non food", "Summerwaves familie zwembad"))).toBe("non-food");
+    expect(categorizeOffer(offer(undefined, "Curver hobbykoffer"))).toBe("non-food");
+    // Food rules still win over the deliberately generic non-food vocabulary.
+    expect(categorizeOffer(offer("Non food", "Koekenpan met tomatensaus"))).toBe("sauzen-conserven");
+  });
+
+  test("classifies bare product titles from chains that publish no category", () => {
+    const bare: Array<[string, CategorySlug]> = [
+      ["Avocado's", "groente-fruit"],
+      ["Hollandse bloemkool", "groente-fruit"],
+      ["Rode paprika", "groente-fruit"],
+      ["Blauwe bessen", "groente-fruit"],
+      ["Edet keukenpapier", "huishouden"],
+      ["Glorix bleek original", "huishouden"],
+      ["Alle Pringles", "snacks"],
+      ["Heinz of Wijko sauzen", "sauzen-conserven"],
+    ];
+    for (const [title, expected] of bare) {
+      expect(categorizeOffer(offer(undefined, title)), title).toBe(expected);
+    }
   });
 });
