@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import type { Offer } from "@superscout/core";
 import {
   CATEGORY_LABEL,
+  type CategorySlug,
   categorizeOffer,
   daysUntilExpiry,
   isExpiringSoon,
@@ -25,7 +26,7 @@ import { StoreBadge } from "@/components/StoreBadge";
 import { DiscountSticker } from "@/components/DiscountSticker";
 import { AddToBasketButton } from "@/components/AddToBasketButton";
 import { JsonLd } from "@/components/JsonLd";
-import { breadcrumbJsonLd, offerJsonLd, SITE_URL } from "@/lib/seo";
+import { breadcrumbJsonLd, productJsonLd, SITE_URL } from "@/lib/seo";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -79,7 +80,7 @@ export default async function OfferPage({ params }: Params) {
 
   return (
     <div className="mx-auto max-w-6xl px-5 pb-24">
-      <JsonLd data={offerJsonLd(offer, url)} />
+      <JsonLd data={productJsonLd(offer, url)} />
       <JsonLd
         data={breadcrumbJsonLd([
           { name: "Home", path: "/" },
@@ -198,11 +199,10 @@ export default async function OfferPage({ params }: Params) {
             <AddToBasketButton id={offer.id} />
           </div>
 
-          <p className="mt-6 font-mono text-[11px] text-ink-soft">
-            Prijsontwikkeling — binnenkort beschikbaar.
-          </p>
         </div>
       </div>
+
+      <OfferProse offer={offer} alternatives={alternatives} category={category} />
 
       <RelatedSection title="Alternatieven bij andere winkels" offers={alternatives} nowIso={nowIso} />
       {offer.brand ? (
@@ -210,6 +210,106 @@ export default async function OfferPage({ params }: Params) {
       ) : null}
       <RelatedSection title="Gerelateerde aanbiedingen" offers={related} nowIso={nowIso} />
     </div>
+  );
+}
+
+/**
+ * Unique prose per offer page.
+ *
+ * 1000+ detail pages that differ only in a title and a number read as thin
+ * content to Google, which crawls them and then declines to index. Every
+ * sentence here is composed from this offer's own data — the store, the actual
+ * saving, the real cheapest alternative — so no two pages produce the same
+ * paragraph, and the text is genuinely useful rather than keyword padding.
+ */
+function OfferProse({
+  offer,
+  alternatives,
+  category,
+}: {
+  offer: Offer;
+  alternatives: Offer[];
+  category: CategorySlug;
+}) {
+  const store = STORE_META[offer.source].name;
+  const { pricing } = offer;
+  const label = CATEGORY_LABEL[category];
+
+  // The cheapest priced alternative at a *different* chain, if there is one.
+  const rival = alternatives
+    .filter((o) => o.source !== offer.source && o.pricing.currentPriceCents !== null)
+    .sort((a, b) => a.pricing.currentPriceCents! - b.pricing.currentPriceCents!)[0];
+
+  const priceSentence =
+    pricing.currentPriceCents !== null
+      ? `Je betaalt ${formatEuro(pricing.currentPriceCents)}${
+          pricing.originalPriceCents !== null
+            ? `, tegen ${formatEuro(pricing.originalPriceCents)} buiten de actie`
+            : ""
+        }.`
+      : `${store} noemt geen vaste actieprijs voor dit artikel; de korting wordt aan de kassa verrekend.`;
+
+  const savingSentence =
+    pricing.savingsAbsoluteCents !== null
+      ? ` Dat scheelt ${formatEuro(pricing.savingsAbsoluteCents)}${
+          pricing.savingsPercent !== null ? ` (${pricing.savingsPercent}%)` : ""
+        } per stuk.`
+      : "";
+
+  return (
+    <section className="mt-14 border-t border-line pt-10" aria-labelledby="over-heading">
+      <h2 id="over-heading" className="font-display text-xl font-bold tracking-tight">
+        Over deze aanbieding
+      </h2>
+      <div className="mt-4 max-w-3xl space-y-4 text-[15px] leading-relaxed text-ink-soft">
+        <p>
+          <strong className="font-semibold text-ink">{offer.title}</strong> staat deze week in de
+          aanbieding bij {store}, in de categorie{" "}
+          <Link
+            href={`/categorie/${category}`}
+            className="font-medium text-ink underline decoration-deal decoration-2 underline-offset-2"
+          >
+            {label.toLowerCase()}
+          </Link>
+          . {mechanismDescription(offer)} {priceSentence}
+          {savingSentence}
+          {/* ~1 in 3 offers arrives without an end date; an empty one would
+              render "De actie loopt ." on hundreds of pages. */}
+          {offer.validUntil ? ` De actie loopt ${validUntilShort(offer.validUntil)}.` : ""}
+        </p>
+
+        {rival ? (
+          <p>
+            Wil je vergelijken: {STORE_META[rival.source].name} heeft deze week{" "}
+            <Link
+              href={`/aanbieding/${offerSlug(rival)}`}
+              className="font-medium text-ink underline decoration-deal decoration-2 underline-offset-2"
+            >
+              {rival.title}
+            </Link>{" "}
+            voor {formatEuro(rival.pricing.currentPriceCents)}
+            {pricing.currentPriceCents !== null
+              ? rival.pricing.currentPriceCents! < pricing.currentPriceCents
+                ? " — dat is de goedkopere van de twee."
+                : " — deze aanbieding bij " + store + " is dus voordeliger."
+              : "."}
+          </p>
+        ) : null}
+
+        <p>
+          Prijzen en voorwaarden komen rechtstreeks van {store} en worden dagelijks ververst.
+          Controleer de definitieve prijs altijd in de winkel of de app van {store}; SuperScout
+          verkoopt zelf niets en verdient niets aan deze aanbieding. Meer{" "}
+          <Link
+            href={`/winkel/${offer.source}`}
+            className="font-medium text-ink underline decoration-deal decoration-2 underline-offset-2"
+          >
+            {store} aanbiedingen
+          </Link>{" "}
+          vind je op de winkelpagina.
+        </p>
+      </div>
+    </section>
   );
 }
 

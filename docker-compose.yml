@@ -8,6 +8,11 @@ services:
     container_name: superscout-web
     environment:
       - OFFERS_PATH=/data/offers.json
+      # SEO/webmaster wiring — all optional, read at render time.
+      # Empty values omit the tag / 404 the key file, which is the safe default.
+      - GOOGLE_SITE_VERIFICATION=${GOOGLE_SITE_VERIFICATION:-}
+      - BING_SITE_VERIFICATION=${BING_SITE_VERIFICATION:-}
+      - INDEXNOW_KEY=${INDEXNOW_KEY:-}
     volumes:
       - offers-data:/data
     ports:

@@ -48,6 +48,20 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  // Fallback verification path for Search Console / Bing Webmaster. Read at
+  // render time (metadata is server-only, so no NEXT_PUBLIC_ needed); an unset
+  // value omits the tag rather than emitting an empty, invalid one.
+  // DNS TXT verification is preferred — it survives rebuilds and covers every
+  // subdomain — but this keeps the meta route open.
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+    other: process.env.BING_SITE_VERIFICATION
+      ? { "msvalidate.01": process.env.BING_SITE_VERIFICATION }
+      : {},
+  },
+  // NB: no `alternates.canonical` here — layout metadata cascades to every
+  // child route, which would silently canonicalise /privacy, /ethiek etc. to
+  // the homepage and get them dropped. Each page declares its own.
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,
@@ -91,8 +105,24 @@ const JSON_LD = {
       "@type": "Organization",
       "@id": `${SITE_URL}/#organization`,
       name: "SuperScout",
+      alternateName: "SuperScout.nl",
       url: SITE_URL,
+      // The logo + explicit description are what let Google separate this
+      // entity from the unrelated superscout.co that currently owns the
+      // "superscout" query. Entity clarity is the lever on a brand term.
+      logo: {
+        "@type": "ImageObject",
+        "@id": `${SITE_URL}/#logo`,
+        url: `${SITE_URL}/icon.svg`,
+        contentUrl: `${SITE_URL}/icon.svg`,
+        caption: "SuperScout",
+      },
+      image: { "@id": `${SITE_URL}/#logo` },
+      description: DESCRIPTION,
+      areaServed: { "@type": "Country", name: "Nederland" },
+      knowsLanguage: "nl-NL",
       founder: { "@type": "Person", name: "Stijn van de Pol", url: "https://stijnvandepol.nl" },
+      sameAs: ["https://stijnvandepol.nl"],
     },
   ],
 };

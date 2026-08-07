@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getOffers, stats } from "@/lib/offers";
+import { byBiggestDiscount, getOffers, stats } from "@/lib/offers";
+import { offerSlug } from "@/lib/format";
 import { OfferExplorer } from "@/components/OfferExplorer";
 import { JsonLd } from "@/components/JsonLd";
-import { SITE_URL } from "@/lib/seo";
+import { faqJsonLd, itemListJsonLd, SITE_URL } from "@/lib/seo";
 
 // Re-read live offers periodically (ISR).
 export const revalidate = 1800;
@@ -72,20 +73,23 @@ export default function Home() {
   const nowIso = now.toISOString();
   const week = isoWeek(now);
 
-  const faqJsonLd = {
+  // The 30 sharpest deals, so the homepage itself is eligible for a list-style
+  // result rather than only ranking as a bare link.
+  const homeListJsonLd = {
     "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "@id": `${SITE_URL}/#faq`,
-    mainEntity: FAQ.map((item) => ({
-      "@type": "Question",
-      name: item.q,
-      acceptedAnswer: { "@type": "Answer", text: item.aText },
-    })),
+    "@type": "CollectionPage",
+    "@id": `${SITE_URL}/#webpage`,
+    url: SITE_URL,
+    name: "Alle supermarktaanbiedingen van deze week",
+    inLanguage: "nl-NL",
+    isPartOf: { "@id": `${SITE_URL}/#website` },
+    mainEntity: itemListJsonLd(byBiggestDiscount(offers), offerSlug),
   };
 
   return (
     <div className="mx-auto max-w-6xl px-5">
-      <JsonLd data={faqJsonLd} />
+      <JsonLd data={homeListJsonLd} />
+      <JsonLd data={faqJsonLd(`${SITE_URL}/#faq`, FAQ)} />
       <div className="pb-24 pt-8">
         {/* Crawlable hero: the page's only h1 states the core query we target. */}
         <header className="mb-6">

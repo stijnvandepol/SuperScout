@@ -50,3 +50,17 @@ jobs:
 
       - name: Remove dangling images
         run: docker image prune -f
+
+      # Push the fresh URL set to Bing/Yandex/Seznam/Naver. Non-fatal: a search
+      # engine being down must never fail a deploy that already succeeded.
+      - name: Notify IndexNow
+        continue-on-error: true
+        env:
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+          SITE_URL: https://superscout.nl
+        run: |
+          for _ in $(seq 1 30); do
+            curl -sf -o /dev/null "$SITE_URL/sitemap.xml" && break
+            sleep 5
+          done
+          node apps/web/scripts/indexnow.mjs
