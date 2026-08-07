@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { Offer, SupermarketSlug } from "@superscout/core";
+import { planBasket, recommendedTrip } from "@superscout/core";
 import { getBasket, onBasketChange, removeFromBasket } from "@/lib/basket";
 import { formatEuro, offerSlug, STORE_META } from "@/lib/format";
 import { ShareBasketButton } from "./ShareBasketButton";
@@ -44,6 +45,7 @@ export function BasketView({ allOffers }: { allOffers: Offer[] }) {
     groups.set(offer.source, group);
   }
   const grandTotal = items.reduce((sum, o) => sum + (o.pricing.currentPriceCents ?? 0), 0);
+  const plan = planBasket(items);
 
   return (
     <div className="mt-6 space-y-8">
@@ -111,14 +113,64 @@ export function BasketView({ allOffers }: { allOffers: Offer[] }) {
         );
       })}
 
-      <div className="flex items-center justify-between rounded-2xl bg-ink px-5 py-4 text-bg">
-        <span className="font-mono text-sm">Totaal · {items.length} producten</span>
-        <span className="font-display text-xl font-bold tabular-nums">{formatEuro(grandTotal)}</span>
+      <div className="rounded-2xl bg-ink px-5 py-4 text-bg">
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-sm">Totaal · {items.length} producten</span>
+          <span className="font-display text-xl font-bold tabular-nums">{formatEuro(grandTotal)}</span>
+        </div>
+        {plan.savingsCents > 0 ? (
+          <div className="mt-2 flex items-center justify-between border-t border-bg/20 pt-2">
+            <span className="font-mono text-xs text-bg/70">Je bespaart</span>
+            <span className="font-mono text-sm font-bold tabular-nums text-bg/90">
+              {formatEuro(plan.savingsCents)}
+            </span>
+          </div>
+        ) : null}
       </div>
+
+      <TripAdvice plan={plan} />
       <p className="font-mono text-[11px] leading-relaxed text-ink-soft">
         Prijzen zijn indicatief; sommige acties (1+1, gratis bezorging) hebben geen enkelprijs. Je rekent
         af in de app van de winkel — “Open bij {`{winkel}`}” brengt je erheen.
       </p>
     </div>
+  );
+}
+
+/**
+ * "You don't have to visit all five."
+ *
+ * Grouping by chain answers *where* things are; this answers whether the extra
+ * trip is worth making. Only shown when dropping a stop keeps most of the
+ * saving — otherwise it would nag about a choice that is already fine.
+ */
+function TripAdvice({ plan }: { plan: ReturnType<typeof planBasket> }) {
+  const trip = recommendedTrip(plan);
+  if (!trip || trip.savingsCents <= 0) return null;
+
+  const skipped = plan.stores.length - trip.stops;
+  const missed = plan.savingsCents - trip.savingsCents;
+  const names = trip.sources.map((s) => STORE_META[s].name);
+  const listed =
+    names.length === 1 ? names[0] : `${names.slice(0, -1).join(", ")} en ${names.at(-1)}`;
+
+  return (
+    <section className="rounded-2xl border border-line bg-surface p-5">
+      <h2 className="font-display text-base font-bold tracking-tight">
+        Minder winkels, bijna hetzelfde voordeel
+      </h2>
+      <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
+        Je mandje ligt verspreid over {plan.stores.length} winkels. Ga je alleen naar{" "}
+        <strong className="text-ink">{listed}</strong>, dan pak je{" "}
+        <strong className="text-ink">{trip.savingsShare}%</strong> van je voordeel mee —{" "}
+        {formatEuro(trip.savingsCents)} van {formatEuro(plan.savingsCents)} — met{" "}
+        {skipped === 1 ? "één winkel" : `${skipped} winkels`} minder.
+        {missed > 0 ? ` Je laat dan ${formatEuro(missed)} liggen.` : ""}
+      </p>
+      <p className="mt-3 font-mono text-[11px] text-ink-soft">
+        {trip.itemsCovered} van je {plan.itemCount} producten liggen bij deze{" "}
+        {trip.stops === 1 ? "winkel" : "winkels"}.
+      </p>
+    </section>
   );
 }

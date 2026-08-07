@@ -9,7 +9,9 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "build:cli": "esbuild src/cli.ts --bundle --platform=node --target=node22 --format=cjs --external:playwright --external:playwright-core --outfile=dist/ingest.cjs"
+    "build:cli": "esbuild src/cli.ts --bundle --platform=node --target=node22 --format=cjs --external:playwright --external:playwright-core --outfile=dist/ingest.cjs",
+    "build:content": "esbuild src/content-cli.ts --bundle --platform=node --target=node22 --format=cjs --outfile=dist/content.cjs",
+    "content": "pnpm build:content && node dist/content.cjs"
   },
   "dependencies": {
     "@superscout/core": "workspace:*",
