@@ -3,15 +3,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { STORE_META } from "@/lib/format";
 import { getOffers } from "@/lib/offers";
+import { chainSentence, dutchList, missingChains } from "@/lib/chains";
 
 export const revalidate = 1800;
 
-export const metadata: Metadata = {
-  title: "Alle supermarkten",
-  description:
-    "Bekijk de actuele aanbiedingen per supermarkt: Albert Heijn, Jumbo, Lidl, ALDI, PLUS, Dirk, Hoogvliet, DekaMarkt, Poiesz en Sligro.",
-  alternates: { canonical: "/winkels", types: SITE_FEED_ALTERNATE },
-};
+export function generateMetadata(): Metadata {
+  return {
+    title: "Alle supermarkten",
+    description: `Bekijk de actuele aanbiedingen per supermarkt: ${chainSentence()}.`,
+    alternates: { canonical: "/winkels", types: SITE_FEED_ALTERNATE },
+  };
+}
 
 export default function StoresPage() {
   const offers = getOffers();
@@ -37,6 +39,40 @@ export default function StoresPage() {
           );
         })}
       </div>
+
+      <UnavailableChains />
     </div>
+  );
+}
+
+/**
+ * Chains SuperScout supports but has no data for today.
+ *
+ * The one place a failing adapter becomes visible without server access. The
+ * ingestion worker isolates each source, so one broken chain never takes the
+ * others down — but that also made failure completely silent: four adapters
+ * stopped producing and the site went on advertising ten chains for weeks.
+ *
+ * Saying so is also better for the visitor. Someone who shops at Dirk and finds
+ * it missing should learn that it is temporarily unavailable, not conclude the
+ * site does not cover it.
+ */
+function UnavailableChains() {
+  const missing = missingChains();
+  if (missing.length === 0) return null;
+
+  return (
+    <section className="mt-10 rounded-2xl border border-line bg-surface-2 p-5">
+      <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest text-ink-soft">
+        Tijdelijk niet beschikbaar
+      </h2>
+      <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-ink-soft">
+        {dutchList(missing.map((m) => m.name))}{" "}
+        {missing.length === 1 ? "hoort" : "horen"} er ook bij, maar{" "}
+        {missing.length === 1 ? "publiceert" : "publiceren"} de folder op dit moment op een manier
+        die we niet kunnen inlezen. We laten die acties liever weg dan dat we je verouderde prijzen
+        voorschotelen.
+      </p>
+    </section>
   );
 }

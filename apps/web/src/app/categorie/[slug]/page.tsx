@@ -15,6 +15,7 @@ import { OfferGrid } from "@/components/OfferGrid";
 import { ImageHostPreconnect } from "@/components/ImageHostPreconnect";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd, faqJsonLd, offerListJsonLd, SITE_URL } from "@/lib/seo";
+import { chainCountWord } from "@/lib/chains";
 
 export const revalidate = 1800;
 
@@ -220,7 +221,7 @@ function CategoryProse({
         </h2>
         <div className="mt-4 max-w-3xl space-y-4 text-[15px] leading-relaxed text-ink-soft">
           <p>
-            SuperScout verzamelt de weekacties van tien Nederlandse supermarkten en bundelt ze per
+            SuperScout verzamelt de weekacties van {chainCountWord()} Nederlandse supermarkten en bundelt ze per
             categorie. In {lower} staan deze week {offers.length} acties van {slices.length}{" "}
             {slices.length === 1 ? "keten" : "ketens"}
             {slices[0]

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SAVINGS_CAMPAIGNS } from "@/lib/spaaracties";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd, faqJsonLd, SITE_FEED_ALTERNATE, SITE_URL } from "@/lib/seo";
+import { chainCountWord } from "@/lib/chains";
 
 export const revalidate = 86_400;
 
@@ -97,7 +98,7 @@ export default function SavingsCampaignsPage() {
           Welke spaaractie loopt er op dit moment?
         </h2>
         <p className="mt-3 max-w-3xl text-[15px] leading-relaxed text-ink-soft">
-          SuperScout houdt de weekaanbiedingen van tien supermarkten dagelijks bij, maar spaaracties
+          SuperScout houdt de weekaanbiedingen van {chainCountWord()} supermarkten dagelijks bij, maar spaaracties
           worden niet in die feeds gepubliceerd — ze staan alleen in de folder en op de actiepagina
           van de keten zelf. We zetten hier daarom geen lijst neer die na zes weken niet meer klopt.
           Wat wel klopt: de mechaniek van elke actievorm verandert nauwelijks, en dat is precies wat

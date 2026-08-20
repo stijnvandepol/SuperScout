@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { chainCount } from "@/lib/chains";
 
 export const alt = "SuperScout — alle supermarktaanbiedingen van deze week op één plek";
 export const size = { width: 1200, height: 630 };
@@ -65,7 +66,7 @@ export default function OpenGraphImage() {
         </div>
 
         <div style={{ display: "flex", fontSize: 32, color: "#51564a" }}>
-          Aanbiedingen van 10 supermarkten · dagelijks vers · zonder account
+          Aanbiedingen van {chainCount()} supermarkten · dagelijks vers · zonder account
         </div>
       </div>
     ),

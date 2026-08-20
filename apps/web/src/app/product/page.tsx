@@ -3,6 +3,7 @@ import Link from "next/link";
 import { byBiggestDiscount, getOffers, stats } from "@/lib/offers";
 import { formatEuro, STORE_META } from "@/lib/format";
 import { OfferCard } from "@/components/OfferCard";
+import { chainSentence } from "@/lib/chains";
 
 export const revalidate = 1800;
 
@@ -46,30 +47,38 @@ const FEATURES = [
   },
 ];
 
-const FAQ = [
-  {
-    q: "Is SuperScout gratis?",
-    a: "Ja, volledig. Er zijn geen advertenties, geen premium-versie en geen verborgen kosten. SuperScout is een onafhankelijk project zonder verdienmodel.",
-  },
-  {
-    q: "Moet ik een account aanmaken?",
-    a: "Nee. SuperScout werkt zonder registratie. Zelfs je winkelmandje wordt alleen op je eigen apparaat opgeslagen — wij kunnen er niet bij.",
-  },
-  {
-    q: "Hoe actueel zijn de aanbiedingen?",
-    a: "Elke ochtend vroeg worden alle winkels opnieuw ingelezen. Je ziet alleen acties die vandaag geldig zijn; verlopen en toekomstige acties worden weggefilterd.",
-  },
-  {
-    q: "Welke supermarkten zitten erin?",
-    a: "Albert Heijn, Jumbo, Lidl, ALDI, PLUS, Dirk, Hoogvliet, DekaMarkt, Poiesz en Sligro. Winkels die hun aanbiedingen alleen als folder-afbeelding publiceren, kunnen (nog) niet mee.",
-  },
-  {
-    q: "Verdient SuperScout aan mijn aankopen?",
-    a: "Nee. Er zijn geen affiliate-vergoedingen en geen winkel betaalt voor plaatsing of volgorde. De volgorde wordt alleen bepaald door jouw zoekopdracht, filters en sortering.",
-  },
-];
+/**
+ * Built per render: the chain answer reads live data, and a module-level const
+ * would freeze it at process start — stale for the whole life of the worker,
+ * regardless of the route's revalidate window.
+ */
+function buildFaq() {
+  return [
+    {
+      q: "Is SuperScout gratis?",
+      a: "Ja, volledig. Er zijn geen advertenties, geen premium-versie en geen verborgen kosten. SuperScout is een onafhankelijk project zonder verdienmodel.",
+    },
+    {
+      q: "Moet ik een account aanmaken?",
+      a: "Nee. SuperScout werkt zonder registratie. Zelfs je winkelmandje wordt alleen op je eigen apparaat opgeslagen — wij kunnen er niet bij.",
+    },
+    {
+      q: "Hoe actueel zijn de aanbiedingen?",
+      a: "Elke ochtend vroeg worden alle winkels opnieuw ingelezen. Je ziet alleen acties die vandaag geldig zijn; verlopen en toekomstige acties worden weggefilterd.",
+    },
+    {
+      q: "Welke supermarkten zitten erin?",
+      a: `Op dit moment ${chainSentence()}. Dat wisselt: een keten die zijn folder tijdelijk anders publiceert dan wij kunnen inlezen, valt eruit tot dat weer werkt. Winkels die hun aanbiedingen alleen als folder-afbeelding publiceren, kunnen sowieso (nog) niet mee.`,
+    },
+    {
+      q: "Verdient SuperScout aan mijn aankopen?",
+      a: "Nee. Er zijn geen affiliate-vergoedingen en geen winkel betaalt voor plaatsing of volgorde. De volgorde wordt alleen bepaald door jouw zoekopdracht, filters en sortering.",
+    },
+  ];
+}
 
 export default function ProductPage() {
+  const FAQ = buildFaq();
   const offers = getOffers();
   const { total, stores } = stats(offers);
   const storeSlugs = [...new Set(offers.map((o) => o.source))].sort();
@@ -100,7 +109,9 @@ export default function ProductPage() {
     <div>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd).replace(/</g, "\\u003c") }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(faqJsonLd).replace(/</g, "\\u003c"),
+        }}
       />
 
       {/* ── Hero ─────────────────────────────────────────────── */}
@@ -116,9 +127,10 @@ export default function ProductPage() {
               <span className="text-deal">Begin met besparen.</span>
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-ink-soft">
-              SuperScout legt elke ochtend de aanbiedingen van {stores} Nederlandse supermarkten
-              naast elkaar. Eén zoekopdracht, de beste deal — tot {maxPercent}% korting. Gratis,
-              zonder account, zonder tracking.
+              SuperScout legt elke ochtend de aanbiedingen van {stores}{" "}
+              Nederlandse supermarkten naast elkaar. Eén zoekopdracht, de beste
+              deal — tot {maxPercent}% korting. Gratis, zonder account, zonder
+              tracking.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <Link
@@ -136,12 +148,18 @@ export default function ProductPage() {
           {/* Signature: a kassabon with today's real biggest savings */}
           <div aria-hidden="true" className="hidden justify-center md:flex">
             <div className="w-72 rotate-2 rounded-sm bg-white px-5 py-6 font-mono text-[11px] leading-relaxed text-ink shadow-[0_18px_50px_rgba(0,0,0,0.14)] [mask-image:linear-gradient(180deg,#000_92%,transparent)]">
-              <p className="text-center font-bold tracking-[0.25em]">SUPERSCOUT</p>
-              <p className="mt-0.5 text-center text-[10px] text-ink-soft">jouw besparing vandaag</p>
+              <p className="text-center font-bold tracking-[0.25em]">
+                SUPERSCOUT
+              </p>
+              <p className="mt-0.5 text-center text-[10px] text-ink-soft">
+                jouw besparing vandaag
+              </p>
               <div className="my-3 border-t border-dashed border-line" />
               {receiptLines.map((o) => (
                 <div key={o.id} className="flex justify-between gap-2">
-                  <span className="truncate">{o.title.toUpperCase().slice(0, 20)}</span>
+                  <span className="truncate">
+                    {o.title.toUpperCase().slice(0, 20)}
+                  </span>
                   <span className="shrink-0 font-bold text-fresh">
                     -{formatEuro(o.pricing.savingsAbsoluteCents ?? 0)}
                   </span>
@@ -172,7 +190,10 @@ export default function ProductPage() {
                 key={s}
                 href={`/winkel/${s}`}
                 className="rounded-full px-4 py-2 font-display text-sm font-bold shadow-sm transition-transform hover:scale-105"
-                style={{ background: STORE_META[s].bg, color: STORE_META[s].fg }}
+                style={{
+                  background: STORE_META[s].bg,
+                  color: STORE_META[s].fg,
+                }}
               >
                 {STORE_META[s].name}
               </Link>
@@ -189,9 +210,13 @@ export default function ProductPage() {
               Zonder SuperScout
             </p>
             <ul className="mt-4 space-y-3 text-[15px] leading-relaxed text-ink-soft">
-              <li>📚 {stores} folders doorbladeren of {stores} apps installeren</li>
+              <li>
+                📚 {stores} folders doorbladeren of {stores} apps installeren
+              </li>
               <li>🗓 Elke keten een andere actieweek — is dit nog geldig?</li>
-              <li>🍪 Cookiewalls, accounts en spaarprogramma's die je volgen</li>
+              <li>
+                🍪 Cookiewalls, accounts en spaarprogramma's die je volgen
+              </li>
               <li>🤷 Nooit zeker of dit écht de laagste prijs is</li>
             </ul>
           </div>
@@ -217,12 +242,19 @@ export default function ProductPage() {
           </h2>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f) => (
-              <div key={f.title} className="rounded-2xl border border-line bg-bg p-5">
+              <div
+                key={f.title}
+                className="rounded-2xl border border-line bg-bg p-5"
+              >
                 <span className="text-2xl" aria-hidden="true">
                   {f.icon}
                 </span>
-                <h3 className="mt-3 font-display text-[16px] font-bold">{f.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{f.text}</p>
+                <h3 className="mt-3 font-display text-[16px] font-bold">
+                  {f.title}
+                </h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">
+                  {f.text}
+                </p>
               </div>
             ))}
           </div>
@@ -243,7 +275,8 @@ export default function ProductPage() {
           </Link>
         </div>
         <p className="mt-2 font-mono text-xs text-ink-soft">
-          Geen showroom-voorbeelden — dit zijn live aanbiedingen, vanochtend opgehaald.
+          Geen showroom-voorbeelden — dit zijn live aanbiedingen, vanochtend
+          opgehaald.
         </p>
         <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           {topDeals.map((o) => (
@@ -256,31 +289,46 @@ export default function ProductPage() {
       <section className="border-y border-line bg-ink text-bg">
         <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 sm:py-14 md:grid-cols-3">
           <div>
-            <h3 className="font-display text-lg font-bold">Privacy als uitgangspunt</h3>
+            <h3 className="font-display text-lg font-bold">
+              Privacy als uitgangspunt
+            </h3>
             <p className="mt-2 text-sm leading-relaxed text-bg/70">
-              Geen persoonsgegevens, geen cookies, geen trackers. Je mandje blijft op je eigen
-              apparaat.{" "}
-              <Link href="/privacy" className="underline underline-offset-2 hover:text-bg">
+              Geen persoonsgegevens, geen cookies, geen trackers. Je mandje
+              blijft op je eigen apparaat.{" "}
+              <Link
+                href="/privacy"
+                className="underline underline-offset-2 hover:text-bg"
+              >
                 Privacyverklaring
               </Link>
             </p>
           </div>
           <div>
-            <h3 className="font-display text-lg font-bold">Geen betaalde ranking</h3>
+            <h3 className="font-display text-lg font-bold">
+              Geen betaalde ranking
+            </h3>
             <p className="mt-2 text-sm leading-relaxed text-bg/70">
-              Geen winkel betaalt voor plaatsing en er zijn geen affiliate-deals. Wat jij ziet, is
-              puur op jouw keuzes gesorteerd.{" "}
-              <Link href="/ethiek" className="underline underline-offset-2 hover:text-bg">
+              Geen winkel betaalt voor plaatsing en er zijn geen
+              affiliate-deals. Wat jij ziet, is puur op jouw keuzes gesorteerd.{" "}
+              <Link
+                href="/ethiek"
+                className="underline underline-offset-2 hover:text-bg"
+              >
                 Ethiek &amp; transparantie
               </Link>
             </p>
           </div>
           <div>
-            <h3 className="font-display text-lg font-bold">Eerlijk over grenzen</h3>
+            <h3 className="font-display text-lg font-bold">
+              Eerlijk over grenzen
+            </h3>
             <p className="mt-2 text-sm leading-relaxed text-bg/70">
-              Data wordt automatisch overgenomen; de winkel is altijd leidend voor de definitieve
-              prijs.{" "}
-              <Link href="/voorwaarden" className="underline underline-offset-2 hover:text-bg">
+              Data wordt automatisch overgenomen; de winkel is altijd leidend
+              voor de definitieve prijs.{" "}
+              <Link
+                href="/voorwaarden"
+                className="underline underline-offset-2 hover:text-bg"
+              >
                 Algemene voorwaarden
               </Link>
             </p>
@@ -290,7 +338,9 @@ export default function ProductPage() {
 
       {/* ── How it works ─────────────────────────────────────── */}
       <section className="mx-auto max-w-6xl px-5 py-12 sm:py-12 sm:py-16">
-        <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">Zo werkt het.</h2>
+        <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+          Zo werkt het.
+        </h2>
         <div className="mt-8 grid gap-6 md:grid-cols-3">
           {[
             {
@@ -309,10 +359,17 @@ export default function ProductPage() {
               text: "Zoek, sorteer, zet in je mandje en open je lijstje direct bij de winkel om te bestellen of te halen.",
             },
           ].map((s) => (
-            <div key={s.step} className="rounded-2xl border border-line bg-surface p-6">
-              <span className="font-mono text-xs font-bold text-deal">{s.step}</span>
+            <div
+              key={s.step}
+              className="rounded-2xl border border-line bg-surface p-6"
+            >
+              <span className="font-mono text-xs font-bold text-deal">
+                {s.step}
+              </span>
               <h3 className="mt-2 font-display text-lg font-bold">{s.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-ink-soft">{s.text}</p>
+              <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+                {s.text}
+              </p>
             </div>
           ))}
         </div>
@@ -321,7 +378,9 @@ export default function ProductPage() {
       {/* ── FAQ ──────────────────────────────────────────────── */}
       <section className="border-t border-line bg-surface">
         <div className="mx-auto max-w-3xl px-5 py-12 sm:py-12 sm:py-16">
-          <h2 className="font-display text-3xl font-bold tracking-tight">Veelgestelde vragen</h2>
+          <h2 className="font-display text-3xl font-bold tracking-tight">
+            Veelgestelde vragen
+          </h2>
           <div className="mt-6 divide-y divide-line">
             {FAQ.map((f) => (
               <details key={f.q} className="group py-4">
@@ -331,7 +390,9 @@ export default function ProductPage() {
                     +
                   </span>
                 </summary>
-                <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">{f.a}</p>
+                <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">
+                  {f.a}
+                </p>
               </details>
             ))}
           </div>
@@ -361,8 +422,8 @@ export default function ProductPage() {
           >
             Stijn van de Pol
           </a>{" "}
-          — geen investeerders, geen advertentiedeals. Vragen of feedback? Neem via die site
-          contact op.
+          — geen investeerders, geen advertentiedeals. Vragen of feedback? Neem
+          via die site contact op.
         </p>
       </section>
     </div>
