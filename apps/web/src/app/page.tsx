@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { toCardOffer } from "@superscout/core";
 import { byBiggestDiscount, getOffers, stats } from "@/lib/offers";
 import { offerSlug } from "@/lib/format";
 import { OfferExplorer } from "@/components/OfferExplorer";
+import { ImageHostPreconnect } from "@/components/ImageHostPreconnect";
 import { JsonLd } from "@/components/JsonLd";
 import { faqJsonLd, itemListJsonLd, SITE_FEED_ALTERNATE, SITE_URL } from "@/lib/seo";
 
@@ -88,8 +90,11 @@ export default function Home() {
     mainEntity: itemListJsonLd(byBiggestDiscount(offers), offerSlug),
   };
 
+  const cards = offers.map(toCardOffer);
+
   return (
     <div className="mx-auto max-w-6xl px-5">
+      <ImageHostPreconnect offers={cards} />
       <JsonLd data={homeListJsonLd} />
       <JsonLd data={faqJsonLd(`${SITE_URL}/#faq`, FAQ)} />
       <div className="pb-24 pt-8">
@@ -104,8 +109,12 @@ export default function Home() {
           </p>
         </header>
 
+        {/* Projected, not passed whole: OfferExplorer is a client component, so
+            every field crosses the RSC serialisation boundary into the HTML.
+            The full set was ~277 KB of the homepage's 403 KB, a quarter of it
+            fields no component reads. */}
         <OfferExplorer
-          offers={offers}
+          offers={cards}
           nowIso={nowIso}
           stat={`${total} aanbiedingen · ${stores} winkels`}
         />

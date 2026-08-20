@@ -57,3 +57,52 @@ export interface Offer {
   /** ISO 8601 timestamp of when this was ingested. */
   fetchedAt: string;
 }
+
+/**
+ * The slice of an offer that a rendered card and the client-side filters read.
+ *
+ * `OfferExplorer` is a client component, so every field of every offer it
+ * receives is serialised into the RSC flight payload — shipped in the HTML,
+ * parsed on the main thread. The homepage hands it the whole live set so search
+ * and filtering stay instant, which is the right call; it just should not pay
+ * for fields nobody reads. Measured on production, `fetchedAt`, `validFrom`,
+ * `url`, `flags` and `description` were a quarter of that payload and were
+ * touched by exactly zero components.
+ *
+ * Server-rendered listings (store, category, deal type) do not cross a
+ * serialisation boundary and can keep passing full offers — a full `Offer`
+ * satisfies this type.
+ */
+export type CardOffer = Pick<
+  Offer,
+  | "id"
+  | "source"
+  | "sourceOfferId"
+  | "title"
+  | "brand"
+  | "imageUrl"
+  | "pricing"
+  | "mechanism"
+  | "rawLabel"
+  | "validUntil"
+  | "sourceCategoryRaw"
+>;
+
+/** Project an offer down to what a card needs, dropping the rest. */
+export function toCardOffer(offer: Offer): CardOffer {
+  return {
+    id: offer.id,
+    source: offer.source,
+    sourceOfferId: offer.sourceOfferId,
+    title: offer.title,
+    ...(offer.brand !== undefined ? { brand: offer.brand } : {}),
+    ...(offer.imageUrl !== undefined ? { imageUrl: offer.imageUrl } : {}),
+    pricing: offer.pricing,
+    mechanism: offer.mechanism,
+    ...(offer.rawLabel !== undefined ? { rawLabel: offer.rawLabel } : {}),
+    validUntil: offer.validUntil,
+    ...(offer.sourceCategoryRaw !== undefined
+      ? { sourceCategoryRaw: offer.sourceCategoryRaw }
+      : {}),
+  };
+}

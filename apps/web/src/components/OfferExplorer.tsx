@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { CategorySlug, Offer, SupermarketSlug } from "@superscout/core";
+import type { CardOffer, CategorySlug, SupermarketSlug } from "@superscout/core";
 import { categorizeOffer, CATEGORIES, CATEGORY_LABEL, isExpiringSoon } from "@superscout/core";
 import { isExVat, STORE_META } from "@/lib/format";
 import { OfferCard } from "./OfferCard";
@@ -13,7 +13,7 @@ export function OfferExplorer({
   nowIso,
   stat,
 }: {
-  offers: Offer[];
+  offers: CardOffer[];
   nowIso: string;
   stat?: string;
 }) {
@@ -59,7 +59,7 @@ export function OfferExplorer({
   const hasExVat = useMemo(() => offers.some((o) => isExVat(o.source)), [offers]);
 
   const sorted = useMemo(() => {
-    const price = (o: Offer) => o.pricing.currentPriceCents;
+    const price = (o: CardOffer) => o.pricing.currentPriceCents;
     const arr = [...filtered];
     switch (sort) {
       case "price-asc":
@@ -177,8 +177,10 @@ export function OfferExplorer({
       ) : (
         <>
           <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {visible.map((o) => (
-              <OfferCard key={o.id} offer={o} nowIso={nowIso} />
+            {visible.map((o, i) => (
+              // The first card is the LCP candidate on the homepage, so it
+              // loads eagerly instead of waiting for the lazy-load pass.
+              <OfferCard key={o.id} offer={o} nowIso={nowIso} priority={i === 0} />
             ))}
           </div>
           {filtered.length > visible.length ? (

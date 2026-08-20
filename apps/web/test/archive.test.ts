@@ -147,3 +147,51 @@ describe("verlopen aanbiedingen", () => {
     expect(resolveBySlug("dirk-137769")).toBeUndefined();
   });
 });
+
+describe("verouderde seed-backfill", () => {
+  test("een verouderde snapshot vult geen ontbrekende keten meer aan", async () => {
+    // The production bug: the DekaMarkt adapter stopped producing, the July
+    // snapshot filled the gap, and all 111 of those records carry an empty
+    // validUntil — which isActive fails open on. Six-week-old prices rendered
+    // under "aanbiedingen deze week".
+    const staleSeedShaped = {
+      ...offer({ sourceOfferId: "136192" }),
+      id: "dekamarkt:136192",
+      source: "dekamarkt",
+      validFrom: "",
+      validUntil: "", // isActive fails open on this
+      fetchedAt: "2020-01-08T05:00:00.000Z",
+    } as Offer;
+
+    const liveOther = {
+      ...offer({ sourceOfferId: "1" }),
+      validFrom: "2020-01-01",
+      validUntil: "2099-12-31",
+    } as Offer;
+
+    writeFiles([liveOther], []);
+
+    const { getOffers } = await import("@/lib/offers");
+    const sources = new Set(getOffers().map((o) => o.source));
+
+    expect(sources.has("dirk")).toBe(true);
+    // The bundled seed is far older than the backfill window, so nothing it
+    // contains may stand in for a chain the live pull is missing.
+    expect(getOffers().some((o) => o.id === staleSeedShaped.id)).toBe(false);
+  });
+
+  test("undated offers from the live file are still trusted", async () => {
+    // The age guard belongs at the seed boundary, not in isActive: a fresh pull
+    // with no end date is a real promotion we simply cannot date.
+    const undatedLive = {
+      ...offer({ sourceOfferId: "555" }),
+      validFrom: "",
+      validUntil: "",
+    } as Offer;
+
+    writeFiles([undatedLive], []);
+
+    const { getOffers } = await import("@/lib/offers");
+    expect(getOffers().some((o) => o.sourceOfferId === "555")).toBe(true);
+  });
+});

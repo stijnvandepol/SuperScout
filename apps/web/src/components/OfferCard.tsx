@@ -1,12 +1,28 @@
 import Link from "next/link";
-import type { Offer } from "@superscout/core";
+import type { CardOffer } from "@superscout/core";
 import { daysUntilExpiry, isExpiringSoon } from "@superscout/core";
 import { formatEuro, isExVat, offerSlug, stickerLabel, validUntilShort } from "@/lib/format";
 import { StoreBadge } from "./StoreBadge";
 import { DiscountSticker } from "./DiscountSticker";
 import { AddToBasketButton } from "./AddToBasketButton";
 
-export function OfferCard({ offer, nowIso }: { offer: Offer; nowIso: string }) {
+export function OfferCard({
+  offer,
+  nowIso,
+  priority = false,
+}: {
+  offer: CardOffer;
+  nowIso: string;
+  /**
+   * This card is above the fold.
+   *
+   * Lazy-loading the image the browser is about to paint delays the Largest
+   * Contentful Paint — Chrome's guidance is explicit that anything in the
+   * initial viewport must load eagerly. Only the very first card also claims
+   * high fetch priority; spreading that across several dilutes the signal.
+   */
+  priority?: boolean;
+}) {
   const { pricing } = offer;
   const hasPrice = pricing.currentPriceCents !== null;
   const soon = isExpiringSoon(offer.validUntil, nowIso);
@@ -27,7 +43,9 @@ export function OfferCard({ offer, nowIso }: { offer: Offer; nowIso: string }) {
           <img
             src={offer.imageUrl}
             alt={offer.title}
-            loading="lazy"
+            loading={priority ? "eager" : "lazy"}
+            fetchPriority={priority ? "high" : undefined}
+            decoding="async"
             referrerPolicy="no-referrer"
             className="h-full w-full object-contain p-4 mix-blend-multiply transition-transform duration-300 group-hover:scale-[1.03]"
           />

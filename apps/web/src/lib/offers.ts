@@ -21,12 +21,46 @@ const TTL_MS = 60_000;
 let cache: { at: number; offers: Offer[] } | null = null;
 
 /**
+ * How old the bundled snapshot may be before it stops standing in for a chain.
+ *
+ * A supermarket promotion runs a week, so a snapshot older than two weeks
+ * cannot contain a single valid price.
+ */
+const SEED_BACKFILL_MAX_AGE_DAYS = 14;
+
+/** Newest ingestion timestamp in the bundled snapshot, as epoch ms. */
+function seedFreshness(): number {
+  let newest = Number.NEGATIVE_INFINITY;
+  for (const offer of SEED) {
+    const at = Date.parse(offer.fetchedAt);
+    if (!Number.isNaN(at) && at > newest) newest = at;
+  }
+  return newest;
+}
+
+/**
  * Backfill chains that are missing from the live file with the bundled seed.
+ *
  * The ingestion worker skips browser-driven chains (Plus/Lidl/Aldi/Hoogvliet)
- * if Chromium can't start in the container, which would silently drop those
- * stores; this guarantees every chain in the snapshot still shows.
+ * if Chromium can't start in the container, and the snapshot keeps a dev or
+ * fresh-deploy environment usable before the first ingest lands.
+ *
+ * Strictly age-limited, because the unguarded version shipped six-week-old
+ * prices to production as this week's deals. Three individually reasonable
+ * decisions combined into it: the DekaMarkt adapter stopped producing, this
+ * function filled the gap from the July snapshot, and every one of those 111
+ * records carries an empty `validUntil` — which `isActive` deliberately fails
+ * open on, so nothing downstream could catch it. The result was a page headed
+ * "DekaMarkt aanbiedingen deze week" listing prices from 8 July.
+ *
+ * For a price comparison site a missing chain is a gap; a wrong price is a lie.
+ * So the backfill now only applies while the snapshot itself is recent enough
+ * to contain a live promotion.
  */
 function mergeWithSeed(live: Offer[]): Offer[] {
+  const age = (Date.now() - seedFreshness()) / 86_400_000;
+  if (!Number.isFinite(age) || age > SEED_BACKFILL_MAX_AGE_DAYS) return live;
+
   const liveSources = new Set(live.map((o) => o.source));
   const fill = SEED.filter((o) => !liveSources.has(o.source));
   return fill.length ? [...live, ...fill] : live;

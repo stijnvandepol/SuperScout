@@ -210,7 +210,16 @@ function classify(text: string): CategorySlug {
  * first (most specific — "Coca-Cola" -> frisdrank even when the source lumps
  * "Frisdrank, sappen, koffie, thee"), falling back to the source category.
  */
-export function categorizeOffer(offer: Offer): CategorySlug {
+/**
+ * Declares the two fields it reads rather than demanding a whole `Offer`.
+ *
+ * Not pedantry: `OfferExplorer` is a client component, so every field of every
+ * offer handed to it is serialised into the RSC flight payload. A signature
+ * that asks for the full type forces callers to ship the full type. Narrowing
+ * it is backwards compatible — a full `Offer` still satisfies this — and lets
+ * the homepage pass a projection instead.
+ */
+export function categorizeOffer(offer: Pick<Offer, "title" | "sourceCategoryRaw">): CategorySlug {
   const byTitle = classify(offer.title);
   if (byTitle !== "overig") return byTitle;
   if (offer.sourceCategoryRaw) {

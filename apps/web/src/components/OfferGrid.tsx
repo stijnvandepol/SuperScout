@@ -1,11 +1,13 @@
-import type { Offer } from "@superscout/core";
+import type { CardOffer } from "@superscout/core";
 import { OfferCard } from "./OfferCard";
 
-export function OfferGrid({ offers, nowIso }: { offers: Offer[]; nowIso: string }) {
+export function OfferGrid({ offers, nowIso }: { offers: CardOffer[]; nowIso: string }) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-      {offers.map((offer) => (
-        <OfferCard key={offer.id} offer={offer} nowIso={nowIso} />
+      {offers.map((offer, i) => (
+        // The grid is 2 columns on mobile and 4 on desktop, so the first card
+        // is the LCP candidate on both.
+        <OfferCard key={offer.id} offer={offer} nowIso={nowIso} priority={i === 0} />
       ))}
     </div>
   );

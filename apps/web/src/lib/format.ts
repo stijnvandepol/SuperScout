@@ -66,7 +66,7 @@ export function formatEuro(cents: number | null): string {
 }
 
 /** Short, punchy label for the discount sticker. */
-export function stickerLabel(offer: Offer): string {
+export function stickerLabel(offer: Pick<Offer, "mechanism" | "pricing" | "rawLabel">): string {
   const m = offer.mechanism;
   switch (m.type) {
     case "percentage_off":
@@ -99,7 +99,7 @@ export function validUntilShort(iso: string): string {
 
 /** Clean URL segment, e.g. "plus:4436-177" -> "plus-4436-177". Reversible: the
  *  source slug never contains a dash, so split on the first dash. */
-export function offerSlug(offer: Offer): string {
+export function offerSlug(offer: Pick<Offer, "source" | "sourceOfferId">): string {
   return `${offer.source}-${offer.sourceOfferId}`;
 }
 

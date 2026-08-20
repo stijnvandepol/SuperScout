@@ -12,6 +12,7 @@ import {
 import { formatEuro, isExVat, offerSlug, STORE_META, validUntilShort } from "@/lib/format";
 import { DEAL_TYPES } from "@/lib/deal-types";
 import { OfferGrid } from "@/components/OfferGrid";
+import { ImageHostPreconnect } from "@/components/ImageHostPreconnect";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd, faqJsonLd, offerListJsonLd, SITE_URL } from "@/lib/seo";
 
@@ -91,6 +92,7 @@ export default async function CategoryPage({ params }: Params) {
 
   return (
     <div className="mx-auto max-w-6xl px-5 pb-24">
+      <ImageHostPreconnect offers={offers} />
       <JsonLd
         data={breadcrumbJsonLd([
           { name: "Home", path: "/" },
