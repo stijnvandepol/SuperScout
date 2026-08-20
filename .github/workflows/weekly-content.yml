@@ -67,14 +67,15 @@ jobs:
             echo '```'
           } > issue-body.md
 
+      # Was `gh issue create`, which exists on GitHub-hosted runners but not on
+      # this self-hosted box — every run died at exit 127. Node 22 is already
+      # installed by the step above and has global fetch, so the REST API needs
+      # nothing extra on the server.
       - name: Open the issue
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
-          gh issue create \
-            --title "Weekcontent — week $(date -u +%V), $(date -u +%Y)" \
-            --body-file issue-body.md \
-            --label content 2>/dev/null \
-          || gh issue create \
-            --title "Weekcontent — week $(date -u +%V), $(date -u +%Y)" \
-            --body-file issue-body.md
+          node .github/scripts/open-content-issue.mjs \
+            "Weekcontent — week $(date -u +%V), $(date -u +%Y)" \
+            issue-body.md
