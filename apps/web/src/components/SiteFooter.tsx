@@ -2,6 +2,7 @@ import Link from "next/link";
 import { categoriesPresent, getOffers } from "@/lib/offers";
 import { STORE_META } from "@/lib/format";
 import { DEAL_TYPES } from "@/lib/deal-types";
+import { SAVINGS_CAMPAIGNS } from "@/lib/spaaracties";
 
 const ABOUT_LINKS = [
   { href: "/product", label: "Over SuperScout" },
@@ -29,7 +30,7 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-line">
       <div className="mx-auto max-w-6xl px-5 pt-12 pb-28 md:pb-8">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
           <FooterColumn title="Supermarkten" href="/winkels">
             {stores.map((slug) => (
               <FooterLink key={slug} href={`/winkel/${slug}`}>
@@ -50,6 +51,15 @@ export function SiteFooter() {
             {dealTypes.map((type) => (
               <FooterLink key={type.slug} href={`/acties/${type.slug}`}>
                 {type.label}
+              </FooterLink>
+            ))}
+            <FooterLink href="/volgende-week">Volgende week</FooterLink>
+          </FooterColumn>
+
+          <FooterColumn title="Spaaracties" href="/spaaracties">
+            {SAVINGS_CAMPAIGNS.map((campaign) => (
+              <FooterLink key={campaign.slug} href={`/spaaracties/${campaign.slug}`}>
+                {campaign.label}
               </FooterLink>
             ))}
           </FooterColumn>

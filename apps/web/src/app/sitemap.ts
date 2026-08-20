@@ -3,6 +3,7 @@ import type { Offer } from "@superscout/core";
 import { categoriesPresent, getOffers } from "@/lib/offers";
 import { offerSlug } from "@/lib/format";
 import { DEAL_TYPES } from "@/lib/deal-types";
+import { SAVINGS_CAMPAIGNS } from "@/lib/spaaracties";
 import { SITE_URL } from "@/lib/seo";
 
 // Regenerates as the offer set changes.
@@ -71,12 +72,35 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
+  // Evergreen explainers. No `lastModified` — the content changes when the file
+  // does, not when the offer set rolls over, and stamping them daily would be
+  // the same dishonesty the site-wide timestamp above avoids.
+  const savingsPages: MetadataRoute.Sitemap = [
+    { url: `${SITE_URL}/spaaracties`, changeFrequency: "monthly" as const, priority: 0.7 },
+    ...SAVINGS_CAMPAIGNS.map((campaign) => ({
+      url: `${SITE_URL}/spaaracties/${campaign.slug}`,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    })),
+  ];
+
+  // NB: archived offer URLs are deliberately absent. They must stay reachable
+  // and crawlable — that is what repairs the 404 damage — but a sitemap listing
+  // tens of thousands of ended promotions tells Google the site's priority is
+  // its own history. Internal links from the live pages are the right entry.
   return [
     { url: SITE_URL, lastModified: siteModified, changeFrequency: "daily", priority: 1 },
     ...indexPages,
+    {
+      url: `${SITE_URL}/volgende-week`,
+      lastModified: siteModified,
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
     ...storePages,
     ...categoryPages,
     ...dealTypePages,
+    ...savingsPages,
     ...offerPages,
     ...infoPages,
   ];

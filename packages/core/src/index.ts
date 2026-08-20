@@ -5,6 +5,8 @@ export * from "./offer";
 export * from "./source-adapter";
 export * from "./offer-store";
 export * from "./offer-period";
+export * from "./offer-archive";
+export * from "./offer-cycle";
 export * from "./related";
 export * from "./category";
 export * from "./weekly-picks";

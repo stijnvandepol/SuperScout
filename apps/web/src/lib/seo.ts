@@ -70,13 +70,20 @@ function honestPriceValidUntil(validUntil: string): string | undefined {
  * Every emitted field must also be visible on the page — that is Google's
  * structured-data policy, and it is why `price` is omitted when we have no
  * explicit per-unit price to show (e.g. "2 voor €3,99" mechanisms).
+ *
+ * An `expired` offer still gets markup, but flipped to `OfferedBySoldOut`-style
+ * honesty: availability drops to SoldOut and `priceValidUntil` is omitted
+ * entirely. Leaving InStock on a promotion that ended in July is exactly the
+ * misrepresentation Google demotes sites for, and the archive is only worth
+ * keeping if what it claims is true.
  */
-export function productJsonLd(offer: Offer, url: string) {
+export function productJsonLd(offer: Offer, url: string, opts?: { expired?: boolean }) {
   const store = STORE_META[offer.source];
   const price = offer.pricing.currentPriceCents;
   // EAN-13 only; the field is strictly typed and a wrong length invalidates it.
   const gtin = offer.productEans?.find((ean) => /^\d{13}$/.test(ean));
-  const validUntil = honestPriceValidUntil(offer.validUntil);
+  const expired = opts?.expired === true;
+  const validUntil = expired ? undefined : honestPriceValidUntil(offer.validUntil);
 
   return {
     "@context": "https://schema.org",
@@ -92,7 +99,7 @@ export function productJsonLd(offer: Offer, url: string) {
     offers: {
       "@type": "Offer",
       url,
-      availability: "https://schema.org/InStock",
+      availability: expired ? "https://schema.org/SoldOut" : "https://schema.org/InStock",
       itemCondition: "https://schema.org/NewCondition",
       ...(price !== null ? { price: (price / 100).toFixed(2), priceCurrency: "EUR" } : {}),
       ...(validUntil ? { priceValidUntil: validUntil } : {}),

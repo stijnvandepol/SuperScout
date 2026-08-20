@@ -69,6 +69,18 @@ docker compose up --build      # bouwt en start op http://localhost:3000
 docker compose down            # stopt
 ```
 
+## Aanbiedingenarchief
+
+De ingest-worker schrijft naast `offers.json` ook `/data/offers-archive.json`: elke actie die we de afgelopen **120 dagen** gezien hebben, inclusief afgelopen en toekomstige.
+
+Dit lost het grootste SEO-probleem van de site op. `offers.json` bevat alleen wat vandaag geldig is, dus tot nu toe verdween elke actiepagina zodra de week omsloeg. Search Console rapporteerde daardoor **848 "niet gevonden (404)" tegenover 626 geïndexeerde pagina's** en 875 URL's die vastzaten op "gevonden — momenteel niet geïndexeerd": Google had geleerd dat dit domein wegwerp-URL's publiceert en crawlde nieuwe niet meer serieus. Juist de actiepagina's waren wat rankte (positie 6-12 op longtail-productzoekopdrachten), dus de wekelijkse rollover sloopte structureel het enige dat werkte.
+
+- Staat op hetzelfde persistente volume als de offers. Weggooien betekent opnieuw 404's op alles wat ouder is dan een week.
+- Groeit tot ruwweg **15-20 MB** en stabiliseert daar; het retentievenster snoeit ouder werk weg (`ARCHIVE_RETENTION_DAYS` in `packages/core/src/offer-archive.ts`).
+- De web-app leest 'm via `ARCHIVE_PATH`, met een eigen cache van 5 minuten. **Bewust een apart bestand**: `getOffers()` draait op elke listing-render en moet klein blijven, terwijl het archief alleen geraakt wordt als iemand een verlopen URL opvraagt.
+- Ontbreekt het bestand, dan werkt de site gewoon — verlopen URL's geven dan weer een 404, zoals voorheen.
+- Verlopen pagina's krijgen `noindex, follow` tenzij ze prijshistorie hebben óf hetzelfde product nu ergens in de actie staat. Ze staan bewust **niet** in de sitemap; ze zijn bereikbaar via interne links.
+
 ## Prijshistorie
 
 De ingest-worker schrijft naast `offers.json` ook `/data/price-history.jsonl` — één regel per product per dag, alleen voor aanbiedingen met een echte stuksprijs (~70% van de set; Jumbo publiceert vrijwel nooit een stuksprijs en levert dus weinig aan).

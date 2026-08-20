@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Offer, SupermarketSlug } from "@superscout/core";
-import { CATEGORY_LABEL, categorizeOffer } from "@superscout/core";
+import type { CycleStart } from "@superscout/core";
+import { CATEGORY_LABEL, categorizeOffer, cycleStart } from "@superscout/core";
 import { byBiggestDiscount, getOffers } from "@/lib/offers";
 import { formatEuro, isExVat, STORE_META, offerSlug, validUntilShort } from "@/lib/format";
 import { DEAL_TYPES } from "@/lib/deal-types";
@@ -55,7 +56,10 @@ export default async function StorePage({ params }: Params) {
 
   const nowIso = new Date().toISOString();
   const canonical = `/winkel/${slug}`;
-  const faq = storeFaq(meta.name, slug as SupermarketSlug, offers);
+  // Derived, not hardcoded: chains do move their cycle, and this page states it
+  // as fact. Null when the chain's own dates do not support a clear answer.
+  const cycle = cycleStart(offers);
+  const faq = storeFaq(meta.name, slug as SupermarketSlug, offers, cycle);
 
   return (
     <div className="mx-auto max-w-6xl px-5 pb-24">
@@ -89,12 +93,18 @@ export default async function StorePage({ params }: Params) {
             {offers.length} aanbiedingen · deze week
           </span>
         </div>
+        {/* "deze week" belongs in the H1, not only the <title>. The queries
+            that reach these pages are "albert heijn aanbiedingen deze week",
+            "acties jumbo", "<chain> folder" — the H1 was the one place the
+            week qualifier was missing. */}
         <h1 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-          {meta.name} aanbiedingen
+          {meta.name} aanbiedingen deze week
         </h1>
         <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-ink-soft">
-          Bekijk alle actuele {meta.name}-aanbiedingen van deze week, gesorteerd op de grootste
-          korting. Zet je favorieten in je mandje en bestel of haal ze direct bij {meta.name}.
+          Alle {offers.length} acties uit de {meta.name} folder van deze week op één pagina,
+          gesorteerd op de grootste korting
+          {cycle ? `. Nieuwe ${meta.name}-aanbiedingen starten op ${cycle.label}` : ""}. Zet je
+          favorieten in je mandje en haal ze direct bij {meta.name}.
         </p>
       </header>
 
@@ -114,7 +124,12 @@ export default async function StorePage({ params }: Params) {
  * content; every answer here quotes this chain's own numbers, so the pages
  * stay distinct and the FAQPage markup stays truthful as the data rolls over.
  */
-function storeFaq(store: string, slug: SupermarketSlug, offers: Offer[]) {
+function storeFaq(
+  store: string,
+  slug: SupermarketSlug,
+  offers: Offer[],
+  cycle: CycleStart | null,
+) {
   const best = offers.find((o) => o.pricing.savingsPercent !== null);
   // Not every chain supplies an end date; empty strings would sort to the front.
   const endDate = offers
@@ -148,6 +163,15 @@ function storeFaq(store: string, slug: SupermarketSlug, offers: Offer[]) {
       aText: `SuperScout haalt dezelfde acties op als in de folder van ${store} staan, maar zet ze naast die van alle andere supermarkten. Je hoeft dus niet per keten te bladeren om te zien waar iets het goedkoopst is.`,
     },
   ];
+
+  // Answers "wanneer komt de nieuwe folder" — a recurring query for every chain
+  // — but only when the chain's own dates actually support an answer.
+  if (cycle) {
+    faq.push({
+      q: `Wanneer komen de nieuwe ${store}-aanbiedingen?`,
+      aText: `${store} start een nieuwe actieweek op ${cycle.label}; ${Math.round(cycle.share * 100)}% van de lopende acties begint op die dag. De folder verschijnt meestal een paar dagen daarvoor, dus vanaf dat moment staan de nieuwe acties hier. Wat al bekend is van volgende week vind je op de pagina met aanbiedingen van volgende week.`,
+    });
+  }
 
   if (isExVat(slug)) {
     faq.push({
@@ -249,16 +273,70 @@ function StoreProse({
         </p>
         <p className="mt-4 text-[15px] leading-relaxed text-ink-soft">
           SuperScout is niet verbonden aan {store}. Alle prijzen en voorwaarden komen van {store}{" "}
-          zelf en worden dagelijks opnieuw opgehaald. Vergelijk ze met de{" "}
-          <Link
-            href="/winkels"
-            className="font-medium text-ink underline decoration-deal decoration-2 underline-offset-2"
-          >
-            aanbiedingen van andere supermarkten
-          </Link>{" "}
-          voordat je boodschappen doet.
+          zelf en worden dagelijks opnieuw opgehaald. Afgelopen acties blijven bewaard, zodat je
+          kunt terugzien wat een product eerder bij {store} in de aanbieding kostte.
         </p>
       </section>
+
+      <StoreCrosslinks store={store} slug={slug} />
     </>
+  );
+}
+
+/**
+ * Links from each store page to every other one.
+ *
+ * Store pages were the site's most isolated hubs: reachable from the footer,
+ * but not from each other, which left each one a leaf with a single inbound
+ * path. Cross-linking turns ten leaves into a connected cluster, and the anchor
+ * text ("Jumbo aanbiedingen") is the phrasing those pages are meant to rank
+ * for. It also serves the actual visitor intent, which on a deals site is
+ * almost always comparative.
+ */
+function StoreCrosslinks({ store, slug }: { store: string; slug: string }) {
+  const others = [...new Set(getOffers().map((o) => o.source))]
+    .filter((source) => source !== slug)
+    .sort((a, b) => STORE_META[a].name.localeCompare(STORE_META[b].name, "nl"));
+
+  if (others.length === 0) return null;
+
+  return (
+    <section className="mt-16 border-t border-line pt-12">
+      <h2 className="font-display text-2xl font-bold tracking-tight">
+        Vergelijk {store} met andere supermarkten
+      </h2>
+      <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-ink-soft">
+        Een keten met de scherpste actie op één product is zelden de goedkoopste op je hele
+        boodschappenlijst. Bekijk wat de rest deze week doet.
+      </p>
+      <div className="mt-6 flex flex-wrap gap-2">
+        {others.map((source) => (
+          <Link
+            key={source}
+            href={`/winkel/${source}`}
+            className="rounded-full border border-line bg-surface px-4 py-2 text-sm transition-colors hover:border-ink/30"
+          >
+            {STORE_META[source].name} aanbiedingen
+          </Link>
+        ))}
+      </div>
+      <p className="mt-6 text-[15px] leading-relaxed text-ink-soft">
+        Of bekijk{" "}
+        <Link
+          href="/volgende-week"
+          className="font-medium text-ink underline decoration-deal decoration-2 underline-offset-2"
+        >
+          wat er volgende week in de aanbieding gaat
+        </Link>{" "}
+        en de{" "}
+        <Link
+          href="/spaaracties"
+          className="font-medium text-ink underline decoration-deal decoration-2 underline-offset-2"
+        >
+          spaaracties van de supermarkten
+        </Link>
+        .
+      </p>
+    </section>
   );
 }

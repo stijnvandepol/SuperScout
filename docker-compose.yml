@@ -8,6 +8,9 @@ services:
     container_name: superscout-web
     environment:
       - OFFERS_PATH=/data/offers.json
+      # Expired promotions, retained so their URLs keep resolving instead of
+      # 404ing the week after. Read lazily — never on the hot listing path.
+      - ARCHIVE_PATH=/data/offers-archive.json
       - PRICE_HISTORY_PATH=/data/price-history.jsonl
       # SEO/webmaster wiring — all optional, read at render time.
       # Empty values omit the tag / 404 the key file, which is the safe default.
@@ -35,6 +38,9 @@ services:
     container_name: superscout-ingestion
     environment:
       - OFFERS_OUT=/data/offers.json
+      # Rolling 120-day archive of every promotion seen, incl. expired and
+      # next-week ones. Like the price log, its value is accumulated time.
+      - ARCHIVE_OUT=/data/offers-archive.json
       # Append-only price log on the same persistent volume. Its whole value is
       # accumulated time, so it must outlive every container rebuild.
       - PRICE_HISTORY_OUT=/data/price-history.jsonl

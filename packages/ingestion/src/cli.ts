@@ -5,6 +5,7 @@
  *
  * Env:
  *   OFFERS_OUT   output path (default /data/offers.json)
+ *   ARCHIVE_OUT  archive path (default /data/offers-archive.json)
  *   INGEST_HOUR  UTC hour of the daily run (default 5 ≈ 07:00 NL summer)
  *   INGEST_ONCE  set to "1" to run a single pass and exit
  */
@@ -13,8 +14,10 @@ import { dirname } from "node:path";
 import type { Browser } from "playwright";
 import type { Offer, PriceObservation } from "@superscout/core";
 import {
+  ARCHIVE_RETENTION_DAYS,
   InMemoryOfferStore,
   isActive,
+  mergeArchive,
   newObservations,
   observationsFrom,
   parseObservations,
@@ -26,6 +29,7 @@ import { browserSources } from "./browser/browser-sources";
 import { launchBrowser } from "./browser/intercept";
 
 const OUT = process.env.OFFERS_OUT ?? "/data/offers.json";
+const ARCHIVE_OUT = process.env.ARCHIVE_OUT ?? "/data/offers-archive.json";
 const HISTORY_OUT = process.env.PRICE_HISTORY_OUT ?? "/data/price-history.jsonl";
 const INGEST_HOUR = Number(process.env.INGEST_HOUR ?? 5);
 
@@ -58,6 +62,42 @@ function recordPrices(offers: Offer[], nowIso: string): void {
     );
   } catch (e) {
     console.error("[ingest] price history append failed (offers still written):", e);
+  }
+}
+
+/**
+ * Fold this pull into the retained archive of expired promotions.
+ *
+ * `OFFERS_OUT` deliberately stays "valid today" — that is the hot path the site
+ * reads on every request and it must stay small. This second file is the long
+ * tail: every promotion we have seen in the last `ARCHIVE_RETENTION_DAYS`,
+ * including the ones that ended, so their URLs keep resolving instead of
+ * turning into the 848 404s Search Console was reporting.
+ *
+ * Fed the *unfiltered* pull, so next-week promotions land here too and the
+ * "volgende week" page has something to show.
+ *
+ * Best-effort, like the price history: an archive that fails to write must
+ * never stop today's offers from publishing.
+ */
+function retainArchive(all: Offer[], nowIso: string): void {
+  try {
+    let previous: Offer[] = [];
+    try {
+      previous = JSON.parse(readFileSync(ARCHIVE_OUT, "utf-8")) as Offer[];
+    } catch {
+      // First run, or the file was never mounted — start from this pull.
+    }
+
+    const archive = mergeArchive(previous, all, nowIso);
+    mkdirSync(dirname(ARCHIVE_OUT), { recursive: true });
+    writeFileSync(ARCHIVE_OUT, JSON.stringify(archive), "utf-8");
+    console.log(
+      `[ingest] archive: ${archive.length} offers retained (${ARCHIVE_RETENTION_DAYS}d, ` +
+        `${archive.length - previous.length >= 0 ? "+" : ""}${archive.length - previous.length}) -> ${ARCHIVE_OUT}.`,
+    );
+  } catch (e) {
+    console.error("[ingest] archive write failed (offers still written):", e);
   }
 }
 
@@ -96,6 +136,7 @@ async function ingestOnce(): Promise<void> {
   writeFileSync(OUT, JSON.stringify(offers), "utf-8");
   console.log(`[ingest] ${nowIso} wrote ${offers.length}/${all.length} active offers -> ${OUT}.`);
 
+  retainArchive(all, nowIso);
   recordPrices(offers, nowIso);
 }
 
