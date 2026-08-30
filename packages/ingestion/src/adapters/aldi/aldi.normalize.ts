@@ -9,9 +9,12 @@ function priceStrToCents(value: string | undefined): number | null {
 }
 
 /**
- * Map one scraped Aldi offer to a normalized Offer. Aldi's tiles carry a
- * discount percentage but usually no strikethrough price and no per-offer dates
- * (it's the current-week folder), so validity is left open.
+ * Map one scraped Aldi offer to a normalized Offer.
+ *
+ * The tiles carry a discount percentage but usually no strikethrough price. The
+ * dates are not in the tile either — they are joined in by the adapter from the
+ * page's own JSON blob (see aldi.validity.ts). They stay optional here: if that
+ * blob ever moves, offers still flow, just without a period.
  */
 export function normalizeAldiOffer(raw: AldiRawOffer, fetchedAt: string): Offer {
   const currentPriceCents = priceStrToCents(raw.currentPrice);
@@ -39,8 +42,8 @@ export function normalizeAldiOffer(raw: AldiRawOffer, fetchedAt: string): Offer 
       savingsPercent: savings.percent,
     },
     mechanism,
-    validFrom: "",
-    validUntil: "",
+    validFrom: raw.validFrom ?? "",
+    validUntil: raw.validUntil ?? "",
     flags: {},
     fetchedAt,
   };

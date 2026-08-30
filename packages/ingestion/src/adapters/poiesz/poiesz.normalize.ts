@@ -37,8 +37,8 @@ export function normalizePoieszOffer(raw: PoieszRawOffer, fetchedAt: string): Of
       savingsPercent: null,
     },
     mechanism: label ? parsePromo(label) : { type: "unknown" },
-    validFrom: "",
-    validUntil: "",
+    validFrom: raw.validFrom ?? "",
+    validUntil: raw.validUntil ?? "",
     flags: {},
     fetchedAt,
   };

@@ -19,4 +19,19 @@ export interface AldiRawOffer {
   /** Relative detail path, e.g. "/product/snacktomaten-1219596.html". */
   url?: string;
   image?: string;
+  /** Promotion period, joined in from the page's JSON blob — see aldi.validity.ts. */
+  validFrom?: string;
+  validUntil?: string;
+}
+
+/**
+ * One scrape pass: the tiles plus the page source they came from.
+ *
+ * The validity dates live in an escaped JSON blob rather than in the markup, so
+ * the raw HTML travels back out of the browser and is parsed by a pure,
+ * unit-tested function instead of by a regex buried in `page.evaluate`.
+ */
+export interface AldiScrape {
+  offers: AldiRawOffer[];
+  html: string;
 }

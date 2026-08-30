@@ -1,8 +1,9 @@
 import type { Browser } from "playwright";
 import type { Offer, SourceAdapter, SupermarketSlug } from "@superscout/core";
 import { scrapePage } from "../../browser/intercept";
-import type { AldiRawOffer } from "./aldi.raw";
+import type { AldiRawOffer, AldiScrape } from "./aldi.raw";
 import { normalizeAldiOffer } from "./aldi.normalize";
+import { parseAldiValidity, toIsoRange } from "./aldi.validity";
 
 const ALDI_OFFERS_URL = "https://www.aldi.nl/aanbiedingen.html";
 
@@ -12,7 +13,7 @@ const ALDI_OFFERS_URL = "https://www.aldi.nl/aanbiedingen.html";
  * (which holds "-29%" or "OP=OP") and `.tag__marker--base-price` (per-kg) are
  * deliberately not treated as the price.
  */
-function extractAldiOffers(): AldiRawOffer[] {
+function extractAldiOffers(): AldiScrape[] {
   const clean = (s: string | null | undefined) => (s ?? "").replace(/\s+/g, " ").trim();
   const tiles = Array.from(document.querySelectorAll(".product-tile"));
   const out: AldiRawOffer[] = [];
@@ -47,7 +48,9 @@ function extractAldiOffers(): AldiRawOffer[] {
       image: tile.querySelector("img")?.getAttribute("src") ?? undefined,
     });
   }
-  return out;
+  // The promotion dates are not in the DOM; they sit in an escaped JSON blob
+  // in the page source, so it goes back out with the tiles to be parsed there.
+  return [{ offers: out, html: document.documentElement.outerHTML }];
 }
 
 /** Aldi: server-rendered offers page, scraped through a headless browser. */
@@ -61,14 +64,20 @@ export class AldiAdapter implements SourceAdapter {
 
   async fetchOffers(): Promise<Offer[]> {
     const fetchedAt = this.clock();
-    const raw = await scrapePage<AldiRawOffer>(this.browser, ALDI_OFFERS_URL, extractAldiOffers);
+    const scraped = await scrapePage<AldiScrape>(this.browser, ALDI_OFFERS_URL, extractAldiOffers);
+    const pass = scraped[0];
+    if (!pass) return [];
+
+    const validity = parseAldiValidity(pass.html);
 
     const seen = new Set<string>();
     const offers: Offer[] = [];
-    for (const r of raw) {
+    for (const r of pass.offers) {
       if (!r.id || !r.title || seen.has(r.id)) continue;
       seen.add(r.id);
-      offers.push(normalizeAldiOffer(r, fetchedAt));
+
+      const period = validity.get(r.id);
+      offers.push(normalizeAldiOffer(period ? { ...r, ...toIsoRange(period) } : r, fetchedAt));
     }
     return offers;
   }

@@ -4,6 +4,12 @@
  * old/new — so we take the lowest as the "from" price and express the discount
  * through the promo label ("1+1 GRATIS", "30% KORTING").
  */
+/** One scrape pass: the cards plus the page source their period lives in. */
+export interface PoieszScrape {
+  offers: PoieszRawOffer[];
+  html: string;
+}
+
 export interface PoieszRawOffer {
   id: string;
   title: string;
@@ -14,4 +20,7 @@ export interface PoieszRawOffer {
   image?: string;
   /** Relative detail path, e.g. "/aanbiedingen/126584". */
   url?: string;
+  /** Folder period, joined in by the adapter — see poiesz.validity.ts. */
+  validFrom?: string;
+  validUntil?: string;
 }

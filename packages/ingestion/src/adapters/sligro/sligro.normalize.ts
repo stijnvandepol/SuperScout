@@ -28,8 +28,8 @@ export function normalizeSligroOffer(raw: SligroRawOffer, fetchedAt: string): Of
       savingsPercent: savings.percent,
     },
     mechanism,
-    validFrom: "",
-    validUntil: "",
+    validFrom: raw.validFrom ?? "",
+    validUntil: raw.validUntil ?? "",
     flags: {},
     fetchedAt,
   };

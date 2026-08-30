@@ -1,13 +1,14 @@
 import type { Browser } from "playwright";
 import type { Offer, SourceAdapter, SupermarketSlug } from "@superscout/core";
 import { scrapePage } from "../../browser/intercept";
-import type { SligroRawOffer } from "./sligro.raw";
+import type { SligroRawOffer, SligroScrape } from "./sligro.raw";
 import { normalizeSligroOffer } from "./sligro.normalize";
+import { parseSligroPeriod } from "./sligro.validity";
 
 const SLIGRO_OFFERS_URL = "https://www.sligro.nl/aanbiedingen";
 
 /** Runs INSIDE the page (page.evaluate) — self-contained, no imports. */
-function extractSligroOffers(): SligroRawOffer[] {
+function extractSligroOffers(): SligroScrape[] {
   const clean = (s: string | null | undefined) => (s ?? "").replace(/\s+/g, " ").trim();
   const all = Array.from(document.querySelectorAll('[class*="cmp-productoverview-product"]'));
   const cards = all.filter((c) => c.querySelector(".cmp-price__new, .cmp-price__price"));
@@ -35,7 +36,8 @@ function extractSligroOffers(): SligroRawOffer[] {
       image: card.querySelector("img")?.getAttribute("src") ?? undefined,
     });
   }
-  return out;
+  // Sligro states its period in prose only, so the visible text goes along.
+  return [{ offers: out, text: document.body.innerText }];
 }
 
 /** Sligro: B2B wholesaler, client-rendered aanbiedingen page (prices ex-VAT). */
@@ -49,16 +51,23 @@ export class SligroAdapter implements SourceAdapter {
 
   async fetchOffers(): Promise<Offer[]> {
     const fetchedAt = this.clock();
-    const raw = await scrapePage<SligroRawOffer>(this.browser, SLIGRO_OFFERS_URL, extractSligroOffers, {
-      waitForSelector: ".cmp-price__new, .cmp-price__price",
-    });
+    const scraped = await scrapePage<SligroScrape>(
+      this.browser,
+      SLIGRO_OFFERS_URL,
+      extractSligroOffers,
+      { waitForSelector: ".cmp-price__new, .cmp-price__price" },
+    );
+    const pass = scraped[0];
+    if (!pass) return [];
+
+    const period = parseSligroPeriod(pass.text);
 
     const seen = new Set<string>();
     const offers: Offer[] = [];
-    for (const r of raw) {
+    for (const r of pass.offers) {
       if (!r.id || seen.has(r.id)) continue;
       seen.add(r.id);
-      offers.push(normalizeSligroOffer(r, fetchedAt));
+      offers.push(normalizeSligroOffer(period ? { ...r, ...period } : r, fetchedAt));
     }
     return offers;
   }

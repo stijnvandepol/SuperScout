@@ -1,14 +1,15 @@
 import type { Browser } from "playwright";
 import type { Offer, SourceAdapter, SupermarketSlug } from "@superscout/core";
 import { scrapePage } from "../../browser/intercept";
-import type { PoieszRawOffer } from "./poiesz.raw";
+import type { PoieszRawOffer, PoieszScrape } from "./poiesz.raw";
 import { normalizePoieszOffer } from "./poiesz.normalize";
+import { parsePoieszPeriod } from "./poiesz.validity";
 
 // The apex domain redirects to webwinkel.* and reliably renders the offers.
 const POIESZ_OFFERS_URL = "https://www.poiesz-supermarkten.nl/aanbiedingen";
 
 /** Runs INSIDE the page (page.evaluate) — self-contained, no imports. */
-function extractPoieszOffers(): PoieszRawOffer[] {
+function extractPoieszOffers(): PoieszScrape[] {
   const clean = (s: string | null | undefined) => (s ?? "").replace(/\s+/g, " ").trim();
   const all = Array.from(document.querySelectorAll('[class*="promotion-card__container"]'));
   // Keep only outermost cards (avoid nested duplicates).
@@ -43,7 +44,8 @@ function extractPoieszOffers(): PoieszRawOffer[] {
       image: card.querySelector("img")?.getAttribute("src") ?? undefined,
     });
   }
-  return out;
+  // The folder period is in the page payload, not the cards.
+  return [{ offers: out, html: document.documentElement.outerHTML }];
 }
 
 /** Poiesz: client-rendered aanbiedingen page, scraped through a headless browser. */
@@ -57,16 +59,25 @@ export class PoieszAdapter implements SourceAdapter {
 
   async fetchOffers(): Promise<Offer[]> {
     const fetchedAt = this.clock();
-    const raw = await scrapePage<PoieszRawOffer>(this.browser, POIESZ_OFFERS_URL, extractPoieszOffers, {
-      waitForSelector: '[class*="promotion-card__container"]',
-    });
+    const scraped = await scrapePage<PoieszScrape>(
+      this.browser,
+      POIESZ_OFFERS_URL,
+      extractPoieszOffers,
+      { waitForSelector: '[class*="promotion-card__container"]' },
+    );
+    const pass = scraped[0];
+    if (!pass) return [];
+
+    // One period covers the whole folder; null when the payload shape moved,
+    // in which case offers still flow, just without dates.
+    const period = parsePoieszPeriod(pass.html);
 
     const seen = new Set<string>();
     const offers: Offer[] = [];
-    for (const r of raw) {
+    for (const r of pass.offers) {
       if (!r.id || seen.has(r.id)) continue;
       seen.add(r.id);
-      offers.push(normalizePoieszOffer(r, fetchedAt));
+      offers.push(normalizePoieszOffer(period ? { ...r, ...period } : r, fetchedAt));
     }
     return offers;
   }
