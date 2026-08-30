@@ -12,8 +12,10 @@ export function OfferExplorer({
   offers,
   nowIso,
   stat,
+  dataDate = null,
 }: {
   offers: CardOffer[];
+  dataDate?: string | null;
   nowIso: string;
   stat?: string;
 }) {
@@ -180,7 +182,7 @@ export function OfferExplorer({
             {visible.map((o, i) => (
               // The first card is the LCP candidate on the homepage, so it
               // loads eagerly instead of waiting for the lazy-load pass.
-              <OfferCard key={o.id} offer={o} nowIso={nowIso} priority={i === 0} />
+              <OfferCard key={o.id} offer={o} nowIso={nowIso} dataDate={dataDate} priority={i === 0} />
             ))}
           </div>
           {filtered.length > visible.length ? (

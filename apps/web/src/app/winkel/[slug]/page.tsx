@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import type { Offer, SupermarketSlug } from "@superscout/core";
 import type { CycleStart } from "@superscout/core";
 import { CATEGORY_LABEL, categorizeOffer, cycleStart } from "@superscout/core";
-import { byBiggestDiscount, getOffers } from "@/lib/offers";
+import { byBiggestDiscount, dataFetchedAt, getOffers } from "@/lib/offers";
 import { formatEuro, isExVat, STORE_META, offerSlug, validUntilShort } from "@/lib/format";
 import { DEAL_TYPES } from "@/lib/deal-types";
 import { OfferGrid } from "@/components/OfferGrid";
@@ -111,7 +111,7 @@ export default async function StorePage({ params }: Params) {
       </header>
 
       <div className="mt-2">
-        <OfferGrid offers={offers} nowIso={nowIso} />
+        <OfferGrid offers={offers} nowIso={nowIso} dataDate={dataFetchedAt()} />
       </div>
 
       <StoreProse store={meta.name} slug={slug} offers={offers} faq={faq} />

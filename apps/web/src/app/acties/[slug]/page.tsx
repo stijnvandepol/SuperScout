@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { byBiggestDiscount, getOffers } from "@/lib/offers";
+import { byBiggestDiscount, dataFetchedAt, getOffers } from "@/lib/offers";
 import { offerSlug } from "@/lib/format";
 import { DEAL_TYPES, dealTypeBySlug } from "@/lib/deal-types";
 import { OfferGrid } from "@/components/OfferGrid";
@@ -83,7 +83,7 @@ export default async function DealTypePage({ params }: Params) {
         </div>
       </header>
 
-      <OfferGrid offers={offers} nowIso={nowIso} />
+      <OfferGrid offers={offers} nowIso={nowIso} dataDate={dataFetchedAt()} />
 
       <section className="mt-20 border-t border-line pt-12" aria-labelledby="faq-heading">
         <h2 id="faq-heading" className="font-display text-2xl font-bold tracking-tight">

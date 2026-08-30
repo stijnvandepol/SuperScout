@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { toCardOffer } from "@superscout/core";
 import { chainSentence, dutchList, missingChains } from "@/lib/chains";
-import { byBiggestDiscount, getOffers, stats } from "@/lib/offers";
+import { byBiggestDiscount, dataFetchedAt, getOffers, stats } from "@/lib/offers";
 import { offerSlug } from "@/lib/format";
 import { OfferExplorer } from "@/components/OfferExplorer";
 import { ImageHostPreconnect } from "@/components/ImageHostPreconnect";
@@ -123,6 +123,7 @@ export default function Home() {
   };
 
   const cards = offers.map(toCardOffer);
+  const dataDate = dataFetchedAt();
 
   return (
     <div className="mx-auto max-w-6xl px-5">
@@ -148,6 +149,7 @@ export default function Home() {
         <OfferExplorer
           offers={cards}
           nowIso={nowIso}
+          dataDate={dataDate}
           stat={`${total} aanbiedingen · ${stores} winkels`}
         />
 

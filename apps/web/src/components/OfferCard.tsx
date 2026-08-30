@@ -1,7 +1,14 @@
 import Link from "next/link";
 import type { CardOffer } from "@superscout/core";
 import { daysUntilExpiry, isExpiringSoon } from "@superscout/core";
-import { formatEuro, isExVat, offerSlug, stickerLabel, validUntilShort } from "@/lib/format";
+import {
+  formatEuro,
+  freshnessLabel,
+  isExVat,
+  offerSlug,
+  stickerLabel,
+  validUntilShort,
+} from "@/lib/format";
 import { StoreBadge } from "./StoreBadge";
 import { DiscountSticker } from "./DiscountSticker";
 import { AddToBasketButton } from "./AddToBasketButton";
@@ -9,10 +16,19 @@ import { AddToBasketButton } from "./AddToBasketButton";
 export function OfferCard({
   offer,
   nowIso,
+  dataDate = null,
   priority = false,
 }: {
   offer: CardOffer;
   nowIso: string;
+  /**
+   * When the offer set was last fetched.
+   *
+   * Five of the eight chains are DOM-scraped and give no end date, so nearly
+   * half the cards had a blank where the validity line belongs. Falling back to
+   * when we last saw the offer says less, but says something true.
+   */
+  dataDate?: string | null;
   /**
    * This card is above the fold.
    *
@@ -27,11 +43,13 @@ export function OfferCard({
   const hasPrice = pricing.currentPriceCents !== null;
   const soon = isExpiringSoon(offer.validUntil, nowIso);
   const daysLeft = daysUntilExpiry(offer.validUntil, nowIso);
-  const expiryText = soon
-    ? daysLeft <= 1
-      ? "verloopt vandaag"
-      : `nog ${daysLeft} dagen`
-    : validUntilShort(offer.validUntil);
+  const expiryText = !offer.validUntil
+    ? freshnessLabel(dataDate, nowIso)
+    : soon
+      ? daysLeft <= 1
+        ? "verloopt vandaag"
+        : `nog ${daysLeft} dagen`
+      : validUntilShort(offer.validUntil);
   const productHref = `/aanbieding/${offerSlug(offer)}`;
 
   // Image + brand/title/price — the part that navigates to the store.

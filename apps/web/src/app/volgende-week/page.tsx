@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { Offer, SupermarketSlug } from "@superscout/core";
 import { cycleStartsBySource } from "@superscout/core";
-import { getOffers, upcomingOffers } from "@/lib/offers";
+import { dataFetchedAt, getOffers, upcomingOffers } from "@/lib/offers";
 import { STORE_META, validUntilShort } from "@/lib/format";
 import { OfferGrid } from "@/components/OfferGrid";
 import { JsonLd } from "@/components/JsonLd";
@@ -51,9 +51,9 @@ const FAQ = [
       "Niet elke keten publiceert de folder van volgende week vooruit. Zodra een supermarkt de nieuwe acties online zet, haalt SuperScout ze binnen en verschijnen ze op deze pagina.",
   },
   {
-    q: "Blijven afgelopen aanbiedingen bewaard?",
+    q: "Verdwijnen aanbiedingen zodra ze aflopen?",
     aText:
-      "Ja. SuperScout bewaart afgelopen acties, zodat je kunt terugzoeken wat een product eerder in de aanbieding kostte en kunt beoordelen of een nieuwe korting echt scherp is.",
+      "Ja. Zodra een actie voorbij is verdwijnt hij uit het overzicht — een afgelopen aanbieding tonen levert alleen verwarring op. Wel onthouden we op de achtergrond wat een product eerder kostte, zodat we bij een volgende actie kunnen zeggen of de korting echt scherp is.",
   },
 ];
 
@@ -139,7 +139,7 @@ export default function NextWeekPage() {
               </span>
             </div>
             <div className="mt-5">
-              <OfferGrid offers={group.offers} nowIso={nowIso} />
+              <OfferGrid offers={group.offers} nowIso={nowIso} dataDate={dataFetchedAt()} />
             </div>
           </section>
         ))

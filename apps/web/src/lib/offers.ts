@@ -142,6 +142,22 @@ export function getOffers(): Offer[] {
   return loadRaw().filter((o) => isActive(o.validFrom, o.validUntil, nowIso));
 }
 
+/**
+ * When the live set was last fetched — one value for the whole page.
+ *
+ * Every offer in a pull shares its `fetchedAt`, so this is passed down as a
+ * single string instead of a field on each card. That matters: `CardOffer`
+ * exists to keep the client payload small, and putting `fetchedAt` back on 849
+ * offers would cost ~40 KB to say the same thing 849 times.
+ */
+export function dataFetchedAt(): string | null {
+  let newest: string | null = null;
+  for (const offer of getOffers()) {
+    if (!newest || offer.fetchedAt > newest) newest = offer.fetchedAt;
+  }
+  return newest;
+}
+
 export function getBySlug(slug: string): Offer | undefined {
   return getOffers().find((o) => offerSlug(o) === slug);
 }

@@ -6,6 +6,7 @@ import { CATEGORY_LABEL, type CategorySlug } from "@superscout/core";
 import {
   allCategoriesPresent,
   byBiggestDiscount,
+  dataFetchedAt,
   isIndexableCategory,
   offersInCategory,
 } from "@/lib/offers";
@@ -126,7 +127,7 @@ export default async function CategoryPage({ params }: Params) {
       </header>
 
       <div className="mt-2">
-        <OfferGrid offers={offers} nowIso={nowIso} />
+        <OfferGrid offers={offers} nowIso={nowIso} dataDate={dataFetchedAt()} />
       </div>
 
       <CategoryProse label={label} slug={slug} offers={offers} slices={slices} faq={faq} />

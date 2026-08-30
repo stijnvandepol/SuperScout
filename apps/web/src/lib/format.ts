@@ -90,6 +90,31 @@ export function stickerLabel(offer: Pick<Offer, "mechanism" | "pricing" | "rawLa
   }
 }
 
+/**
+ * What a card says when the chain never told us when the promotion ends.
+ *
+ * Five of the eight live chains are DOM-scraped and publish their validity as
+ * prose ("geldig t/m zondag"), which the normalizers do not extract — so 47% of
+ * offers arrive with an empty `validUntil` and the card rendered a blank where
+ * the expiry line belongs. A shopper reads that blank as "no idea whether this
+ * still counts", which is exactly the doubt the site exists to remove.
+ *
+ * We cannot invent an end date, but we do know when we last saw the offer on
+ * the chain's own page. That is a weaker claim, and a true one.
+ */
+export function freshnessLabel(fetchedAt: string | null, nowIso: string): string {
+  if (!fetchedAt) return "geldigheid onbekend";
+
+  const seen = Date.parse(fetchedAt);
+  const now = Date.parse(nowIso);
+  if (Number.isNaN(seen) || Number.isNaN(now)) return "geldigheid onbekend";
+
+  const days = Math.floor((now - seen) / 86_400_000);
+  if (days <= 0) return "vandaag opgehaald";
+  if (days === 1) return "gisteren opgehaald";
+  return `opgehaald ${validUntilShort(fetchedAt).replace("t/m ", "")}`;
+}
+
 /** "2026-07-07" (or full ISO) -> "t/m 07-07". */
 export function validUntilShort(iso: string): string {
   const parts = iso.slice(0, 10).split("-");

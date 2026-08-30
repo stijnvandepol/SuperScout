@@ -73,13 +73,30 @@ docker compose down            # stopt
 
 De ingest-worker schrijft naast `offers.json` ook `/data/offers-archive.json`: elke actie die we de afgelopen **120 dagen** gezien hebben, inclusief afgelopen en toekomstige.
 
-Dit lost het grootste SEO-probleem van de site op. `offers.json` bevat alleen wat vandaag geldig is, dus tot nu toe verdween elke actiepagina zodra de week omsloeg. Search Console rapporteerde daardoor **848 "niet gevonden (404)" tegenover 626 geïndexeerde pagina's** en 875 URL's die vastzaten op "gevonden — momenteel niet geïndexeerd": Google had geleerd dat dit domein wegwerp-URL's publiceert en crawlde nieuwe niet meer serieus. Juist de actiepagina's waren wat rankte (positie 6-12 op longtail-productzoekopdrachten), dus de wekelijkse rollover sloopte structureel het enige dat werkte.
+**Het archief zijn geen pagina's.** Verlopen acties krijgen bewust geen eigen pagina meer — "deze actie is afgelopen" is een doodlopend eind vermomd als inhoud. In plaats daarvan:
 
-- Staat op hetzelfde persistente volume als de offers. Weggooien betekent opnieuw 404's op alles wat ouder is dan een week.
+- Staat hetzelfde product nu ergens in de aanbieding, dan volgt een **308 naar die actuele actie**. Dat is wat de bezoeker zocht.
+- Zo niet, dan is het een **404**.
+- Het redirectdoel wordt per request opnieuw bepaald, niet opgeslagen. Anders zou de actie van vorige week naar die van deze week wijzen, die zelf weer verloopt, en groeit er een redirectketen aan.
+
+Het archief blijft dus bestaan als **index**, niet als publieksinhoud: het voedt die redirect en de prijshistorie.
+
+- Staat op hetzelfde persistente volume als de offers.
 - Groeit tot ruwweg **15-20 MB** en stabiliseert daar; het retentievenster snoeit ouder werk weg (`ARCHIVE_RETENTION_DAYS` in `packages/core/src/offer-archive.ts`).
-- De web-app leest 'm via `ARCHIVE_PATH`, met een eigen cache van 5 minuten. **Bewust een apart bestand**: `getOffers()` draait op elke listing-render en moet klein blijven, terwijl het archief alleen geraakt wordt als iemand een verlopen URL opvraagt.
-- Ontbreekt het bestand, dan werkt de site gewoon — verlopen URL's geven dan weer een 404, zoals voorheen.
-- Verlopen pagina's krijgen `noindex, follow` tenzij ze prijshistorie hebben óf hetzelfde product nu ergens in de actie staat. Ze staan bewust **niet** in de sitemap; ze zijn bereikbaar via interne links.
+- De web-app leest 'm via `ARCHIVE_PATH`, met een eigen cache van 5 minuten. **Bewust een apart bestand**: `getOffers()` draait op elke listing-render en moet klein blijven, terwijl het archief alleen geraakt wordt bij een verlopen URL.
+- Ontbreekt het bestand, dan werkt de site gewoon — verlopen URL's geven dan een 404 in plaats van een redirect.
+
+## Aanbiedingen zonder einddatum
+
+Vijf van de acht live ketens (ALDI, DekaMarkt, Poiesz, Hoogvliet, Sligro) worden via DOM-scraping opgehaald en leveren **geen enkele datum** — geen `validFrom`, geen `validUntil`. Dat is ~47% van de set. De drie API-ketens (AH, Dirk, Jumbo) hebben 100% dekking.
+
+Gevolgen om rekening mee te houden:
+
+- `isActive()` faalt bewust open op ontbrekende datums, dus deze acties worden nooit weggefilterd. Dat werkt alleen zolang de ingest daadwerkelijk dagelijks draait: het bestand wordt overschreven met wat de keten *vandaag* publiceert.
+- De kaart toonde hier een lege regel. Nu valt hij terug op `freshnessLabel()` — "vandaag opgehaald" — wat een zwakkere maar ware claim is.
+- Het filter "bijna verlopen" en sorteren op resterende looptijd werken voor deze ketens niet.
+
+De echte oplossing is de vijf normalizers de geldigheidsperiode laten uitlezen; die staat op de pagina's van de ketens wel degelijk vermeld, alleen in lopende tekst.
 
 ## Prijshistorie
 

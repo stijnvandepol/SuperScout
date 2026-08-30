@@ -5,12 +5,17 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import type { Offer } from "@superscout/core";
 
 /**
- * End-to-end check on the fix for the 848 "not found (404)" pages Search
- * Console was reporting: a promotion that has ended must still resolve from
- * disk, marked expired, instead of disappearing with the weekly rollover.
+ * The archive is an index, not a set of pages.
  *
- * Real files and a real module load, because the bug being guarded against
- * lives precisely in the file/env/cache plumbing that a mock would replace.
+ * It was briefly both: expired promotions rendered as "deze actie is afgelopen"
+ * pages to stop the weekly wave of 404s. That worked for crawlers and was a bad
+ * experience for shoppers, so the pages are gone. The data stays, because it
+ * still answers the one useful question — is this product on offer somewhere
+ * right now — which drives the redirect on an expired URL, and it feeds the
+ * price history.
+ *
+ * Real files and a real module load, because the behaviour being guarded lives
+ * precisely in the file/env/cache plumbing that a mock would replace.
  */
 
 function offer(partial: Partial<Offer> & { sourceOfferId: string }): Offer {
@@ -55,19 +60,21 @@ function writeFiles(live: Offer[], archived: Offer[]): void {
 }
 
 describe("verlopen aanbiedingen", () => {
-  test("een afgelopen actie blijft oplosbaar en wordt als verlopen gemarkeerd", async () => {
+  test("een afgelopen actie is nog vindbaar in het archief, gemarkeerd als verlopen", async () => {
     const expired = offer({ sourceOfferId: "137769" });
     writeFiles([], [expired]);
 
     const { resolveBySlug } = await import("@/lib/offers");
     const resolved = resolveBySlug("dirk-137769");
 
+    // The page turns this into a redirect or a 404; the resolver's job is only
+    // to say which promotion the slug refers to and whether it still runs.
     expect(resolved).toBeDefined();
     expect(resolved?.status).toBe("expired");
     expect(resolved?.offer.title).toBe("Brabantia melkopschuimer");
   });
 
-  test("een onbekende slug blijft een 404 — het archief maakt niet alles geldig", async () => {
+  test("een onbekende slug blijft onvindbaar — het archief maakt niet alles geldig", async () => {
     writeFiles([], [offer({ sourceOfferId: "137769" })]);
 
     const { resolveBySlug } = await import("@/lib/offers");
