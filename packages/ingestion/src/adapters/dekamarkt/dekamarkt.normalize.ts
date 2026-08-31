@@ -40,8 +40,8 @@ export function normalizeDekamarktOffer(raw: DekamarktRawOffer, fetchedAt: strin
       savingsPercent: savings.percent,
     },
     mechanism,
-    validFrom: "",
-    validUntil: "",
+    validFrom: raw.validFrom ?? "",
+    validUntil: raw.validUntil ?? "",
     flags: {},
     fetchedAt,
   };

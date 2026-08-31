@@ -88,15 +88,24 @@ Het archief blijft dus bestaan als **index**, niet als publieksinhoud: het voedt
 
 ## Aanbiedingen zonder einddatum
 
-Vijf van de acht live ketens (ALDI, DekaMarkt, Poiesz, Hoogvliet, Sligro) worden via DOM-scraping opgehaald en leveren **geen enkele datum** — geen `validFrom`, geen `validUntil`. Dat is ~47% van de set. De drie API-ketens (AH, Dirk, Jumbo) hebben 100% dekking.
+De drie API-ketens (AH, Dirk, Jumbo) leveren hun geldigheidsperiode gestructureerd mee. De vijf browser-gescrapete ketens deden dat niet, waardoor ~47% van de set zonder datum binnenkwam. Vier daarvan zijn inmiddels opgelost, elk met een eigen parser onder `adapters/<keten>/<keten>.validity.ts`:
 
-Gevolgen om rekening mee te houden:
+| Keten | Waar de datum vandaan komt |
+|---|---|
+| ALDI | Ge-escapete JSON-blob met `promotionPrices` per product, gekoppeld op `objectID` |
+| DekaMarkt | Nuxt-payload (`__NUXT_DATA__`), devalue-encoded; velden verwijzen naar indices |
+| Poiesz | Nuxt-payload, één folderperiode voor de hele pagina |
+| Sligro | Alleen in lopende tekst: "Geldig van 13 t/m 31 augustus 2026" |
+| **Hoogvliet** | **Geen** — de catalogus-pagina publiceert geen actieperiode |
 
-- `isActive()` faalt bewust open op ontbrekende datums, dus deze acties worden nooit weggefilterd. Dat werkt alleen zolang de ingest daadwerkelijk dagelijks draait: het bestand wordt overschreven met wat de keten *vandaag* publiceert.
-- De kaart toonde hier een lege regel. Nu valt hij terug op `freshnessLabel()` — "vandaag opgehaald" — wat een zwakkere maar ware claim is.
-- Het filter "bijna verlopen" en sorteren op resterende looptijd werken voor deze ketens niet.
+Twee dingen om te onthouden bij onderhoud:
 
-De echte oplossing is de vijf normalizers de geldigheidsperiode laten uitlezen; die staat op de pagina's van de ketens wel degelijk vermeld, alleen in lopende tekst.
+- **Einddatums zijn vaak exclusief.** Poiesz en DekaMarkt geven het middernacht-moment van de dag *na* de actie. Bij DekaMarkt bevestigden alle 95 offers dat `endDate - 1 dag == disclaimerEndDate`. Klakkeloos overnemen laat elke aanbieding een dag te lang lopen.
+- **Elke parser geeft `null` terug in plaats van een gok.** Faalt de parser, dan stromen de aanbiedingen gewoon door, alleen zonder periode — de kaart valt dan terug op `freshnessLabel()` ("vandaag opgehaald").
+
+De parsers draaien bewust *buiten* `page.evaluate`, als pure functies met echte fixtures. Dit is het stuk dat stilletjes breekt als een keten zijn pagina verbouwt, en stil falen is precies hoe de ontbrekende datums maandenlang onopgemerkt bleven.
+
+Gevolg van een ontbrekende periode: `isActive()` faalt bewust open, dus zulke acties worden nooit weggefilterd. Dat werkt alleen zolang de ingest daadwerkelijk dagelijks draait. Ook het filter "bijna verlopen" en sorteren op looptijd doen voor die aanbiedingen niets.
 
 ## Prijshistorie
 

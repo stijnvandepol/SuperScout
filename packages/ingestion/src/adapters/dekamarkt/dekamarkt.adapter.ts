@@ -1,8 +1,9 @@
 import type { Browser } from "playwright";
 import type { Offer, SourceAdapter, SupermarketSlug } from "@superscout/core";
 import { scrapePage } from "../../browser/intercept";
-import type { DekamarktRawOffer } from "./dekamarkt.raw";
+import type { DekamarktRawOffer, DekamarktScrape } from "./dekamarkt.raw";
 import { normalizeDekamarktOffer } from "./dekamarkt.normalize";
+import { normaliseTitle, parseDekamarktValidity } from "./dekamarkt.validity";
 
 const DEKAMARKT_OFFERS_URL = "https://www.dekamarkt.nl/aanbiedingen";
 
@@ -12,7 +13,7 @@ const DEKAMARKT_OFFERS_URL = "https://www.dekamarkt.nl/aanbiedingen";
  * `.regular-strike`, so the current price is the last price token once the
  * strike value is stripped off.
  */
-function extractDekamarktOffers(): DekamarktRawOffer[] {
+function extractDekamarktOffers(): DekamarktScrape[] {
   const clean = (s: string | null | undefined) => (s ?? "").replace(/\s+/g, " ").trim();
   const cards = Array.from(document.querySelectorAll(".product__card"));
   const out: DekamarktRawOffer[] = [];
@@ -47,7 +48,8 @@ function extractDekamarktOffers(): DekamarktRawOffer[] {
       image: card.querySelector("img")?.getAttribute("src") ?? undefined,
     });
   }
-  return out;
+  // The promotion dates are not on the cards; they sit in the Nuxt payload.
+  return [{ offers: out, html: document.documentElement.outerHTML }];
 }
 
 /** DekaMarkt: server-rendered aanbiedingen page, scraped through a headless browser. */
@@ -61,18 +63,26 @@ export class DekamarktAdapter implements SourceAdapter {
 
   async fetchOffers(): Promise<Offer[]> {
     const fetchedAt = this.clock();
-    const raw = await scrapePage<DekamarktRawOffer>(
+    const scraped = await scrapePage<DekamarktScrape>(
       this.browser,
       DEKAMARKT_OFFERS_URL,
       extractDekamarktOffers,
     );
+    const pass = scraped[0];
+    if (!pass) return [];
+
+    const validity = parseDekamarktValidity(pass.html);
 
     const seen = new Set<string>();
     const offers: Offer[] = [];
-    for (const r of raw) {
+    for (const r of pass.offers) {
       if (!r.id || seen.has(r.id)) continue;
       seen.add(r.id);
-      offers.push(normalizeDekamarktOffer(r, fetchedAt));
+
+      // Title first, then the folder-wide period: DekaMarkt runs one week at a
+      // time, so `common` covers whatever the title join happens to miss.
+      const period = validity.byTitle.get(normaliseTitle(r.title)) ?? validity.common;
+      offers.push(normalizeDekamarktOffer(period ? { ...r, ...period } : r, fetchedAt));
     }
     return offers;
   }
