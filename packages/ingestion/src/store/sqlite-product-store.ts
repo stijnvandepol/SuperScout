@@ -2,6 +2,7 @@ import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import type { Product, ProductQuery, ProductStore, SupermarketSlug } from "@superscout/core";
+import { normaliseTitle } from "@superscout/core";
 
 /**
  * SQLite-backed catalogue.
@@ -36,7 +37,11 @@ CREATE TABLE IF NOT EXISTS products (
   category_path          TEXT,
   taxonomy_id            INTEGER,
   url                    TEXT,
-  fetched_at             TEXT NOT NULL
+  fetched_at             TEXT NOT NULL,
+  -- Normalised title, so an offer can find its catalogue entry without a scan.
+  -- No chain publishes an EAN and the promotion feed uses different internal
+  -- ids than the catalogue, so the normalised name is the only join we have.
+  title_key              TEXT
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS products_source_pid
@@ -46,6 +51,7 @@ CREATE INDEX IF NOT EXISTS products_source ON products (source);
 -- per chain per night.
 CREATE INDEX IF NOT EXISTS products_source_fetched ON products (source, fetched_at);
 CREATE INDEX IF NOT EXISTS products_title ON products (title);
+CREATE INDEX IF NOT EXISTS products_title_key ON products (source, title_key);
 `;
 
 interface Row {
@@ -105,6 +111,15 @@ export class SqliteProductStore implements ProductStore {
     }
     this.db.exec("PRAGMA foreign_keys = ON");
     this.db.exec(SCHEMA);
+    // CREATE TABLE IF NOT EXISTS leaves an existing table alone, so a database
+    // written before title_key existed needs the column added explicitly. The
+    // nightly crawl fills it; until then the column is simply null.
+    try {
+      this.db.exec("ALTER TABLE products ADD COLUMN title_key TEXT");
+      this.db.exec("CREATE INDEX IF NOT EXISTS products_title_key ON products (source, title_key)");
+    } catch {
+      // Already present.
+    }
   }
 
   async upsertMany(products: Product[]): Promise<void> {
@@ -114,8 +129,8 @@ export class SqliteProductStore implements ProductStore {
       INSERT INTO products (
         id, source, source_product_id, title, brand, sales_unit_size,
         price_cents, price_before_bonus_cents, unit_price_cents, unit_price_label,
-        image_url, category_path, taxonomy_id, url, fetched_at
-      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        image_url, category_path, taxonomy_id, url, fetched_at, title_key
+      ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
       ON CONFLICT(id) DO UPDATE SET
         title = excluded.title,
         brand = excluded.brand,
@@ -128,7 +143,8 @@ export class SqliteProductStore implements ProductStore {
         category_path = excluded.category_path,
         taxonomy_id = excluded.taxonomy_id,
         url = excluded.url,
-        fetched_at = excluded.fetched_at
+        fetched_at = excluded.fetched_at,
+        title_key = excluded.title_key
     `);
 
     // One transaction per batch: 42.000 individual commits would take minutes
@@ -152,6 +168,7 @@ export class SqliteProductStore implements ProductStore {
           p.taxonomyId ?? null,
           p.url ?? null,
           p.fetchedAt,
+          normaliseTitle(p.title) || null,
         );
       }
       this.db.exec("COMMIT");

@@ -10,7 +10,9 @@ import {
   isExpiringSoon,
   relatedOffers,
 } from "@superscout/core";
+import { productPath } from "@superscout/core";
 import { currentEquivalent, getOffers, resolveBySlug } from "@/lib/offers";
+import { productForOffer } from "@/lib/catalogue";
 import { insightFor } from "@/lib/price-history";
 
 import {
@@ -101,8 +103,17 @@ export default async function OfferPage({ params }: Params) {
    * The target is recomputed on every request rather than stored, so this stays
    * a single hop forever. A stored redirect would point at last week's
    * promotion, which itself expires, and the chain would grow a link a week.
+   *
+   * The product page is preferred over the current promotion because it is
+   * permanent: sending an expired URL to this week's offer only moves the
+   * problem to next week, while the catalogue entry is there whether or not
+   * anything is discounted. Only two chains have a catalogue so far, so the
+   * promotion remains the fallback.
    */
   if (status === "expired") {
+    const catalogued = productForOffer(offer);
+    if (catalogued) permanentRedirect(productPath(catalogued));
+
     const replacement = currentEquivalent(offer);
     if (replacement) permanentRedirect(`/aanbieding/${offerSlug(replacement)}`);
     notFound();
@@ -246,6 +257,7 @@ export default async function OfferPage({ params }: Params) {
             <AddToBasketButton id={offer.id} />
           </div>
 
+          <CataloguePermalink offer={offer} />
           <PriceHistoryNote offer={offer} />
         </div>
       </div>
@@ -258,6 +270,33 @@ export default async function OfferPage({ params }: Params) {
       ) : null}
       <RelatedSection title="Gerelateerde aanbiedingen" offers={related} nowIso={nowIso} />
     </div>
+  );
+}
+
+/**
+ * Link from a running promotion to the product's permanent page.
+ *
+ * Not a redirect. These offer pages sit at position 6-12 on long-tail product
+ * queries and the catalogue pages are not indexed yet, so redirecting would
+ * hand a working ranking to a page Google has never seen — a gamble with the
+ * one thing that works. A link consolidates nothing on its own, but it costs
+ * nothing either, and once the product pages actually rank the redirect becomes
+ * a safe move made on evidence rather than hope.
+ */
+function CataloguePermalink({ offer }: { offer: Offer }) {
+  const product = productForOffer(offer);
+  if (!product) return null;
+
+  return (
+    <p className="mt-6 text-sm leading-relaxed text-ink-soft">
+      <Link
+        href={productPath(product)}
+        className="font-medium text-ink underline decoration-deal decoration-2 underline-offset-2"
+      >
+        Bekijk de vaste prijs en prijshistorie van dit product
+      </Link>{" "}
+      — die pagina blijft bestaan, ook als deze actie is afgelopen.
+    </p>
   );
 }
 

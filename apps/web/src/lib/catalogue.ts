@@ -1,5 +1,6 @@
 import { DatabaseSync } from "node:sqlite";
-import type { Product, SupermarketSlug } from "@superscout/core";
+import type { Offer, Product, SupermarketSlug } from "@superscout/core";
+import { normaliseTitle } from "@superscout/core";
 
 /**
  * Read side of the product catalogue.
@@ -130,6 +131,35 @@ export function neighbours(product: Product, limit = 8): Product[] {
     return rows.map(toProduct);
   } catch {
     return [];
+  }
+}
+
+/**
+ * The catalogue entry an offer is about, if we carry one.
+ *
+ * Matched on `priceKey` — chain plus normalised title — because no chain
+ * publishes an EAN and the promotion feed and the catalogue use different
+ * internal ids for the same item. A miss is the normal case for the six chains
+ * with no catalogue yet, and the caller must treat it as such rather than as an
+ * error.
+ *
+ * Deliberately not a LIKE query: a fuzzy match here would send a visitor to a
+ * page about a different product, which is worse than sending them nowhere.
+ */
+export function productForOffer(offer: Offer): Product | undefined {
+  const handle = connect();
+  if (!handle) return undefined;
+
+  const key = normaliseTitle(offer.title);
+  if (!key) return undefined;
+
+  try {
+    const row = handle
+      .prepare("SELECT * FROM products WHERE source = ? AND title_key = ? LIMIT 1")
+      .get(offer.source, key) as unknown as Row | undefined;
+    return row ? toProduct(row) : undefined;
+  } catch {
+    return undefined;
   }
 }
 

@@ -22,7 +22,7 @@ export interface PriceObservation {
 }
 
 /** Normalise a title into something that survives week-to-week rewording. */
-function normaliseTitle(title: string): string {
+export function normaliseTitle(title: string): string {
   return title
     .toLowerCase()
     .normalize("NFD")
