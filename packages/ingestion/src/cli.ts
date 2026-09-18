@@ -31,6 +31,7 @@ import { SqliteProductStore } from "./store/sqlite-product-store";
 import { apiAdapters } from "./sources";
 import { browserSources } from "./browser/browser-sources";
 import { launchBrowser } from "./browser/intercept";
+import { DIR_FOR_WEB, READ_FOR_WEB, shareWithWeb } from "./shared-volume";
 
 /**
  * Write a file so that a reader never sees it half-written.
@@ -44,14 +45,15 @@ import { launchBrowser } from "./browser/intercept";
  */
 function writeAtomic(path: string, contents: string): void {
   const temp = `${path}.tmp`;
-  mkdirSync(dirname(path), { recursive: true, mode: 0o755 });
-  // Mode explicitly, not by umask. The worker runs as root and the web app runs
-  // as `nextjs`, so anything written here has to be world-readable or the site
-  // sees nothing. writeFileSync keeps an existing file's permissions, which
-  // hid this for as long as the file was only ever overwritten in place —
-  // writing a fresh temp file and renaming does not inherit anything.
-  writeFileSync(temp, contents, { encoding: "utf-8", mode: 0o644 });
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(temp, contents, { encoding: "utf-8" });
+  // Ownership before the rename, so the file is never briefly unreadable to the
+  // web app. Permissions cannot be inherited here: writeFileSync keeps an
+  // existing file's mode, which hid the problem for as long as this overwrote
+  // in place — a fresh temp file starts from the worker's umask as root.
+  shareWithWeb(temp, READ_FOR_WEB);
   renameSync(temp, path);
+  shareWithWeb(dirname(path), DIR_FOR_WEB);
 }
 
 const OUT = process.env.OFFERS_OUT ?? "/data/offers.json";

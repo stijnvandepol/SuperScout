@@ -61,12 +61,14 @@ jobs:
           docker exec -e INGEST_ONCE=1 -e SKIP_ASSORTMENT=1 superscout-ingestion \
             node --experimental-sqlite packages/ingestion/dist/ingest.cjs 2>&1 | tail -20
 
-      # Read the file the web app actually reads, rather than trusting the
-      # step above to have meant it.
-      - name: Verify offers landed
+      # Verified from inside the web container, not the worker. The worker
+      # reading its own output proves nothing: it runs as root and wrote the
+      # file. The question that matters is whether the container serving the
+      # site can read it, and that is a different user on a shared volume.
+      - name: Verify the web app can read the offers
         run: |
-          docker exec superscout-ingestion node -e "
-            const o = JSON.parse(require('fs').readFileSync('/data/offers.json','utf8'));
+          docker exec superscout-web node -e "
+            const o = JSON.parse(require('fs').readFileSync(process.env.OFFERS_PATH, 'utf8'));
             const chains = [...new Set(o.map(x => x.source))].sort();
             console.log('offers:', o.length, '| ketens:', chains.join(' '));
             if (o.length < 100) {
@@ -74,6 +76,20 @@ jobs:
               process.exit(1);
             }
           "
+
+      # And end to end, because a readable file is still not a working page:
+      # the homepage was serving zero while this exact file parsed fine.
+      - name: Verify the homepage shows them
+        run: |
+          for i in 1 2 3 4 5 6; do
+            body=$(docker exec superscout-web wget -qO- http://127.0.0.1:3000/ || true)
+            count=$(printf '%s' "$body" | grep -oE '[0-9]+ aanbiedingen' | head -1 | grep -oE '^[0-9]+' || echo 0)
+            echo "poging $i: $count aanbiedingen op de homepage"
+            if [ "${count:-0}" -ge 100 ]; then exit 0; fi
+            sleep 5
+          done
+          echo "De homepage toont geen aanbiedingen terwijl het bestand wel leesbaar is."
+          exit 1
 
       - name: Remove dangling images
         run: docker image prune -f

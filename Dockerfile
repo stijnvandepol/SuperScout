@@ -23,7 +23,11 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
-RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
+# Pinned, not auto-allocated. The ingestion worker runs as root on a shared
+# volume and hands its output to this group (see packages/ingestion/src/
+# shared-volume.ts, WEB_GID); an id picked by `addgroup -S` would silently
+# drift on a base-image bump and lock the site out of its own data.
+RUN addgroup -g 1001 -S nodejs && adduser -u 1001 -S nextjs -G nodejs
 COPY --from=build --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=build --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=build --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public

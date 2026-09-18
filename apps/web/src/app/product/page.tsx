@@ -5,7 +5,9 @@ import { formatEuro, STORE_META } from "@/lib/format";
 import { OfferCard } from "@/components/OfferCard";
 import { chainSentence } from "@/lib/chains";
 
-export const revalidate = 1800;
+// Read at request time, never baked into the build: see `loadRaw` in
+// lib/offers.ts for what a build-time prerender of this page contains.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Over SuperScout — dé aanbiedingen-vergelijker van Nederland",

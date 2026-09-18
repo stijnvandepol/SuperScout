@@ -15,7 +15,9 @@ import {
 } from "@/lib/seo";
 import { offerSlug } from "@/lib/format";
 
-export const revalidate = 1800;
+// Read at request time, never baked into the build: see `loadRaw` in
+// lib/offers.ts for what a build-time prerender of this page contains.
+export const dynamic = "force-dynamic";
 
 const TITLE = "Supermarkt aanbiedingen volgende week";
 const DESCRIPTION =

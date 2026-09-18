@@ -15,7 +15,9 @@ import {
 } from "@/lib/seo";
 
 // Re-read live offers periodically (ISR).
-export const revalidate = 1800;
+// Read at request time, never baked into the build: see `loadRaw` in
+// lib/offers.ts for what a build-time prerender of this page contains.
+export const dynamic = "force-dynamic";
 
 // Filtered/searched variants (?q=…) all canonicalise to the clean homepage.
 export const metadata: Metadata = {

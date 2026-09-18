@@ -1,6 +1,7 @@
 import { DatabaseSync } from "node:sqlite";
-import { chmodSync, mkdirSync } from "node:fs";
+import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
+import { DIR_FOR_WEB, shareWithWeb, WRITE_FOR_WEB } from "../shared-volume";
 import type { Product, ProductQuery, ProductStore, SupermarketSlug } from "@superscout/core";
 import { normaliseTitle } from "@superscout/core";
 
@@ -112,19 +113,11 @@ export class SqliteProductStore implements ProductStore {
       this.db.exec("PRAGMA journal_mode = WAL");
       this.db.exec("PRAGMA synchronous = NORMAL");
 
-      // WAL has a cost that is easy to miss: even a read-only connection needs
-      // write access to the database's directory and its -shm sidecar, because
-      // SQLite attaches shared memory to read. The worker runs as root and the
-      // web app as `nextjs`, so without this the site opens the catalogue and
-      // silently gets nothing.
-      // The directory too: SQLite creates the -shm sidecar on first read, so a
-      // reader that cannot write here cannot open the database at all.
-      for (const target of [dirname(path), path, `${path}-wal`, `${path}-shm`]) {
-        try {
-          chmodSync(target, target === dirname(path) ? 0o777 : 0o666);
-        } catch {
-          // Not every sidecar exists yet; the ones that do are what matter.
-        }
+      // The reader needs write access here, not just read — see
+      // WRITE_FOR_WEB for why WAL makes that unavoidable.
+      shareWithWeb(dirname(path), DIR_FOR_WEB);
+      for (const target of [path, `${path}-wal`, `${path}-shm`]) {
+        shareWithWeb(target, WRITE_FOR_WEB);
       }
     }
     this.db.exec("PRAGMA foreign_keys = ON");

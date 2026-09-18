@@ -136,6 +136,27 @@ function sanitise(offers: Offer[], label: string): Offer[] {
   return clean;
 }
 
+/**
+ * Read the live offer file, or the snapshot while it can still be true.
+ *
+ * Note what this returns during `docker build`: OFFERS_PATH is set by
+ * docker-compose, not by the Dockerfile, and /data is a volume that does not
+ * exist yet — so at build time there is no path, no file, and `usableSeed()`
+ * is empty because the bundled snapshot is months old. Every page prerendered
+ * in the image therefore says "0 aanbiedingen".
+ *
+ * That is why the offer-driven routes are `force-dynamic` rather than ISR.
+ * With `revalidate` they shipped the build-time emptiness and kept serving it:
+ * the container read this file perfectly (1.012 offers, all valid) while the
+ * homepage showed zero, because nothing ever called this function again. The
+ * routes generated on demand — category pages, product pages — were correct
+ * the whole time, which is what finally located the fault at the build
+ * boundary rather than in the data or the volume permissions.
+ *
+ * Rendering per request is affordable here because of the cache below: the
+ * parse happens at most once a minute, and the rest is a filter over an array
+ * already in memory.
+ */
 function loadRaw(): Offer[] {
   const path = process.env.OFFERS_PATH;
   if (!path) return usableSeed();

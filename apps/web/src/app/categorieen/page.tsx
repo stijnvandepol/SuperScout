@@ -3,7 +3,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { categoriesPresent } from "@/lib/offers";
 
-export const revalidate = 1800;
+// Read at request time, never baked into the build: see `loadRaw` in
+// lib/offers.ts for what a build-time prerender of this page contains.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Alle categorieën aanbiedingen",

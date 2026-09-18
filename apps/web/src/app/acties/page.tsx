@@ -5,7 +5,9 @@ import { DEAL_TYPES } from "@/lib/deal-types";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd, SITE_FEED_ALTERNATE } from "@/lib/seo";
 
-export const revalidate = 1800;
+// Read at request time, never baked into the build: see `loadRaw` in
+// lib/offers.ts for what a build-time prerender of this page contains.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Soorten aanbiedingen — 1+1 gratis, % korting en stapelacties",

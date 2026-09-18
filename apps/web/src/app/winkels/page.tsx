@@ -5,7 +5,9 @@ import { STORE_META } from "@/lib/format";
 import { getOffers } from "@/lib/offers";
 import { chainSentence, dutchList, missingChains } from "@/lib/chains";
 
-export const revalidate = 1800;
+// Read at request time, never baked into the build: see `loadRaw` in
+// lib/offers.ts for what a build-time prerender of this page contains.
+export const dynamic = "force-dynamic";
 
 export function generateMetadata(): Metadata {
   return {

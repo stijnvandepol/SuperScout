@@ -6,8 +6,9 @@ import { DEAL_TYPES } from "@/lib/deal-types";
 import { SAVINGS_CAMPAIGNS } from "@/lib/spaaracties";
 import { SITE_URL } from "@/lib/seo";
 
-// Regenerates as the offer set changes.
-export const revalidate = 1800;
+// Read at request time, never baked into the build: see `loadRaw` in
+// lib/offers.ts for what a build-time prerender of this page contains.
+export const dynamic = "force-dynamic";
 
 /** Newest ingestion timestamp in a slice — the honest lastModified for a listing. */
 function newestFetch(offers: Offer[]): string | undefined {
