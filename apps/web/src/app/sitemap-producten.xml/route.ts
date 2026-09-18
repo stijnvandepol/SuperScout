@@ -16,15 +16,21 @@ import { SITE_URL } from "@/lib/seo";
  */
 
 /**
- * An hour, not a day.
+ * Computed per request, never prerendered.
  *
- * This route was first rendered at deploy time, when the catalogue database was
- * still empty, and a 24-hour cache meant Google read an empty index for a full
- * day while 28.000 product URLs sat behind it undiscovered. The index is two
- * COUNT queries, so refreshing it hourly costs nothing and the file heals
- * itself within an hour of a crawl finishing.
+ * This route takes no parameters, so Next renders it during `docker build` —
+ * where the /data volume is not mounted and the catalogue database is empty. It
+ * then served an empty index until the revalidate window expired, which meant
+ * every deploy hid 28.000 product URLs from Google for up to an hour.
+ *
+ * The chunk routes never had this problem: their dynamic segments mean they are
+ * only ever rendered on a real request, with the real database. The index had no
+ * segments to force that, so it says so explicitly.
+ *
+ * It is two COUNT queries per chain. Computing them per request costs nothing
+ * next to being wrong after every release.
  */
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export async function GET(): Promise<Response> {
   const chunks: string[] = [];
