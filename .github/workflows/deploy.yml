@@ -55,11 +55,9 @@ jobs:
       # replaces was silent: the web app fell back to the bundled July snapshot
       # and served it as this week's offers.
       - name: Refresh offers
-        env:
-          # Offers only: the catalogue crawl takes twenty minutes and has
-          # its own nightly pass, so a deploy should not wait on it.
-          ONE_SHOT: INGEST_ONCE=1 SKIP_ASSORTMENT=1
         run: |
+          # Offers only: the catalogue crawl takes twenty minutes and has its
+          # own nightly pass, so a deploy should not wait on it.
           docker exec -e INGEST_ONCE=1 -e SKIP_ASSORTMENT=1 superscout-ingestion \
             node --experimental-sqlite packages/ingestion/dist/ingest.cjs 2>&1 | tail -20
 
