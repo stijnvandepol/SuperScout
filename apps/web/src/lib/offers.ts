@@ -28,6 +28,26 @@ let cache: { at: number; offers: Offer[] } | null = null;
  */
 const SEED_BACKFILL_MAX_AGE_DAYS = 14;
 
+/**
+ * The bundled snapshot, but only while it could still be true.
+ *
+ * `loadRaw` has two paths that reach for the seed — no OFFERS_PATH configured,
+ * and the live file failing to parse — and both used to hand back the snapshot
+ * unconditionally. That is how a July snapshot ended up on the site in
+ * September as "aanbiedingen van deze week": 194 Aldi, 111 DekaMarkt, 35 Poiesz
+ * offers, matching the seed exactly, all undated so `isActive` let them through.
+ *
+ * The age guard already existed on `mergeWithSeed`, which fills in a missing
+ * chain. It did not exist here, on the path that replaces *everything*. An
+ * empty site is a visible failure; a site quietly serving ten-week-old prices
+ * is not, and for a price comparison that is the worse of the two.
+ */
+function usableSeed(): Offer[] {
+  const age = (Date.now() - seedFreshness()) / 86_400_000;
+  if (!Number.isFinite(age) || age > SEED_BACKFILL_MAX_AGE_DAYS) return [];
+  return SEED;
+}
+
 /** Newest ingestion timestamp in the bundled snapshot, as epoch ms. */
 function seedFreshness(): number {
   let newest = Number.NEGATIVE_INFINITY;
@@ -118,7 +138,7 @@ function sanitise(offers: Offer[], label: string): Offer[] {
 
 function loadRaw(): Offer[] {
   const path = process.env.OFFERS_PATH;
-  if (!path) return SEED;
+  if (!path) return usableSeed();
 
   const now = Date.now();
   if (cache && now - cache.at < TTL_MS) return cache.offers;
@@ -127,8 +147,11 @@ function loadRaw(): Offer[] {
     const offers = mergeWithSeed(parsed);
     cache = { at: now, offers };
     return offers;
-  } catch {
-    return cache?.offers ?? SEED;
+  } catch (error) {
+    // Loud, because this is the failure that hides: the site keeps serving and
+    // nothing about the page says the data is two months old.
+    console.error(`[offers] kon ${path} niet lezen:`, error);
+    return cache?.offers ?? usableSeed();
   }
 }
 

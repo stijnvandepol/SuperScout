@@ -202,3 +202,35 @@ describe("verouderde seed-backfill", () => {
     expect(getOffers().some((o) => o.sourceOfferId === "555")).toBe(true);
   });
 });
+
+describe("de seed mag nooit de hele site worden", () => {
+  test("een onleesbaar offers-bestand levert liever niets dan juli-prijzen", async () => {
+    // Dit ging in productie mis. De leeftijdsgrens stond op mergeWithSeed, dat
+    // een ontbrekende keten aanvult, maar niet op het pad dat *alles* vervangt:
+    // een kapot offers.json gaf de volledige juli-snapshot terug. Resultaat:
+    // 194 Aldi, 111 DekaMarkt, 35 Poiesz aanbiedingen op de site, exact de
+    // seed-aantallen, tien weken oud, gepresenteerd als "deze week".
+    const path = join(dir, "kapot.json");
+    writeFileSync(path, "{dit is geen json", "utf-8");
+    process.env.OFFERS_PATH = path;
+
+    const { getOffers } = await import("@/lib/offers");
+    expect(getOffers()).toEqual([]);
+  });
+
+  test("zonder OFFERS_PATH net zo goed", async () => {
+    delete process.env.OFFERS_PATH;
+
+    const { getOffers } = await import("@/lib/offers");
+    expect(getOffers()).toEqual([]);
+  });
+
+  test("een leeg bestand is een leeg aanbod, geen seed", async () => {
+    const path = join(dir, "leeg.json");
+    writeFileSync(path, "[]", "utf-8");
+    process.env.OFFERS_PATH = path;
+
+    const { getOffers } = await import("@/lib/offers");
+    expect(getOffers()).toEqual([]);
+  });
+});
