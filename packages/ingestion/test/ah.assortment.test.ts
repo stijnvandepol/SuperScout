@@ -122,9 +122,10 @@ describe("AhAssortmentSource", () => {
     ]);
     const source = new AhAssortmentSource({ fetcher, throttleMs: 0 });
 
-    const products = await source.fetchTaxonomy(1192, "kaas");
+    const { products, complete } = await source.fetchTaxonomy(1192, "kaas");
 
     expect(products.map((p) => p.sourceProductId)).toEqual(["1", "2", "3"]);
+    expect(complete).toBe(true);
     expect(calls).toHaveLength(2);
   });
 
@@ -132,19 +133,73 @@ describe("AhAssortmentSource", () => {
     const { fetcher } = fakeApi([[{ ...REAL, id: 7 }], [{ ...REAL, id: 7 }]]);
     const source = new AhAssortmentSource({ fetcher, throttleMs: 0 });
 
-    expect(await source.fetchTaxonomy(1192)).toHaveLength(1);
+    expect((await source.fetchTaxonomy(1192)).products).toHaveLength(1);
   });
 
-  test("a GraphQL error surfaces rather than returning an empty aisle", async () => {
-    // Silently returning [] would let pruneStale wipe the aisle from the
-    // catalogue on the next pass.
-    const fetcher = async (url: string) =>
-      url.includes("mobile-auth")
-        ? new Response(JSON.stringify({ access_token: "tok" }), { status: 200 })
-        : new Response(JSON.stringify({ errors: [{ message: "boom" }] }), { status: 200 });
+  test("a page that keeps failing yields a partial aisle, not an empty one", async () => {
+    // AH's gateway returns "Subgraph errors redacted" deep into a large aisle.
+    // Measured on a full crawl it took out the four biggest aisles entirely —
+    // 13.500 products lost because one page in each failed after 30 good ones.
+    let served = 0;
+    const fetcher = async (url: string) => {
+      if (url.includes("mobile-auth")) {
+        return new Response(JSON.stringify({ access_token: "tok" }), { status: 200 });
+      }
+      served += 1;
+      // First page fine, everything after it broken however often we retry.
+      if (served === 1) {
+        return new Response(
+          JSON.stringify({
+            data: {
+              productSearch: {
+                page: { totalElements: 200, totalPages: 2 },
+                products: [{ ...REAL, id: 1 }],
+              },
+            },
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response(JSON.stringify({ errors: [{ message: "Subgraph errors redacted" }] }), {
+        status: 200,
+      });
+    };
 
     const source = new AhAssortmentSource({ fetcher, throttleMs: 0 });
-    await expect(source.fetchTaxonomy(1192)).rejects.toThrow(/boom/);
+    const { products, complete } = await source.fetchTaxonomy(1192);
+
+    expect(products).toHaveLength(1);
+    expect(complete).toBe(false);
+  });
+
+  test("a failing page is retried before it counts as failed", async () => {
+    let attempts = 0;
+    const fetcher = async (url: string) => {
+      if (url.includes("mobile-auth")) {
+        return new Response(JSON.stringify({ access_token: "tok" }), { status: 200 });
+      }
+      attempts += 1;
+      if (attempts < 3) {
+        return new Response(JSON.stringify({ errors: [{ message: "Subgraph errors redacted" }] }), {
+          status: 200,
+        });
+      }
+      return new Response(
+        JSON.stringify({
+          data: {
+            productSearch: { page: { totalElements: 1, totalPages: 1 }, products: [{ ...REAL, id: 1 }] },
+          },
+        }),
+        { status: 200 },
+      );
+    };
+
+    const source = new AhAssortmentSource({ fetcher, throttleMs: 0 });
+    const { products, complete } = await source.fetchTaxonomy(1192);
+
+    expect(attempts).toBe(3);
+    expect(complete).toBe(true);
+    expect(products).toHaveLength(1);
   });
 
   test("reports progress so a three-minute crawl is observable", async () => {

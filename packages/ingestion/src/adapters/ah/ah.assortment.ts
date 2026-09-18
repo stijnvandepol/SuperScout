@@ -32,6 +32,25 @@ const PAGE_SIZE = 100;
 /** Courtesy delay between requests; a full crawl is ~425 of them. */
 const THROTTLE_MS = 250;
 
+/**
+ * Attempts per page before giving up on it.
+ *
+ * Kept for genuinely transient failures, but note what it does *not* fix. AH's
+ * gateway answers "Subgraph errors redacted" past offset 3.000 within a
+ * taxonomy — a second result-window cap alongside the 10.000 one on an
+ * unfiltered query. Retrying was measured against it and every attempt failed
+ * identically, because it is a limit rather than load: on a full crawl the four
+ * aisles above 3.000 products each stopped at exactly 3.000.
+ *
+ * The consequence is that those four aisles lose their tail — roughly 1.500
+ * products of 42.000, about 3.5%. Recovering them means crawling their
+ * sub-categories, which AH's sitemap lists but does not map to parents.
+ */
+const PAGE_ATTEMPTS = 3;
+
+/** Backoff between attempts. */
+const RETRY_MS = 1500;
+
 const PRODUCT_QUERY = `
 query assortment($input: ProductSearchInput!) {
   productSearch(input: $input) {
@@ -135,6 +154,19 @@ export type Fetcher = (url: string, init: RequestInit) => Promise<Response>;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+export interface TaxonomyResult {
+  products: Product[];
+  /**
+   * Whether every page of the aisle came back.
+   *
+   * False is the normal state for the four aisles above AH's 3.000-per-taxonomy
+   * cap, not an exception. Keeping the partial result raised a full crawl from
+   * 28.911 products to 40.911; the caller still has to know, because pruning
+   * against an incomplete crawl would delete the rest of the catalogue.
+   */
+  complete: boolean;
+}
+
 export interface CrawlProgress {
   taxonomyId: number;
   label: string;
@@ -220,8 +252,26 @@ export class AhAssortmentSource {
     };
   }
 
+  /** One page, retried a few times before it counts as failed. */
+  private async pageWithRetry(
+    taxonomyId: number,
+    page: number,
+  ): Promise<{ products: AhRawProduct[]; totalElements: number; totalPages: number }> {
+    let lastError: unknown;
+
+    for (let attempt = 1; attempt <= PAGE_ATTEMPTS; attempt += 1) {
+      try {
+        return await this.page(taxonomyId, page);
+      } catch (error) {
+        lastError = error;
+        if (attempt < PAGE_ATTEMPTS) await sleep(RETRY_MS * attempt);
+      }
+    }
+    throw lastError;
+  }
+
   /** Every product in one aisle, following its pages. */
-  async fetchTaxonomy(taxonomyId: number, label = ""): Promise<Product[]> {
+  async fetchTaxonomy(taxonomyId: number, label = ""): Promise<TaxonomyResult> {
     const fetchedAt = (this.options.clock ?? (() => new Date().toISOString()))();
     const throttle = this.options.throttleMs ?? THROTTLE_MS;
 
@@ -233,7 +283,13 @@ export class AhAssortmentSource {
     let totalElements = 0;
 
     while (pageIndex < totalPages) {
-      const result = await this.page(taxonomyId, pageIndex);
+      let result;
+      try {
+        result = await this.pageWithRetry(taxonomyId, pageIndex);
+      } catch {
+        // Keep what the aisle already gave us and tell the caller it is partial.
+        return { products: out, complete: false };
+      }
       totalPages = result.totalPages;
       totalElements = result.totalElements;
 
@@ -256,6 +312,6 @@ export class AhAssortmentSource {
       if (pageIndex < totalPages && throttle > 0) await sleep(throttle);
     }
 
-    return out;
+    return { products: out, complete: true };
   }
 }

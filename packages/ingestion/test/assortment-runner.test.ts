@@ -17,13 +17,16 @@ function product(id: string, fetchedAt: string): Product {
 }
 
 /** Stands in for the real crawler; `failOn` makes one aisle blow up. */
-function fakeSource(opts: { perAisle?: number; failOn?: string; fetchedAt?: string } = {}) {
+function fakeSource(
+  opts: { perAisle?: number; failOn?: string; partialOn?: string; fetchedAt?: string } = {},
+) {
   const at = opts.fetchedAt ?? new Date(Date.now() + 60_000).toISOString();
   let n = 0;
   return {
     fetchTaxonomy: vi.fn(async (_id: number, label = "") => {
       if (opts.failOn === label) throw new Error("aisle kapot");
-      return Array.from({ length: opts.perAisle ?? 2 }, () => product(String(n++), at));
+      const products = Array.from({ length: opts.perAisle ?? 2 }, () => product(String(n++), at));
+      return { products, complete: opts.partialOn !== label };
     }),
   } as unknown as AhAssortmentSource;
 }
@@ -77,6 +80,25 @@ describe("crawlAhAssortment", () => {
 
     expect(report.pruned).toBe(0);
     expect(await store.get("ah:delisted")).toBeDefined();
+    await store.close();
+  });
+
+  test("a partial aisle is stored but still blocks the prune", async () => {
+    // The failure mode this exists for: AH's gateway errors deep into a large
+    // aisle, and throwing away 3.000 already-fetched products is worse than
+    // keeping them. Keeping them must not licence a prune, though.
+    const store = new SqliteProductStore(":memory:");
+    await store.upsertMany([product("delisted", "2020-01-01T00:00:00.000Z")]);
+
+    const report = await crawlAhAssortment(store, {
+      source: fakeSource({ partialOn: "kaas" }),
+    });
+
+    expect(report.aislesFailed).toBe(1);
+    expect(report.pruned).toBe(0);
+    expect(await store.get("ah:delisted")).toBeDefined();
+    // The partial aisle's products still landed.
+    expect(report.products).toBeGreaterThan(0);
     await store.close();
   });
 

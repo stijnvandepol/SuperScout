@@ -54,10 +54,20 @@ export async function crawlAhAssortment(
 
   for (const aisle of AH_AISLES) {
     try {
-      const batch: Product[] = await source.fetchTaxonomy(aisle.id, aisle.slug);
+      const { products: batch, complete } = await source.fetchTaxonomy(aisle.id, aisle.slug);
+
+      // Store partial aisles too: losing 3.000 products because page 31 of 35
+      // failed is worse than keeping 3.000. The aisle is still recorded as
+      // failed, which is what stops the prune.
       await store.upsertMany(batch);
       products += batch.length;
-      log(`[assortment] ${aisle.slug}: ${batch.length} opgeslagen (verwacht ~${aisle.measured})`);
+
+      if (complete) {
+        log(`[assortment] ${aisle.slug}: ${batch.length} opgeslagen (verwacht ~${aisle.measured})`);
+      } else {
+        errors.push({ aisle: aisle.slug, error: "onvolledig: pagina faalde na retries" });
+        log(`[assortment] ${aisle.slug}: ${batch.length} opgeslagen, ONVOLLEDIG`);
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       errors.push({ aisle: aisle.slug, error: message });
