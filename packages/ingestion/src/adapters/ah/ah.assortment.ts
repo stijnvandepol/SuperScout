@@ -44,6 +44,7 @@ query assortment($input: ProductSearchInput!) {
       webPath
       category
       price { now { amount } was { amount } unitInfo { price { amount } description } }
+      imagePack { medium { url } }
       taxonomies { id name slug }
     }
   }
@@ -65,6 +66,8 @@ export interface AhRawProduct {
     } | null;
   } | null;
   taxonomies?: { id: number; name: string; slug: string }[] | null;
+  /** A list, one entry per rendition set; we take the first medium. */
+  imagePack?: { medium?: { url?: string | null } | null }[] | null;
 }
 
 /** Euro amount (7.16) to integer cents, or null when absent or nonsensical. */
@@ -117,6 +120,11 @@ export function normalizeAhProduct(
 
   const category = raw.category?.trim();
   if (category) product.categoryPath = category;
+
+  // 400x400 WEBP: large enough for the product page, small enough that 22.000
+  // of them do not sink the listing pages that show them in a grid.
+  const image = raw.imagePack?.[0]?.medium?.url;
+  if (image) product.imageUrl = image;
 
   if (raw.webPath) product.url = `https://www.ah.nl${raw.webPath}`;
 

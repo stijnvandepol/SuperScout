@@ -64,7 +64,7 @@ query assortment($input: ProductSearchInput!) {
       link
       category
       inAssortment
-      price { price promoPrice }
+      price { price promoPrice pricePerUnit { price unit } }
     }
   }
 }`;
@@ -79,7 +79,12 @@ export interface JumboRawProduct {
   link?: string | null;
   category?: string | null;
   inAssortment?: boolean | null;
-  price?: { price?: number | null; promoPrice?: number | null } | null;
+  price?: {
+    price?: number | null;
+    promoPrice?: number | null;
+    /** Comparable unit price, already in cents, e.g. 1899 per "kg". */
+    pricePerUnit?: { price?: number | null; unit?: string | null } | null;
+  } | null;
 }
 
 export interface JumboCategory {
@@ -121,6 +126,11 @@ export function normalizeJumboProduct(raw: JumboRawProduct, fetchedAt: string): 
 
   const unit = raw.subtitle?.trim();
   if (unit) product.salesUnitSize = unit;
+
+  const unitPrice = centsOf(raw.price?.pricePerUnit?.price);
+  if (unitPrice !== null) product.unitPriceCents = unitPrice;
+  const unitLabel = raw.price?.pricePerUnit?.unit?.trim();
+  if (unitLabel) product.unitPriceLabel = unitLabel;
 
   const category = raw.category?.trim();
   if (category) product.categoryPath = category;

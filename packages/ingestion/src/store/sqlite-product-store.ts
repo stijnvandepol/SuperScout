@@ -52,6 +52,9 @@ CREATE INDEX IF NOT EXISTS products_source ON products (source);
 CREATE INDEX IF NOT EXISTS products_source_fetched ON products (source, fetched_at);
 CREATE INDEX IF NOT EXISTS products_title ON products (title);
 CREATE INDEX IF NOT EXISTS products_title_key ON products (source, title_key);
+-- The "same shelf" rail groups by taxonomy where a chain gives one and by
+-- category name where it does not; both paths need to stay a lookup.
+CREATE INDEX IF NOT EXISTS products_category ON products (source, category_path);
 `;
 
 interface Row {

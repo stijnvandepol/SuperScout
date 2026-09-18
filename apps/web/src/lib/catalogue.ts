@@ -118,16 +118,29 @@ export function getProduct(
  */
 export function neighbours(product: Product, limit = 8): Product[] {
   const handle = connect();
-  if (!handle || product.taxonomyId === undefined) return [];
+  if (!handle) return [];
+
+  // Two chains, two notions of "same shelf". Albert Heijn gives a numeric
+  // taxonomy id per product; Jumbo gives only a category name string, so
+  // keying on the id alone left all 5.877 Jumbo pages without a rail — the
+  // thin-content shape the rail exists to prevent.
+  const [column, value] =
+    product.taxonomyId !== undefined
+      ? ["taxonomy_id", product.taxonomyId as number | string]
+      : product.categoryPath
+        ? ["category_path", product.categoryPath]
+        : [null, null];
+
+  if (!column || value === null) return [];
 
   try {
     const rows = handle
       .prepare(
         `SELECT * FROM products
-         WHERE source = ? AND taxonomy_id = ? AND id != ? AND price_cents IS NOT NULL
+         WHERE source = ? AND ${column} = ? AND id != ? AND price_cents IS NOT NULL
          ORDER BY title LIMIT ?`,
       )
-      .all(product.source, product.taxonomyId, product.id, limit) as unknown as Row[];
+      .all(product.source, value, product.id, limit) as unknown as Row[];
     return rows.map(toProduct);
   } catch {
     return [];
