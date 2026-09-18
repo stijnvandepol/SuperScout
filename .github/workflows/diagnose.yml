@@ -1,0 +1,50 @@
+name: Diagnose /data
+
+# Wegwerp-diagnose: draait op de self-hosted runner en laat zien wat beide
+# containers daadwerkelijk op de gedeelde volume zien. Handmatig te starten.
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    runs-on: self-hosted
+    steps:
+      - name: Wie is wie
+        run: |
+          echo "--- ingest identity"
+          docker exec superscout-ingestion id || true
+          echo "--- web identity"
+          docker exec superscout-web id || true
+
+      - name: Wat staat er op de volume
+        run: |
+          echo "--- ingest ziet /data"
+          docker exec superscout-ingestion ls -la /data/ || true
+          echo "--- web ziet /data"
+          docker exec superscout-web ls -la /data/ || true
+
+      - name: Kan de web-container offers.json echt lezen
+        run: |
+          docker exec superscout-web node -e "
+            const fs = require('fs');
+            const p = process.env.OFFERS_PATH || '/data/offers.json';
+            console.log('OFFERS_PATH =', p);
+            try {
+              const raw = fs.readFileSync(p, 'utf8');
+              const o = JSON.parse(raw);
+              console.log('gelezen:', raw.length, 'bytes,', o.length, 'aanbiedingen');
+              console.log('nieuwste fetchedAt:', o.map(x => x.fetchedAt).sort().pop());
+              const nu = new Date().toISOString();
+              const geldig = o.filter(x => (!x.validUntil || x.validUntil >= nu) && (!x.validFrom || x.validFrom <= nu));
+              console.log('nu geldig volgens datums:', geldig.length);
+            } catch (e) {
+              console.log('LEZEN MISLUKT:', e.code, e.message);
+            }
+          " || true
+
+      - name: Draait de web-container het nieuwe image
+        run: |
+          docker inspect -f '{{.Config.Image}} | gestart {{.State.StartedAt}}' superscout-web || true
+          docker inspect -f '{{.Config.Image}} | gestart {{.State.StartedAt}}' superscout-ingestion || true
+          echo "--- laatste weblogs"
+          docker logs --tail 40 superscout-web 2>&1 || true
