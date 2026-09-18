@@ -48,6 +48,35 @@ jobs:
       - name: Build image & (re)start container
         run: docker compose up -d --build
 
+      # A container restart already kicks off an ingest, but it runs the
+      # 20-minute catalogue crawl in the same pass, so the next deploy can kill
+      # it midway. This is an explicit offers-only refresh that finishes in about
+      # a minute and, crucially, reports whether it worked — the failure this
+      # replaces was silent: the web app fell back to the bundled July snapshot
+      # and served it as this week's offers.
+      - name: Refresh offers
+        env:
+          # Offers only: the catalogue crawl takes twenty minutes and has
+          # its own nightly pass, so a deploy should not wait on it.
+          ONE_SHOT: INGEST_ONCE=1 SKIP_ASSORTMENT=1
+        run: |
+          docker exec -e INGEST_ONCE=1 -e SKIP_ASSORTMENT=1 superscout-ingestion \
+            node --experimental-sqlite packages/ingestion/dist/ingest.cjs 2>&1 | tail -20
+
+      # Read the file the web app actually reads, rather than trusting the
+      # step above to have meant it.
+      - name: Verify offers landed
+        run: |
+          docker exec superscout-ingestion node -e "
+            const o = JSON.parse(require('fs').readFileSync('/data/offers.json','utf8'));
+            const chains = [...new Set(o.map(x => x.source))].sort();
+            console.log('offers:', o.length, '| ketens:', chains.join(' '));
+            if (o.length < 100) {
+              console.error('Te weinig aanbiedingen - controleer de adapters');
+              process.exit(1);
+            }
+          "
+
       - name: Remove dangling images
         run: docker image prune -f
 

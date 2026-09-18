@@ -11,7 +11,7 @@
  *   INGEST_HOUR  UTC hour of the daily run (default 5 ≈ 07:00 NL summer)
  *   INGEST_ONCE  set to "1" to run a single pass and exit
  */
-import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import type { Browser } from "playwright";
 import type { Offer, PriceObservation } from "@superscout/core";
@@ -31,6 +31,23 @@ import { SqliteProductStore } from "./store/sqlite-product-store";
 import { apiAdapters } from "./sources";
 import { browserSources } from "./browser/browser-sources";
 import { launchBrowser } from "./browser/intercept";
+
+/**
+ * Write a file so that a reader never sees it half-written.
+ *
+ * `writeFileSync` truncates first and fills after, so a process killed mid-call
+ * leaves a partial file behind. That is not theoretical: six deploys in one day,
+ * each recreating this container, left `/data/offers.json` unparseable — and the
+ * web app fell back to the bundled July snapshot and served it as this week's
+ * offers. Writing to a sibling and renaming is atomic on the same filesystem, so
+ * a reader sees either the previous file or the complete new one.
+ */
+function writeAtomic(path: string, contents: string): void {
+  const temp = `${path}.tmp`;
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(temp, contents, "utf-8");
+  renameSync(temp, path);
+}
 
 const OUT = process.env.OFFERS_OUT ?? "/data/offers.json";
 const ARCHIVE_OUT = process.env.ARCHIVE_OUT ?? "/data/offers-archive.json";
@@ -95,8 +112,7 @@ function retainArchive(all: Offer[], nowIso: string): void {
     }
 
     const archive = mergeArchive(previous, all, nowIso);
-    mkdirSync(dirname(ARCHIVE_OUT), { recursive: true });
-    writeFileSync(ARCHIVE_OUT, JSON.stringify(archive), "utf-8");
+    writeAtomic(ARCHIVE_OUT, JSON.stringify(archive));
     console.log(
       `[ingest] archive: ${archive.length} offers retained (${ARCHIVE_RETENTION_DAYS}d, ` +
         `${archive.length - previous.length >= 0 ? "+" : ""}${archive.length - previous.length}) -> ${ARCHIVE_OUT}.`,
@@ -173,8 +189,7 @@ async function ingestOnce(): Promise<void> {
     return;
   }
 
-  mkdirSync(dirname(OUT), { recursive: true });
-  writeFileSync(OUT, JSON.stringify(offers), "utf-8");
+  writeAtomic(OUT, JSON.stringify(offers));
   console.log(`[ingest] ${nowIso} wrote ${offers.length}/${all.length} active offers -> ${OUT}.`);
 
   retainArchive(all, nowIso);
