@@ -44,8 +44,13 @@ import { launchBrowser } from "./browser/intercept";
  */
 function writeAtomic(path: string, contents: string): void {
   const temp = `${path}.tmp`;
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(temp, contents, "utf-8");
+  mkdirSync(dirname(path), { recursive: true, mode: 0o755 });
+  // Mode explicitly, not by umask. The worker runs as root and the web app runs
+  // as `nextjs`, so anything written here has to be world-readable or the site
+  // sees nothing. writeFileSync keeps an existing file's permissions, which
+  // hid this for as long as the file was only ever overwritten in place —
+  // writing a fresh temp file and renaming does not inherit anything.
+  writeFileSync(temp, contents, { encoding: "utf-8", mode: 0o644 });
   renameSync(temp, path);
 }
 
