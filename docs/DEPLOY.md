@@ -107,6 +107,22 @@ De parsers draaien bewust *buiten* `page.evaluate`, als pure functies met echte 
 
 Gevolg van een ontbrekende periode: `isActive()` faalt bewust open, dus zulke acties worden nooit weggefilterd. Dat werkt alleen zolang de ingest daadwerkelijk dagelijks draait. Ook het filter "bijna verlopen" en sorteren op looptijd doen voor die aanbiedingen niets.
 
+## Productcatalogus (SQLite)
+
+Naast de aanbiedingen haalt de worker sinds kort het **volledige assortiment** van Albert Heijn op: 42.354 producten tegen 242 aanbiedingen. De aanbiedingenfeed beschrijft alleen wat deze week in de actie is, wat de site afgrendelt op ~1.000 pagina's die allemaal verlopen. De catalogus is wat de winkel verkoopt, dus een productpagina daaruit is permanent en beantwoordt een vraag die de actiefeed niet kan: "wat kost dit bij AH".
+
+- Ligt in `/data/superscout.db` op hetzelfde volume (`CATALOGUE_DB`). Weggooien betekent een crawl van ~3 minuten opnieuw, geen dataverlies.
+- Draait **na** de aanbiedingen en is best-effort: een mislukte crawl mag nooit de reden zijn dat de acties van vandaag niet publiceren. `SKIP_ASSORTMENT=1` slaat 'm over.
+- Schrijft per aisle, niet aan het eind. Een crawl die in aisle 19 sneuvelt laat 18 bijgewerkte aisles achter in plaats van niets.
+- **Snoeit alleen na een volledige crawl.** Verdwenen producten moeten weg (een gedelist artikel is een pagina die een prijs belooft die de winkel niet meer voert), maar snoeien na een gedeeltelijke crawl zou elke aisle wissen die hij niet bereikt heeft.
+
+Twee dingen om te weten bij onderhoud:
+
+- **`node:sqlite` in plaats van better-sqlite3.** De web-image is alpine, de ingest-image is Playwright's noble; een native module zou tegen musl én glibc moeten compileren. De ingebouwde heeft geen installatiestap. Hij is op Node 22 nog experimenteel, dus beide containers draaien met `--experimental-sqlite`; op Node 24 is die vlag een no-op.
+- **De AH-API is alleen via proberen te kennen.** Introspectie staat uit (`INTROSPECTION_DISABLED`) en veldsuggesties ook. Een fout veld geeft "Cannot query field X", een goed veld geeft data. Een veld toevoegen betekent het op dezelfde manier uitproberen. De taxonomie-id's komen uit AH's eigen sitemap (`/sitemaps/entities/products/categories.xml`); de API heeft geen taxonomie-query.
+
+Een lege query rapporteert altijd `totalElements: 10000` — dat is de Elasticsearch-cap, geen echt aantal. Daarom loopt de crawl langs de 25 hoofdcategorieën, die elk 400-3.700 producten bevatten en dus ruim onder de cap blijven.
+
 ## Prijshistorie
 
 De ingest-worker schrijft naast `offers.json` ook `/data/price-history.jsonl` — één regel per product per dag, alleen voor aanbiedingen met een echte stuksprijs (~70% van de set; Jumbo publiceert vrijwel nooit een stuksprijs en levert dus weinig aan).

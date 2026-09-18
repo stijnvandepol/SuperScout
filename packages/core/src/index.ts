@@ -4,6 +4,8 @@ export * from "./money";
 export * from "./offer";
 export * from "./source-adapter";
 export * from "./offer-store";
+export * from "./product-store";
+export * from "./product";
 export * from "./offer-period";
 export * from "./offer-archive";
 export * from "./offer-cycle";

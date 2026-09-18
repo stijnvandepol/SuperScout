@@ -12,6 +12,9 @@ services:
       # 404ing the week after. Read lazily — never on the hot listing path.
       - ARCHIVE_PATH=/data/offers-archive.json
       - PRICE_HISTORY_PATH=/data/price-history.jsonl
+      # Product catalogue (SQLite). Tens of thousands of rows, so the web app
+      # queries it rather than parsing a file per request.
+      - CATALOGUE_DB=/data/superscout.db
       # SEO/webmaster wiring — all optional, read at render time.
       # Empty values omit the tag / 404 the key file, which is the safe default.
       - GOOGLE_SITE_VERIFICATION=${GOOGLE_SITE_VERIFICATION:-}
@@ -44,6 +47,7 @@ services:
       # Append-only price log on the same persistent volume. Its whole value is
       # accumulated time, so it must outlive every container rebuild.
       - PRICE_HISTORY_OUT=/data/price-history.jsonl
+      - CATALOGUE_DB=/data/superscout.db
       # Runs once on start, then every morning at this UTC hour (5 ≈ 07:00 NL).
       - INGEST_HOUR=5
     volumes:

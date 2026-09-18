@@ -5,6 +5,8 @@
  *
  * Env:
  *   OFFERS_OUT   output path (default /data/offers.json)
+ *   CATALOGUE_DB SQLite path for the product catalogue (default /data/superscout.db)
+ *   SKIP_ASSORTMENT set to "1" to run only the promotion pull
  *   ARCHIVE_OUT  archive path (default /data/offers-archive.json)
  *   INGEST_HOUR  UTC hour of the daily run (default 5 ≈ 07:00 NL summer)
  *   INGEST_ONCE  set to "1" to run a single pass and exit
@@ -24,6 +26,8 @@ import {
   serialiseObservations,
 } from "@superscout/core";
 import { runIngestion } from "./runner";
+import { crawlAhAssortment } from "./assortment-runner";
+import { SqliteProductStore } from "./store/sqlite-product-store";
 import { apiAdapters } from "./sources";
 import { browserSources } from "./browser/browser-sources";
 import { launchBrowser } from "./browser/intercept";
@@ -31,6 +35,7 @@ import { launchBrowser } from "./browser/intercept";
 const OUT = process.env.OFFERS_OUT ?? "/data/offers.json";
 const ARCHIVE_OUT = process.env.ARCHIVE_OUT ?? "/data/offers-archive.json";
 const HISTORY_OUT = process.env.PRICE_HISTORY_OUT ?? "/data/price-history.jsonl";
+const CATALOGUE_DB = process.env.CATALOGUE_DB ?? "/data/superscout.db";
 const INGEST_HOUR = Number(process.env.INGEST_HOUR ?? 5);
 
 /**
@@ -101,6 +106,33 @@ function retainArchive(all: Offer[], nowIso: string): void {
   }
 }
 
+/**
+ * Refresh the product catalogue.
+ *
+ * Runs after the promotions, and best-effort like the price history: the
+ * catalogue is a growth project, while the promotions are what the site shows
+ * today. A failed crawl must never be the reason a day's offers do not publish.
+ */
+async function crawlCatalogue(): Promise<void> {
+  if (process.env.SKIP_ASSORTMENT === "1") {
+    console.log("[assortment] overgeslagen (SKIP_ASSORTMENT=1)");
+    return;
+  }
+
+  let store: SqliteProductStore | null = null;
+  try {
+    store = new SqliteProductStore(CATALOGUE_DB);
+    const report = await crawlAhAssortment(store, { onProgress: (line) => console.log(line) });
+    if (report.aislesFailed > 0) {
+      console.error(`[assortment] ${report.aislesFailed} aisles faalden:`, report.errors);
+    }
+  } catch (e) {
+    console.error("[assortment] crawl mislukt (aanbiedingen staan er wel):", e);
+  } finally {
+    await store?.close();
+  }
+}
+
 async function ingestOnce(): Promise<void> {
   const nowIso = new Date().toISOString();
   const store = new InMemoryOfferStore();
@@ -138,6 +170,7 @@ async function ingestOnce(): Promise<void> {
 
   retainArchive(all, nowIso);
   recordPrices(offers, nowIso);
+  await crawlCatalogue();
 }
 
 function logReport(report: { results: { source: string; ok: boolean; offerCount: number; error?: string }[] }): void {

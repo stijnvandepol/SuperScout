@@ -29,7 +29,9 @@ COPY --from=build --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.n
 COPY --from=build --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 USER nextjs
 EXPOSE 3000
-CMD ["node", "apps/web/server.js"]
+# --experimental-sqlite: node:sqlite is built in but flagged on Node 22. On
+# Node 24 the flag is a harmless no-op, so this survives a base-image bump.
+CMD ["node", "--experimental-sqlite", "apps/web/server.js"]
 
 # ---- Ingestion worker (needs a headless browser for JS/bot-protected chains) ----
 # Playwright base image ships Chromium + system deps matching playwright 1.61.1.
@@ -46,4 +48,4 @@ COPY packages ./packages
 COPY apps ./apps
 RUN pnpm install --frozen-lockfile
 COPY --from=build /app/packages/ingestion/dist/ingest.cjs ./packages/ingestion/dist/ingest.cjs
-CMD ["node", "packages/ingestion/dist/ingest.cjs"]
+CMD ["node", "--experimental-sqlite", "packages/ingestion/dist/ingest.cjs"]
