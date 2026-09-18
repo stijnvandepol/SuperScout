@@ -26,7 +26,7 @@ import {
   serialiseObservations,
 } from "@superscout/core";
 import { runIngestion } from "./runner";
-import { crawlAhAssortment } from "./assortment-runner";
+import { crawlAhAssortment, crawlJumboAssortment } from "./assortment-runner";
 import { SqliteProductStore } from "./store/sqlite-product-store";
 import { apiAdapters } from "./sources";
 import { browserSources } from "./browser/browser-sources";
@@ -122,9 +122,18 @@ async function crawlCatalogue(): Promise<void> {
   let store: SqliteProductStore | null = null;
   try {
     store = new SqliteProductStore(CATALOGUE_DB);
-    const report = await crawlAhAssortment(store, { onProgress: (line) => console.log(line) });
-    if (report.aislesFailed > 0) {
-      console.error(`[assortment] ${report.aislesFailed} aisles faalden:`, report.errors);
+    const log = (line: string) => console.log(line);
+
+    // Sequential, not parallel: two crawls hammering two chains at once is both
+    // rude and a good way to get rate-limited off one of them.
+    for (const crawl of [crawlAhAssortment, crawlJumboAssortment]) {
+      const report = await crawl(store, { onProgress: log });
+      if (report.aislesFailed > 0) {
+        console.error(
+          `[assortment] ${report.source}: ${report.aislesFailed} onderdelen faalden:`,
+          report.errors.slice(0, 5),
+        );
+      }
     }
   } catch (e) {
     console.error("[assortment] crawl mislukt (aanbiedingen staan er wel):", e);
