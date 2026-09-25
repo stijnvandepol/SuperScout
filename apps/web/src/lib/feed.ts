@@ -61,6 +61,8 @@ export interface FeedOptions {
   offers: Offer[];
   /** Feeds are for "what's new", not an archive. */
   limit?: number;
+  /** Absolute URL of this feed, when it is not `${path}/feed.xml` (e.g. a search feed). */
+  selfUrl?: string;
 }
 
 export function renderRssFeed({
@@ -69,6 +71,7 @@ export function renderRssFeed({
   path,
   offers,
   limit = 50,
+  selfUrl,
 }: FeedOptions): string {
   const selected = [...offers]
     .sort((a, b) => (b.fetchedAt ?? "").localeCompare(a.fetchedAt ?? ""))
@@ -106,7 +109,7 @@ export function renderRssFeed({
     <description>${xml(description)}</description>
     <language>nl-NL</language>
     <lastBuildDate>${rfc822(newest)}</lastBuildDate>
-    <atom:link href="${xml(`${SITE_URL}${path === "/" ? "" : path}/feed.xml`)}" rel="self" type="application/rss+xml"/>
+    <atom:link href="${xml(selfUrl ?? `${SITE_URL}${path === "/" ? "" : path}/feed.xml`)}" rel="self" type="application/rss+xml"/>
 ${items}
   </channel>
 </rss>

@@ -93,6 +93,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: SITE_URL, lastModified: siteModified, changeFrequency: "daily", priority: 1 },
     ...indexPages,
     {
+      url: `${SITE_URL}/beste-aanbiedingen`,
+      lastModified: siteModified,
+      changeFrequency: "daily",
+      priority: 0.9,
+    },
+    {
       url: `${SITE_URL}/volgende-week`,
       lastModified: siteModified,
       changeFrequency: "daily",

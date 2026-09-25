@@ -27,6 +27,8 @@ export const CATEGORIES = [
   { slug: "huishouden", label: "Huishouden" },
   { slug: "baby", label: "Baby" },
   { slug: "huisdier", label: "Huisdieren" },
+  { slug: "koken-tafelen", label: "Koken & tafelen" },
+  { slug: "bouw-tuin", label: "Klussen & tuin" },
   { slug: "non-food", label: "Non-food & seizoen" },
   { slug: "overig", label: "Overig" },
 ] as const;
@@ -36,6 +38,44 @@ export type CategorySlug = (typeof CATEGORIES)[number]["slug"];
 export const CATEGORY_LABEL = Object.fromEntries(
   CATEGORIES.map((c) => [c.slug, c.label]),
 ) as Record<CategorySlug, string>;
+
+/**
+ * Departments: the layer a shopper thinks in before they think in categories.
+ *
+ * Twenty-odd food categories were fine while every offer came from a
+ * supermarket. Drugstores, HEMA, Action and DIY chains sell almost nothing in
+ * them, so the index page needs a coarser first cut — "Drogisterij &
+ * verzorging", "Klussen & tuin" — or those retailers' offers would sit as three
+ * lonely tiles among twenty food ones.
+ *
+ * Grouping only: category URLs do not change, and a department gets no page
+ * of its own until it holds enough offers to be worth one.
+ */
+export const DEPARTMENTS = [
+  {
+    slug: "eten-drinken",
+    label: "Eten & drinken",
+    categories: ["groente-fruit", "vlees-vis", "kaas-vleeswaren", "zuivel", "brood", "ontbijt", "maaltijden", "pasta-rijst", "sauzen-conserven", "snacks", "snoep-koek", "ijs", "frisdrank", "koffie-thee", "water", "bier-wijn"],
+  },
+  { slug: "drogisterij", label: "Drogisterij & verzorging", categories: ["drogisterij"] },
+  { slug: "huishouden", label: "Huishouden", categories: ["huishouden"] },
+  { slug: "baby-gezin", label: "Baby & gezin", categories: ["baby"] },
+  { slug: "huisdieren", label: "Huisdieren", categories: ["huisdier"] },
+  { slug: "koken-tafelen", label: "Koken & tafelen", categories: ["koken-tafelen"] },
+  { slug: "bouw-tuin", label: "Klussen & tuin", categories: ["bouw-tuin"] },
+  { slug: "wonen-vrije-tijd", label: "Wonen, vrije tijd & seizoen", categories: ["non-food", "overig"] },
+] as const satisfies ReadonlyArray<{ slug: string; label: string; categories: readonly CategorySlug[] }>;
+
+export type DepartmentSlug = (typeof DEPARTMENTS)[number]["slug"];
+
+const DEPARTMENT_OF = new Map<CategorySlug, DepartmentSlug>(
+  DEPARTMENTS.flatMap((d) => d.categories.map((c) => [c as CategorySlug, d.slug] as const)),
+);
+
+/** The department a category belongs to. Every category has exactly one. */
+export function departmentOf(category: CategorySlug): DepartmentSlug {
+  return DEPARTMENT_OF.get(category) ?? "wonen-vrije-tijd";
+}
 
 /**
  * Keyword length at or above which a keyword may match *inside* a word.
@@ -129,12 +169,22 @@ const RULES: ReadonlyArray<{ match: readonly string[]; slug: CategorySlug }> = [
 
   { match: ["soep", "conserv", "saus", "smaakmaker", "olie", "azijn", "ketchup", "mayonaise", "mosterd", "appelmoes", "augurk", "piccalilly", "bouillon", "kruiden", "specerij", "peper", "zout", "suiker", "=bloem", "=meel", "heinz", "wijko", "remia", "unox", "knorr", "maggi"], slug: "sauzen-conserven" },
 
-  { match: ["groente", "fruit", "aardappel", "salade", "tomaat", "tomaten", "komkommer", "paprika", "=sla", "ijsbergsla", "veldsla", "wortel", "bloemkool", "broccoli", "spinazie", "courgette", "aubergine", "prei", "uien", "champignon", "avocado", "banaan", "banane", "appel", "=peer", "=peren", "sinaasappel", "mandarijn", "citroen", "druiv", "bessen", "aardbei", "frambo", "kiwi", "meloen", "ananas", "mango", "perzik", "nectarine", "pruim", "=kers", "=kersen", "bospeen", "andijvie", "boerenkool", "spruit", "asperge", "radijs", "selderij", "venkel", "pompoen", "witlof", "rucola", "spitskool", "rode kool", "sperzieboon", "doperwt", "=mais", "artisjok", "dadels", "olijf"], slug: "groente-fruit" },
+  { match: ["groente", "fruit", "aardappel", "salade", "tomaat", "tomaten", "komkommer", "paprika", "=sla", "ijsbergsla", "veldsla", "wortel", "bloemkool", "broccoli", "spinazie", "courgette", "aubergine", "prei", "uien", "champignon", "avocado", "banaan", "banane", "appel", "=peer", "=peren", "sinaasappel", "mandarijn", "citroen", "druiv", "bessen", "aardbei", "frambo", "kiwi", "meloen", "ananas", "mango", "perzik", "nectarine", "pruim", "=kers", "=kersen", "bospeen", "andijvie", "boerenkool", "spruit", "asperge", "radijs", "selderij", "venkel", "pompoen", "witlof", "rucola", "spitskool", "rode kool", "sperzieboon", "doperwt", "=mais", "artisjok", "dadels", "olijf", "tuinkers", "tuinbonen"], slug: "groente-fruit" },
+
+  // Kitchen and garden goods sit after every food rule for the same reason
+  // non-food does: their vocabulary is generic. They are split out because they
+  // are what drugstores, HEMA, Action and DIY chains mostly sell, and one
+  // "non-food" bucket would swallow all of it once those retailers are live.
+  // Words that collide with a food rule are left out on purpose: "wokpan"
+  // reaches pasta via "wok", "theedoek" reaches koffie-thee via "thee".
+  { match: ["koken, tafelen", "koekenpan", "steelpan", "braadpan", "hapjespan", "pannenset", "servies", "bestek", "snijplank", "messenset", "keukenmes", "bakvorm", "ovenschaal", "vershoudbak", "vershouddoos", "airfryer", "staafmixer", "waterkoker"], slug: "koken-tafelen" },
+
+  { match: ["bouwmarkt", "klussen", "tuin", "gereedschap", "boormachine", "accuschroef", "schroevendraaier", "=zaag", "=verf", "muurverf", "lakverf", "kwast", "grasmaaier", "heggenschaar", "tuinslang", "potgrond", "bloembollen", "parasol", "barbecue", "tuinset", "plantenbak"], slug: "bouw-tuin" },
 
   // Deliberately last of the real categories: Aldi/Lidl mid-week non-food and
   // Dirk's seasonal aisle are a genuine shopping category, but their words
   // ("koffer", "set") are generic enough that every food rule must win first.
-  { match: ["non food", "non-food", "koken, tafelen", "vrije tijd", "wonen", "bloemen", "voordeelshop", "kerst", "sinterklaas", "halloween", "carnaval", "tuin", "speelgoed", "kleding", "broek", "shirt", "sokken", "jas ", "schoen", "textiel", "handdoek", "dekbed", "kussen", "gereedschap", "zwembad", "bolderkar", "opberg", "hobbykoffer", "koekenpan", "steelpan", "pannenset", "servies", "bestek", "lamp", "batterij", "elektr", "fiets", "camping", "barbecue", "parasol", "matras", "gordijn", "vaas", "kaarsen", "meubel", "bureau", "stoel", "boormachine", "accuschroef"], slug: "non-food" },
+  { match: ["non food", "non-food", "vrije tijd", "wonen", "bloemen", "voordeelshop", "kerst", "sinterklaas", "halloween", "carnaval", "speelgoed", "kleding", "broek", "shirt", "sokken", "jas ", "schoen", "textiel", "handdoek", "dekbed", "kussen", "zwembad", "bolderkar", "opberg", "hobbykoffer", "lamp", "batterij", "elektr", "fiets", "camping", "matras", "gordijn", "vaas", "kaarsen", "meubel", "bureau", "stoel"], slug: "non-food" },
 ];
 
 /**

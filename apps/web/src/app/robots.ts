@@ -6,8 +6,9 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      // Personal utility page, no crawl value.
-      disallow: "/mandje",
+      // Personal utility pages, the operator page and JSON endpoints: no crawl
+      // value, and /api would only spend crawl budget on data Google cannot use.
+      disallow: ["/mandje", "/volglijst", "/beheer", "/api/"],
     },
     // Two sitemaps: the site's own pages, and the product catalogue — which is
     // an order of magnitude larger and changes on a different rhythm.

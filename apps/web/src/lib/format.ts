@@ -1,51 +1,28 @@
-import type { MechanismType, Offer, SupermarketSlug } from "@superscout/core";
+import type { MechanismType, Offer, RetailerInfo, SupermarketSlug } from "@superscout/core";
+import { RETAILERS } from "@superscout/core";
 
-export interface StoreMeta {
-  name: string;
-  bg: string;
-  fg: string;
-  /** Where "Open bij {store}" sends the shopper (opens the app via universal links). */
-  offersUrl: string;
-  /** Wholesalers (Sligro/Makro) list prices excluding VAT — flag it everywhere. */
-  exVat?: boolean;
-}
+/**
+ * Presentation facts per chain: name, brand colours, offers link.
+ *
+ * A view onto the core registry rather than a second copy of it — the copy is
+ * what made adding a chain a four-file change.
+ */
+export type StoreMeta = RetailerInfo;
 
 /** Whether a chain's prices are shown excluding VAT (B2B wholesale). */
 export function isExVat(source: SupermarketSlug): boolean {
   return STORE_META[source].exVat === true;
 }
 
-/** Locally-hosted store icons (their own favicons), used as the store badge. */
-export const STORE_ICON: Partial<Record<SupermarketSlug, string>> = {
-  ah: "/store-icons/ah.png",
-  jumbo: "/store-icons/jumbo.png",
-  lidl: "/store-icons/lidl.png",
-  aldi: "/store-icons/aldi.png",
-  plus: "/store-icons/plus.ico",
-  dirk: "/store-icons/dirk.png",
-  hoogvliet: "/store-icons/hoogvliet.png",
-  dekamarkt: "/store-icons/dekamarkt.png",
-  poiesz: "/store-icons/poiesz.png",
-  sligro: "/store-icons/sligro.png",
-};
-
 /** Brand colours + offers link per chain (kept neutral of any single chain's dominance). */
-export const STORE_META: Record<SupermarketSlug, StoreMeta> = {
-  ah: { name: "Albert Heijn", bg: "#00a0e2", fg: "#ffffff", offersUrl: "https://www.ah.nl/bonus" },
-  jumbo: { name: "Jumbo", bg: "#eeb500", fg: "#1a1500", offersUrl: "https://www.jumbo.com/aanbiedingen" },
-  lidl: { name: "Lidl", bg: "#0050aa", fg: "#ffffff", offersUrl: "https://www.lidl.nl/c/aanbiedingen/s10005610" },
-  aldi: { name: "ALDI", bg: "#1e3a8a", fg: "#ffffff", offersUrl: "https://www.aldi.nl/aanbiedingen.html" },
-  plus: { name: "PLUS", bg: "#00814b", fg: "#ffffff", offersUrl: "https://www.plus.nl/aanbiedingen" },
-  dirk: { name: "Dirk", bg: "#e30613", fg: "#ffffff", offersUrl: "https://www.dirk.nl/aanbiedingen" },
-  hoogvliet: { name: "Hoogvliet", bg: "#e2001a", fg: "#ffffff", offersUrl: "https://www.hoogvliet.com/aanbiedingen" },
-  dekamarkt: { name: "DekaMarkt", bg: "#004b93", fg: "#ffffff", offersUrl: "https://www.dekamarkt.nl/aanbiedingen" },
-  vomar: { name: "Vomar", bg: "#d4021d", fg: "#ffffff", offersUrl: "https://www.vomar.nl/aanbiedingen" },
-  coop: { name: "Coop", bg: "#e2001a", fg: "#ffffff", offersUrl: "https://www.coop.nl/aanbiedingen" },
-  spar: { name: "Spar", bg: "#009640", fg: "#ffffff", offersUrl: "https://www.spar.nl/aanbiedingen" },
-  ekoplaza: { name: "Ekoplaza", bg: "#4b9b3f", fg: "#ffffff", offersUrl: "https://www.ekoplaza.nl/aanbiedingen" },
-  poiesz: { name: "Poiesz", bg: "#5a9e2f", fg: "#ffffff", offersUrl: "https://webwinkel.poiesz-supermarkten.nl/aanbiedingen" },
-  sligro: { name: "Sligro", bg: "#e64415", fg: "#ffffff", offersUrl: "https://www.sligro.nl/aanbiedingen.html", exVat: true },
-};
+export const STORE_META: Record<SupermarketSlug, StoreMeta> = RETAILERS;
+
+/** Locally-hosted store icons (their own favicons), used as the store badge. */
+export const STORE_ICON: Partial<Record<SupermarketSlug, string>> = Object.fromEntries(
+  Object.entries(RETAILERS)
+    .filter(([, info]) => (info as RetailerInfo).icon)
+    .map(([slug, info]) => [slug, (info as RetailerInfo).icon!]),
+);
 
 export const MECHANISM_LABEL: Record<MechanismType, string> = {
   price_drop: "Prijsverlaging",
@@ -157,5 +134,22 @@ export function mechanismDescription(offer: Offer): string {
     }
     case "unknown":
       return offer.rawLabel ?? "Bekijk de voorwaarden in de winkel.";
+  }
+}
+
+/**
+ * Where an offer's data came from, in words a shopper understands. Chain
+ * adapters read the retailer's own site and set no provenance.
+ */
+export function provenanceLabel(offer: Pick<Offer, "provenance" | "source">): string {
+  switch (offer.provenance) {
+    case "partner-feed":
+      return `Aangeleverd door ${STORE_META[offer.source].name}`;
+    case "affiliate-feed":
+      return "Partnerfeed";
+    case "manual":
+      return "Handmatig ingevoerd";
+    default:
+      return `Website van ${STORE_META[offer.source].name}`;
   }
 }

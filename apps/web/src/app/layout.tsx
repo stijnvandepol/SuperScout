@@ -7,6 +7,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { JsonLd } from "@/components/JsonLd";
 import { SITE_URL } from "@/lib/seo";
 import { chainSentence } from "@/lib/chains";
+import { analyticsConfig } from "@/lib/analytics-config";
 
 const display = Space_Grotesk({
   subsets: ["latin"],
@@ -168,15 +169,37 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const analytics = analyticsConfig();
   return (
     <html
       lang="nl"
       className={`${display.variable} ${body.variable} ${mono.variable}`}
     >
       <body>
+        {/* Skip link: keyboard users land on the header's nav otherwise. */}
+        <a
+          href="#inhoud"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-full focus:bg-ink focus:px-4 focus:py-2 focus:text-bg"
+        >
+          Naar de inhoud
+        </a>
+        {analytics ? (
+          <>
+            {/* Queue shim: events fired before the script loads are kept. */}
+            <script
+              dangerouslySetInnerHTML={{
+                __html:
+                  "window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)}",
+              }}
+            />
+            <script defer data-domain={analytics.domain} src={analytics.scriptSrc} />
+          </>
+        ) : null}
         <JsonLd data={siteJsonLd()} />
         <SiteHeader />
-        <main className="pb-24 md:pb-16">{children}</main>
+        <main id="inhoud" className="pb-24 md:pb-16">
+          {children}
+        </main>
         <SiteFooter />
         <BottomNav />
       </body>

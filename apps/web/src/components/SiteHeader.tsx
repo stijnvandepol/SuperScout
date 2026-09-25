@@ -14,8 +14,14 @@ export function SiteHeader() {
           <Link href="/winkels" className="transition-colors hover:text-ink">
             Winkels
           </Link>
+          <Link href="/beste-aanbiedingen" className="transition-colors hover:text-ink">
+            Top deals
+          </Link>
           <Link href="/acties" className="transition-colors hover:text-ink">
             Acties
+          </Link>
+          <Link href="/volglijst" className="transition-colors hover:text-ink">
+            Volglijst
           </Link>
           <Link href="/mandje" className="transition-colors hover:text-ink">
             Mandje

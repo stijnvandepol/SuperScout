@@ -1,6 +1,7 @@
 import { SITE_FEED_ALTERNATE } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SECTORS } from "@superscout/core";
 import { STORE_META } from "@/lib/format";
 import { getOffers } from "@/lib/offers";
 import { chainSentence, dutchList, missingChains } from "@/lib/chains";
@@ -19,28 +20,47 @@ export function generateMetadata(): Metadata {
 
 export default function StoresPage() {
   const offers = getOffers();
-  const slugs = [...new Set(offers.map((o) => o.source))].sort();
+  const slugs = [...new Set(offers.map((o) => o.source))].sort((a, b) =>
+    STORE_META[a].name.localeCompare(STORE_META[b].name, "nl"),
+  );
+  // Grouped by sector once there is more than one; a single heading above a
+  // single group would only push the tiles down.
+  const groups = SECTORS.map((sector) => ({
+    ...sector,
+    slugs: slugs.filter((s) => STORE_META[s].sector === sector.slug),
+  })).filter((g) => g.slugs.length > 0);
+  const grouped = groups.length > 1;
+
   return (
     <div className="mx-auto max-w-6xl px-5 py-8">
       <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">Winkels</h1>
-      <p className="mt-2 font-mono text-sm text-ink-soft">Kies een supermarkt.</p>
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {slugs.map((s) => {
-          const meta = STORE_META[s];
-          const count = offers.filter((o) => o.source === s).length;
-          return (
-            <Link
-              key={s}
-              href={`/winkel/${s}`}
-              className="flex items-center justify-between rounded-2xl p-4 font-display font-bold"
-              style={{ background: meta.bg, color: meta.fg }}
-            >
-              <span>{meta.name}</span>
-              <span className="font-mono text-xs opacity-80">{count}</span>
-            </Link>
-          );
-        })}
-      </div>
+      <p className="mt-2 font-mono text-sm text-ink-soft">Kies een winkel.</p>
+      {groups.map((group) => (
+        <section key={group.slug} className={grouped ? "mt-8" : "mt-6"}>
+          {grouped ? (
+            <h2 className="font-mono text-[11px] font-bold uppercase tracking-widest text-ink-soft">
+              {group.label}
+            </h2>
+          ) : null}
+          <div className={`${grouped ? "mt-3 " : ""}grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4`}>
+            {group.slugs.map((s) => {
+              const meta = STORE_META[s];
+              const count = offers.filter((o) => o.source === s).length;
+              return (
+                <Link
+                  key={s}
+                  href={`/winkel/${s}`}
+                  className="flex items-center justify-between rounded-2xl p-4 font-display font-bold"
+                  style={{ background: meta.bg, color: meta.fg }}
+                >
+                  <span>{meta.name}</span>
+                  <span className="font-mono text-xs opacity-80">{count}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      ))}
 
       <UnavailableChains />
     </div>

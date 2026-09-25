@@ -1,9 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import type { CardOffer, CategorySlug, SupermarketSlug } from "@superscout/core";
 import { categorizeOffer, CATEGORIES, CATEGORY_LABEL, isExpiringSoon } from "@superscout/core";
 import { isExVat, STORE_META } from "@/lib/format";
+import { normalizeTerm, offerMatches } from "@/lib/search";
+import { countBucket, track } from "@/lib/analytics";
+import {
+  getWatchlist,
+  isWatched,
+  onWatchlistChange,
+  unseen,
+  unwatchTerm,
+  watchTerm,
+  type WatchedTerm,
+} from "@/lib/watchlist";
 import { OfferCard } from "./OfferCard";
 
 type SortKey = "relevant" | "price-asc" | "price-desc" | "discount";
@@ -27,12 +39,47 @@ export function OfferExplorer({
   const [sort, setSort] = useState<SortKey>("relevant");
   const [limit, setLimit] = useState(48);
 
-  // Support /?q=… deep links (search engines' sitelinks searchbox) without
-  // making the statically-rendered page dynamic.
+  // Typing stays instant on a slow phone: the input updates at once, the
+  // filter over ~1.000 offers catches up when the browser has time (INP).
+  const deferredQuery = useDeferredValue(query);
+
+  // Deep links: /?q=koffie&winkel=ah&categorie=zuivel. The sitelinks searchbox
+  // uses `q`; the rest makes a filtered view something you can share or
+  // bookmark. All variants canonicalise to "/", so this adds no crawlable URLs.
+  const hydrated = useRef(false);
   useEffect(() => {
-    const q = new URLSearchParams(window.location.search).get("q");
+    const params = new URLSearchParams(window.location.search);
+    const q = params.get("q");
+    const winkel = params.get("winkel");
+    const categorie = params.get("categorie");
     if (q) setQuery(q);
+    if (winkel && offers.some((o) => o.source === winkel)) setStore(winkel as SupermarketSlug);
+    if (categorie && CATEGORIES.some((c) => c.slug === categorie)) {
+      setCategory(categorie as CategorySlug);
+    }
+    // Read once, on arrival; afterwards the state is the source of truth.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Mirror the filters back into the address bar, without a navigation. The
+  // first run is skipped: it sees the pre-hydration defaults and would wipe
+  // the very parameters the effect above is still applying.
+  useEffect(() => {
+    if (!hydrated.current) {
+      hydrated.current = true;
+      return;
+    }
+    const params = new URLSearchParams();
+    const q = normalizeTerm(deferredQuery);
+    if (q) params.set("q", q);
+    if (store) params.set("winkel", store);
+    if (category) params.set("categorie", category);
+    const search = params.toString();
+    const next = `${window.location.pathname}${search ? `?${search}` : ""}`;
+    if (next !== `${window.location.pathname}${window.location.search}`) {
+      window.history.replaceState(window.history.state, "", next);
+    }
+  }, [deferredQuery, store, category]);
 
   // Precompute each offer's category once.
   const catOf = useMemo(() => new Map(offers.map((o) => [o.id, categorizeOffer(o)])), [offers]);
@@ -44,19 +91,28 @@ export function OfferExplorer({
   }, [catOf]);
 
   const filtered = useMemo(() => {
-    const needle = query.trim().toLowerCase();
+    const needle = normalizeTerm(deferredQuery);
     return offers.filter((o) => {
       if (category && catOf.get(o.id) !== category) return false;
       if (store && o.source !== store) return false;
       if (expiringOnly && !isExpiringSoon(o.validUntil, nowIso)) return false;
       if (exVatOnly && !isExVat(o.source)) return false;
-      if (needle) {
-        const hay = `${o.title} ${o.brand ?? ""} ${o.sourceCategoryRaw ?? ""} ${o.rawLabel ?? ""}`.toLowerCase();
-        if (!hay.includes(needle)) return false;
-      }
+      if (needle && !offerMatches(o, needle)) return false;
       return true;
     });
-  }, [offers, catOf, query, category, store, expiringOnly, exVatOnly, nowIso]);
+  }, [offers, catOf, deferredQuery, category, store, expiringOnly, exVatOnly, nowIso]);
+
+  // One event per settled search, not per keystroke. The result count is
+  // bucketed: "0" is the number that matters — it is demand we do not meet.
+  useEffect(() => {
+    const term = normalizeTerm(deferredQuery);
+    if (term.length < 2) return;
+    const timer = setTimeout(
+      () => track("Zoekopdracht", { term, resultaten: countBucket(filtered.length) }),
+      1500,
+    );
+    return () => clearTimeout(timer);
+  }, [deferredQuery, filtered.length]);
 
   const hasExVat = useMemo(() => offers.some((o) => isExVat(o.source)), [offers]);
 
@@ -77,11 +133,15 @@ export function OfferExplorer({
   }, [filtered, sort]);
 
   // Reset the render window whenever the result set or ordering changes.
-  useEffect(() => setLimit(48), [query, category, store, expiringOnly, exVatOnly, sort]);
+  useEffect(() => setLimit(48), [deferredQuery, category, store, expiringOnly, exVatOnly, sort]);
   const visible = sorted.slice(0, limit);
+
+  const term = normalizeTerm(deferredQuery);
 
   return (
     <section>
+      <WatchlistNews offers={offers} />
+
       {/* Search */}
       <div className="relative">
         <svg
@@ -110,7 +170,10 @@ export function OfferExplorer({
         <FilterSelect
           label="Winkel"
           value={store ?? ""}
-          onChange={(v) => setStore((v || null) as SupermarketSlug | null)}
+          onChange={(v) => {
+            setStore((v || null) as SupermarketSlug | null);
+            if (v) track("Filter", { soort: "winkel", waarde: v });
+          }}
         >
           <option value="">Alle winkels</option>
           {stores.map((s) => (
@@ -123,7 +186,10 @@ export function OfferExplorer({
         <FilterSelect
           label="Categorie"
           value={category ?? ""}
-          onChange={(v) => setCategory((v || null) as CategorySlug | null)}
+          onChange={(v) => {
+            setCategory((v || null) as CategorySlug | null);
+            if (v) track("Filter", { soort: "categorie", waarde: v });
+          }}
         >
           <option value="">Alle categorieën</option>
           {categories.map((c) => (
@@ -165,16 +231,41 @@ export function OfferExplorer({
         ) : null}
       </div>
 
-      <p className="mt-4 font-mono text-xs text-ink-soft">
-        {stat && !query && !category && !store && !expiringOnly && !exVatOnly
-          ? stat
-          : `${filtered.length} ${filtered.length === 1 ? "aanbieding" : "aanbiedingen"}`}
-      </p>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="font-mono text-xs text-ink-soft" aria-live="polite">
+          {stat && !query && !category && !store && !expiringOnly && !exVatOnly
+            ? stat
+            : `${filtered.length} ${filtered.length === 1 ? "aanbieding" : "aanbiedingen"}`}
+        </p>
+        {term.length >= 2 ? (
+          <FollowButton term={term} matchIds={filtered.map((o) => o.id)} />
+        ) : null}
+      </div>
 
       {filtered.length === 0 ? (
-        <div className="mt-8 rounded-2xl border border-dashed border-line py-16 text-center">
-          <p className="font-display text-lg">Niets gevonden</p>
-          <p className="mt-1 font-mono text-xs text-ink-soft">Pas je zoekopdracht of filters aan.</p>
+        <div className="mt-8 rounded-2xl border border-dashed border-line px-6 py-14 text-center">
+          <p className="font-display text-lg">
+            {term ? `Deze week geen aanbiedingen voor “${term}”` : "Niets gevonden"}
+          </p>
+          <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-ink-soft">
+            {term
+              ? "Volg deze zoekterm: zodra een winkel er een actie op zet, zie je het hier bij je volgende bezoek."
+              : "Pas je zoekopdracht of filters aan."}
+          </p>
+          {category || store || expiringOnly || exVatOnly ? (
+            <button
+              type="button"
+              onClick={() => {
+                setCategory(null);
+                setStore(null);
+                setExpiringOnly(false);
+                setExVatOnly(false);
+              }}
+              className="mt-4 rounded-full border border-line px-4 py-2 font-mono text-xs font-bold hover:border-ink"
+            >
+              Wis filters
+            </button>
+          ) : null}
         </div>
       ) : (
         <>
@@ -238,5 +329,96 @@ function FilterSelect({
         <path d="m5 7.5 5 5 5-5" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </div>
+  );
+}
+
+/**
+ * "Volg deze zoekterm" — the account-free price alert.
+ *
+ * The ids on screen are stored as already seen, so the first thing the
+ * visitor hears back is genuinely new, not the list they were just reading.
+ */
+function FollowButton({ term, matchIds }: { term: string; matchIds: string[] }) {
+  const [watching, setWatching] = useState(false);
+
+  useEffect(() => {
+    const read = () => setWatching(isWatched(term));
+    read();
+    return onWatchlistChange(read);
+  }, [term]);
+
+  return (
+    <button
+      type="button"
+      aria-pressed={watching}
+      onClick={() => {
+        if (watching) {
+          unwatchTerm(term);
+          return;
+        }
+        if (watchTerm(term, matchIds)) track("Volg zoekterm", { term });
+      }}
+      className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 font-mono text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-deal ${
+        watching ? "bg-fresh/10 text-fresh" : "border border-line bg-surface text-ink hover:border-ink/40"
+      }`}
+    >
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2">
+        <path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9" strokeLinejoin="round" />
+        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" strokeLinecap="round" />
+      </svg>
+      {watching ? `Je volgt “${term}”` : `Volg “${term}”`}
+    </button>
+  );
+}
+
+/**
+ * The return-visit payoff: what is new for the terms you follow.
+ *
+ * Computed from the offers already on the page, so it costs no request. It
+ * deliberately does not mark anything as seen — only opening the watchlist
+ * does — so the banner stays until the visitor has actually looked.
+ */
+function WatchlistNews({ offers }: { offers: CardOffer[] }) {
+  const [list, setList] = useState<WatchedTerm[]>([]);
+
+  useEffect(() => {
+    const read = () => setList(getWatchlist());
+    read();
+    return onWatchlistChange(read);
+  }, []);
+
+  const news = useMemo(
+    () =>
+      list
+        .map((entry) => ({
+          term: entry.term,
+          count: unseen(
+            entry,
+            offers.filter((o) => offerMatches(o, entry.term)).map((o) => o.id),
+          ).length,
+        }))
+        .filter((n) => n.count > 0),
+    [list, offers],
+  );
+
+  if (news.length === 0) return null;
+  const total = news.reduce((sum, n) => sum + n.count, 0);
+
+  return (
+    <Link
+      href="/volglijst"
+      className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-fresh/30 bg-fresh/10 px-4 py-3 text-sm transition-colors hover:border-fresh"
+    >
+      <span>
+        <strong className="font-display">
+          {total} {total === 1 ? "nieuwe aanbieding" : "nieuwe aanbiedingen"}
+        </strong>{" "}
+        <span className="text-ink-soft">
+          voor {news.slice(0, 3).map((n) => `“${n.term}”`).join(", ")}
+          {news.length > 3 ? ` en ${news.length - 3} meer` : ""}
+        </span>
+      </span>
+      <span className="shrink-0 font-mono text-xs font-bold text-fresh">Bekijk →</span>
+    </Link>
   );
 }

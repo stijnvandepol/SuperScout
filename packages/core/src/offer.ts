@@ -56,7 +56,17 @@ export interface Offer {
 
   /** ISO 8601 timestamp of when this was ingested. */
   fetchedAt: string;
+
+  /**
+   * How the offer reached us. Absent on everything the chain adapters fetch,
+   * which read the retailer's own website; set by the feed adapter, whose
+   * records come from a partner, an affiliate network or a human. Shown on the
+   * offer page, because "where does this price come from" is a fair question.
+   */
+  provenance?: OfferProvenance;
 }
+
+export type OfferProvenance = "partner-feed" | "affiliate-feed" | "manual";
 
 /**
  * The slice of an offer that a rendered card and the client-side filters read.

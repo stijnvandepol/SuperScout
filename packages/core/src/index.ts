@@ -1,3 +1,4 @@
+export * from "./retailer";
 export * from "./supermarket";
 export * from "./mechanism";
 export * from "./money";

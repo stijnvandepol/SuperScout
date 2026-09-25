@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { toCardOffer } from "@superscout/core";
-import { chainSentence, dutchList, missingChains } from "@/lib/chains";
+import { chainSentence, dutchList, headlineChains, missingChains } from "@/lib/chains";
 import { byBiggestDiscount, dataFetchedAt, getOffers, stats } from "@/lib/offers";
 import { offerSlug } from "@/lib/format";
 import { OfferExplorer } from "@/components/OfferExplorer";
@@ -138,9 +138,18 @@ export default function Home() {
           <h1 className="font-display text-3xl font-bold leading-[1.05] tracking-tight sm:text-4xl">
             Alle supermarktaanbiedingen van deze week
           </h1>
+          {/* Derived from live data, like every other chain claim on the
+              site: this line used to name Dirk, Lidl and PLUS through the
+              weeks their adapters produced nothing. */}
           <p className="mt-2 max-w-2xl text-[15px] text-ink-soft">
-            Vergelijk in week {week} de acties van Albert Heijn, Jumbo, Lidl,
-            ALDI, PLUS, Dirk en meer — gratis, zonder account.
+            Vergelijk in week {week} de acties van {headlineChains()} — gratis, zonder account.{" "}
+            <Link
+              href="/beste-aanbiedingen"
+              className="font-medium text-ink underline decoration-deal decoration-2 underline-offset-2"
+            >
+              Bekijk de top 10 van deze week
+            </Link>
+            .
           </p>
         </header>
 

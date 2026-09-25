@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Offer, SupermarketSlug } from "@superscout/core";
-import { CATEGORY_LABEL, type CategorySlug } from "@superscout/core";
+import { CATEGORY_LABEL, retailerNoun, type CategorySlug } from "@superscout/core";
 import {
   allCategoriesPresent,
   byBiggestDiscount,
@@ -41,7 +41,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   // category search is nearly always "where is this cheapest", and a snippet
   // that answers "we compared 9 supermarkets" earns the click that "we have 34
   // offers" does not.
-  const description = `Alle ${count} ${label.toLowerCase()}-aanbiedingen van deze week, van ${stores} supermarkten naast elkaar. Vergelijk prijs en korting en zie meteen welke keten de beste deal heeft.`;
+  const noun = retailerNoun(new Set(offers.map((o) => o.source)));
+  const description = `Alle ${count} ${label.toLowerCase()}-aanbiedingen van deze week, van ${stores} ${noun} naast elkaar. Vergelijk prijs en korting en zie meteen welke keten de beste deal heeft.`;
   const canonical = `/categorie/${slug}`;
 
   return {

@@ -23,3 +23,8 @@ export type * from "./adapters/plus/plus.raw";
 
 export { runIngestion } from "./runner";
 export type { IngestionReport, SourceResult, RunOptions } from "./runner";
+
+export { FeedFileAdapter, feedAdapters } from "./adapters/feed/feed.adapter";
+export { normalizeFeed, MAX_FEED_AGE_DAYS, MAX_FEED_VALIDITY_DAYS } from "./adapters/feed/feed.normalize";
+export type { FeedFile, FeedOffer, FeedResult } from "./adapters/feed/feed.normalize";
+export { parseFeedLabel } from "./adapters/feed/feed.label";

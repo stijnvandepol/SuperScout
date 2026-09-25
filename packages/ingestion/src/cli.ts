@@ -10,6 +10,7 @@
  *   ARCHIVE_OUT  archive path (default /data/offers-archive.json)
  *   INGEST_HOUR  UTC hour of the daily run (default 5 ≈ 07:00 NL summer)
  *   INGEST_ONCE  set to "1" to run a single pass and exit
+ *   FEEDS_DIR    directory of partner/affiliate/manual feed files (default /data/feeds)
  */
 import { appendFileSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
@@ -29,6 +30,7 @@ import { runIngestion } from "./runner";
 import { crawlAhAssortment, crawlJumboAssortment } from "./assortment-runner";
 import { SqliteProductStore } from "./store/sqlite-product-store";
 import { apiAdapters } from "./sources";
+import { feedAdapters } from "./adapters/feed/feed.adapter";
 import { browserSources } from "./browser/browser-sources";
 import { launchBrowser } from "./browser/intercept";
 import { DIR_FOR_WEB, READ_FOR_WEB, shareWithWeb } from "./shared-volume";
@@ -61,6 +63,7 @@ const ARCHIVE_OUT = process.env.ARCHIVE_OUT ?? "/data/offers-archive.json";
 const HISTORY_OUT = process.env.PRICE_HISTORY_OUT ?? "/data/price-history.jsonl";
 const CATALOGUE_DB = process.env.CATALOGUE_DB ?? "/data/superscout.db";
 const INGEST_HOUR = Number(process.env.INGEST_HOUR ?? 5);
+const FEEDS_DIR = process.env.FEEDS_DIR ?? "/data/feeds";
 
 /**
  * Append today's prices to the running history.
@@ -169,7 +172,9 @@ async function ingestOnce(): Promise<void> {
   const nowIso = new Date().toISOString();
   const store = new InMemoryOfferStore();
 
-  const adapters = apiAdapters();
+  // Feed files first: they need no network, so they report even on a day the
+  // chains' websites are unreachable.
+  const adapters = [...feedAdapters(FEEDS_DIR), ...apiAdapters()];
   let browser: Browser | null = null;
   try {
     browser = await launchBrowser();
