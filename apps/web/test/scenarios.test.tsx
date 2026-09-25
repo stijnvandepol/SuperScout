@@ -42,7 +42,9 @@ describe("Gebruikersscenario's", () => {
     const user = userEvent.setup();
     explorer();
     await user.type(search(), "zzzzz");
-    expect(screen.getByText("Niets gevonden")).toBeInTheDocument();
+    // Names the term and offers to follow it, rather than a bare "Niets gevonden".
+    expect(screen.getByText("Deze week geen aanbiedingen voor “zzzzz”")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /Volg “zzzzz”/ }).length).toBeGreaterThan(0);
   });
 
   test("05 — filteren op winkel Dirk toont alleen Dirk", async () => {
@@ -217,5 +219,60 @@ describe("Gebruikersscenario's", () => {
     expect(text).toContain("• Gerookte zalm — 2e gratis");
     expect(text).toContain("💶 Totaal (indicatief): €0,99");
     expect(text).toContain("superscout.nl");
+  });
+
+  test("30 — een zoekterm volgen zet hem in de volglijst, met wat al getoond is als gezien", async () => {
+    const user = userEvent.setup();
+    explorer();
+    await user.type(search(), "bananen");
+    await user.click(screen.getByRole("button", { name: "Volg “bananen”" }));
+
+    const list = JSON.parse(localStorage.getItem("superscout:volglijst") ?? "[]");
+    expect(list).toHaveLength(1);
+    expect(list[0].term).toBe("bananen");
+    expect(list[0].seen).toEqual(["dirk:1"]);
+    expect(screen.getByRole("button", { name: "Je volgt “bananen”" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  test("31 — wie terugkomt, ziet wat er nieuw is voor zijn gevolgde termen", () => {
+    localStorage.setItem(
+      "superscout:volglijst",
+      JSON.stringify([
+        { term: "bananen", addedAt: NOW, seen: [] },
+        { term: "wijn", addedAt: NOW, seen: ["plus:4"] },
+      ]),
+    );
+    explorer();
+    const banner = screen.getByRole("link", { name: /1 nieuwe aanbieding/ });
+    expect(banner).toHaveAttribute("href", "/volglijst");
+    expect(banner).toHaveTextContent("“bananen”");
+    expect(banner).not.toHaveTextContent("“wijn”");
+  });
+
+  test("32 — een gedeelde link met filters opent dezelfde weergave", () => {
+    window.history.replaceState(null, "", "/?winkel=dirk&q=appels");
+    explorer();
+    expect(search()).toHaveValue("appels");
+    expect(screen.getByLabelText("Winkel")).toHaveValue("dirk");
+    expect(screen.getByRole("heading", { name: "Elstar appels" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Bananen" })).not.toBeInTheDocument();
+  });
+
+  test("33 — filters komen in de adresbalk, zodat je ze kunt delen", async () => {
+    const user = userEvent.setup();
+    explorer();
+    await user.selectOptions(screen.getByLabelText("Winkel"), "dirk");
+    await user.type(search(), "appels");
+    expect(window.location.search).toContain("winkel=dirk");
+    expect(window.location.search).toContain("q=appels");
+  });
+
+  test("34 — een lege staat met filters biedt aan ze te wissen", async () => {
+    const user = userEvent.setup();
+    explorer();
+    await user.selectOptions(screen.getByLabelText("Winkel"), "ah");
+    await user.type(search(), "bananen");
+    await user.click(screen.getByRole("button", { name: "Wis filters" }));
+    expect(screen.getByRole("heading", { name: "Bananen" })).toBeInTheDocument();
   });
 });

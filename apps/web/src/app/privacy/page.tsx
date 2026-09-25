@@ -1,4 +1,10 @@
 import type { Metadata } from "next";
+import { analyticsConfig } from "@/lib/analytics-config";
+
+// Per request, because one section depends on whether the operator has turned
+// analytics on — a privacy statement baked at build time would describe the
+// build machine, not the site.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Privacy",
@@ -8,6 +14,7 @@ export const metadata: Metadata = {
 };
 
 export default function PrivacyPage() {
+  const analytics = analyticsConfig();
   return (
     <div className="mx-auto max-w-3xl px-5 pb-24">
       <header className="pb-8 pt-10 sm:pt-14">
@@ -17,7 +24,7 @@ export default function PrivacyPage() {
         <h1 className="mt-4 font-display text-4xl font-bold tracking-tight">
           Jouw boodschappen gaan niemand iets aan.
         </h1>
-        <p className="mt-4 text-ink-soft">Laatst bijgewerkt: 6 juli 2026</p>
+        <p className="mt-4 text-ink-soft">Laatst bijgewerkt: 25 september 2026</p>
       </header>
 
       <div className="space-y-8 border-t border-line pt-8 text-[15px] leading-relaxed text-ink-soft">
@@ -30,21 +37,55 @@ export default function PrivacyPage() {
           </p>
         </section>
 
+        {analytics ? (
+          <section>
+            <h2 className="font-display text-lg font-bold text-ink">
+              Geen cookies, geen profielen — wel anonieme tellingen
+            </h2>
+            <p className="mt-2">
+              De site plaatst geen cookies en gebruikt geen advertentienetwerken, tracking­pixels
+              of vingerafdruk­technieken. Om te weten welke zoekopdrachten niets opleveren en
+              welke functies gebruikt worden, tellen we bezoeken en een paar acties (zoals
+              “zoekopdracht”, “gedeeld”, “doorgeklikt naar winkel”) met{" "}
+              <strong className="text-ink">Plausible Analytics</strong>. Dat werkt zonder cookies
+              en zonder iets op je apparaat op te slaan, bewaart geen IP-adressen en maakt geen
+              profiel: we zien alleen totalen, nooit wie wat deed. Daarom is er ook geen
+              cookiebanner nodig.
+            </p>
+          </section>
+        ) : (
+          <section>
+            <h2 className="font-display text-lg font-bold text-ink">Geen cookies, geen tracking</h2>
+            <p className="mt-2">
+              De site plaatst geen cookies en gebruikt geen analytics, advertentienetwerken,
+              tracking­pixels of vingerafdruk­technieken. Daarom zie je ook geen cookiebanner —
+              die is simpelweg niet nodig.
+            </p>
+          </section>
+        )}
+
         <section>
-          <h2 className="font-display text-lg font-bold text-ink">Geen cookies, geen tracking</h2>
+          <h2 className="font-display text-lg font-bold text-ink">
+            Je mandje en volglijst blijven op je apparaat
+          </h2>
           <p className="mt-2">
-            De site plaatst geen cookies en gebruikt geen analytics, advertentienetwerken,
-            tracking­pixels of vingerafdruk­technieken. Daarom zie je ook geen cookiebanner —
-            die is simpelweg niet nodig.
+            Het winkelmandje en de zoektermen die je volgt worden opgeslagen in de{" "}
+            <em>localStorage</em> van je eigen browser. Die gegevens verlaten je apparaat nooit en
+            zijn voor ons onzichtbaar. Om te zien wat er nieuw is voor je volglijst, vraagt je
+            browser de actuele aanbiedingen per zoekterm op, net als bij gewoon zoeken; wie dat
+            vraagt, slaan we niet op. Verwijder je je browserdata, dan zijn mandje en volglijst
+            leeg — meer “account verwijderen” is er niet, want er is geen account.
           </p>
         </section>
 
         <section>
-          <h2 className="font-display text-lg font-bold text-ink">Je mandje blijft op je apparaat</h2>
+          <h2 className="font-display text-lg font-bold text-ink">Als je een fout meldt</h2>
           <p className="mt-2">
-            Het winkelmandje wordt opgeslagen in de <em>localStorage</em> van je eigen browser.
-            Die gegevens verlaten je apparaat nooit en zijn voor ons onzichtbaar. Verwijder je je
-            browserdata, dan is je mandje leeg.
+            Meld je dat een aanbieding niet klopt, dan bewaren we alleen welke aanbieding het is,
+            de reden die je kiest, je eventuele toelichting en het tijdstip (op de minuut). Geen
+            naam, geen e-mailadres, geen IP-adres. Om misbruik te beperken onthoudt de server je
+            IP-adres tien minuten in zijn werkgeheugen; het wordt nergens opgeslagen. Zet in je
+            toelichting liever geen persoonsgegevens.
           </p>
         </section>
 

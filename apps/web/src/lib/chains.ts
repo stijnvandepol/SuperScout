@@ -1,5 +1,5 @@
 import type { SupermarketSlug } from "@superscout/core";
-import { INGESTED_SUPERMARKETS } from "@superscout/core";
+import { INGESTED_SUPERMARKETS, retailerNoun } from "@superscout/core";
 import { getOffers } from "@/lib/offers";
 import { STORE_META } from "@/lib/format";
 
@@ -84,8 +84,25 @@ export function dutchList(names: string[]): string {
 export function chainSentence(max = 10): string {
   const names = liveChains().map((c) => c.name);
   if (names.length === 0) return "de grote Nederlandse supermarkten";
-  if (names.length > max) return `${names.length} Nederlandse supermarkten`;
+  if (names.length > max) return `${names.length} Nederlandse ${liveNoun()}`;
   return dutchList(names);
+}
+
+/**
+ * "supermarkten" while only supermarkets are live, "winkels" once a drugstore
+ * or DIY chain joins — so copy written today stays true after the expansion.
+ */
+export function liveNoun(): string {
+  return retailerNoun(liveChains().map((c) => c.slug));
+}
+
+/** The biggest live chains first, as the homepage names them. */
+export function headlineChains(max = 6): string {
+  const chains = [...liveChains()].sort((a, b) => b.count - a.count);
+  if (chains.length === 0) return `de grote Nederlandse ${liveNoun()}`;
+  const names = chains.map((c) => c.name);
+  if (names.length <= max) return dutchList(names);
+  return `${names.slice(0, max).join(", ")} en ${names.length - max} andere`;
 }
 
 /** "zes supermarkten" — spelled out up to twelve, as Dutch prose expects. */

@@ -11,6 +11,7 @@ import { OfferGrid } from "@/components/OfferGrid";
 import { ImageHostPreconnect } from "@/components/ImageHostPreconnect";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd, faqJsonLd, offerListJsonLd, SITE_URL } from "@/lib/seo";
+import { liveNoun } from "@/lib/chains";
 
 export const revalidate = 1800;
 
@@ -305,7 +306,7 @@ function StoreCrosslinks({ store, slug }: { store: string; slug: string }) {
   return (
     <section className="mt-16 border-t border-line pt-12">
       <h2 className="font-display text-2xl font-bold tracking-tight">
-        Vergelijk {store} met andere supermarkten
+        Vergelijk {store} met andere {liveNoun()}
       </h2>
       <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-ink-soft">
         Een keten met de scherpste actie op één product is zelden de goedkoopste op je hele

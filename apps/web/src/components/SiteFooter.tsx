@@ -53,6 +53,7 @@ export function SiteFooter() {
                 {type.label}
               </FooterLink>
             ))}
+            <FooterLink href="/beste-aanbiedingen">Beste aanbiedingen</FooterLink>
             <FooterLink href="/volgende-week">Volgende week</FooterLink>
           </FooterColumn>
 

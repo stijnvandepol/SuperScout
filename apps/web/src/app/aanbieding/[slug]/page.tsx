@@ -17,13 +17,18 @@ import { insightFor } from "@/lib/price-history";
 
 import {
   formatEuro,
+  freshnessLabel,
   isExVat,
   mechanismDescription,
   offerSlug,
+  provenanceLabel,
   STORE_META,
   validUntilShort,
 } from "@/lib/format";
 import { OfferCard } from "@/components/OfferCard";
+import { OutboundLink } from "@/components/OutboundLink";
+import { ShareOfferButton } from "@/components/ShareOfferButton";
+import { ReportOfferButton } from "@/components/ReportOfferButton";
 import { StoreBadge } from "@/components/StoreBadge";
 import { DiscountSticker } from "@/components/DiscountSticker";
 import { AddToBasketButton } from "@/components/AddToBasketButton";
@@ -65,9 +70,19 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   const upcoming = status === "upcoming";
   const title = `${offer.title}${price} bij ${store} — SuperScout`;
+  // Nearly half the chains publish no end date, and `validUntilShort("")` is
+  // an empty string — which put "Geldig ." into hundreds of snippets. A
+  // missing date now drops the sentence instead of shipping half of it.
+  const validity = upcoming
+    ? offer.validFrom
+      ? ` Geldig vanaf ${validUntilShort(offer.validFrom).replace("t/m ", "")}.`
+      : ""
+    : offer.validUntil
+      ? ` Geldig ${validUntilShort(offer.validUntil)}.`
+      : "";
   const description = upcoming
-    ? `${offer.title} gaat in de aanbieding bij ${store}. ${mechanismDescription(offer)} Geldig vanaf ${validUntilShort(offer.validFrom)}.`
-    : `${offer.title} in de aanbieding bij ${store}. ${mechanismDescription(offer)} Geldig ${validUntilShort(offer.validUntil)}.`;
+    ? `${offer.title} gaat in de aanbieding bij ${store}. ${mechanismDescription(offer)}${validity}`
+    : `${offer.title} in de aanbieding bij ${store}. ${mechanismDescription(offer)}${validity}`;
 
   return {
     title,
@@ -225,11 +240,13 @@ export default async function OfferPage({ params }: Params) {
             <div className="flex justify-between gap-4">
               <dt className="font-mono text-xs uppercase tracking-wide text-ink-soft">Geldig</dt>
               <dd className={`text-right font-mono ${soon ? "font-bold text-urgent" : ""}`}>
-                {soon
-                  ? days <= 1
-                    ? "verloopt vandaag"
-                    : `nog ${days} dagen`
-                  : validUntilShort(offer.validUntil)}
+                {!offer.validUntil
+                  ? `einddatum onbekend · ${freshnessLabel(offer.fetchedAt, nowIso)}`
+                  : soon
+                    ? days <= 1
+                      ? "verloopt vandaag"
+                      : `nog ${days} dagen`
+                    : validUntilShort(offer.validUntil)}
               </dd>
             </div>
             <div className="flex justify-between gap-4">
@@ -240,25 +257,58 @@ export default async function OfferPage({ params }: Params) {
                 </Link>
               </dd>
             </div>
+            {/* Where the price comes from and how fresh it is — the question
+                every price comparison should answer before being asked. */}
+            <div className="flex justify-between gap-4">
+              <dt className="font-mono text-xs uppercase tracking-wide text-ink-soft">Bron</dt>
+              <dd className="text-right text-ink-soft">
+                {provenanceLabel(offer)} · {freshnessLabel(offer.fetchedAt, nowIso)}
+              </dd>
+            </div>
           </dl>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             {offer.url ? (
-              <a
+              <OutboundLink
                 href={offer.url}
-                target="_blank"
-                rel="noopener noreferrer nofollow sponsored"
+                store={offer.source}
+                // "sponsored" only where it is true: an affiliate link earns a
+                // commission, a link to the chain's own page does not.
+                rel={
+                  offer.provenance === "affiliate-feed"
+                    ? "noopener noreferrer nofollow sponsored"
+                    : "noopener noreferrer nofollow"
+                }
                 className="rounded-full px-6 py-3 text-center font-display text-sm font-bold shadow-sm transition-opacity hover:opacity-90"
                 style={{ background: store.bg, color: store.fg }}
               >
                 Bekijk bij {store.name} →
-              </a>
+              </OutboundLink>
             ) : null}
             <AddToBasketButton id={offer.id} />
           </div>
 
+          <div className="mt-4">
+            <ShareOfferButton
+              url={url}
+              text={`${offer.title}${
+                pricing.currentPriceCents !== null ? ` voor ${formatEuro(pricing.currentPriceCents)}` : ""
+              } bij ${store.name}`}
+            />
+          </div>
+          {offer.provenance === "affiliate-feed" ? (
+            <p className="mt-3 text-xs leading-relaxed text-ink-soft">
+              Deze link loopt via een partnerprogramma. Koop je iets, dan kan SuperScout een kleine
+              vergoeding krijgen. Dat verandert niets aan de prijs of aan de volgorde op de site.
+            </p>
+          ) : null}
+
           <CataloguePermalink offer={offer} />
           <PriceHistoryNote offer={offer} />
+
+          <div className="mt-6">
+            <ReportOfferButton offerId={offer.id} />
+          </div>
         </div>
       </div>
 
@@ -427,9 +477,10 @@ function OfferProse({
         ) : null}
 
         <p>
-          Prijzen en voorwaarden komen rechtstreeks van {store} en worden dagelijks ververst.
+          {sourceSentence(offer, store)}{" "}
           Controleer de definitieve prijs altijd in de winkel of de app van {store}; SuperScout
-          verkoopt zelf niets en verdient niets aan deze aanbieding. Meer{" "}
+          verkoopt zelf niets
+          {offer.provenance === "affiliate-feed" ? "" : " en verdient niets aan deze aanbieding"}. Meer{" "}
           <Link
             href={`/winkel/${offer.source}`}
             className="font-medium text-ink underline decoration-deal decoration-2 underline-offset-2"
@@ -441,6 +492,20 @@ function OfferProse({
       </div>
     </section>
   );
+}
+
+/** One honest sentence on where the price comes from, per kind of source. */
+function sourceSentence(offer: Offer, store: string): string {
+  switch (offer.provenance) {
+    case "partner-feed":
+      return `${store} levert deze aanbieding zelf aan; we werken hem bij zodra ${store} dat doet.`;
+    case "affiliate-feed":
+      return "Deze aanbieding komt uit de productfeed van een partnerprogramma en wordt dagelijks bijgewerkt.";
+    case "manual":
+      return `Deze aanbieding is met de hand overgenomen en voor het laatst gecontroleerd op ${new Date(offer.fetchedAt).toLocaleDateString("nl-NL", { day: "numeric", month: "long" })}.`;
+    default:
+      return `Prijzen en voorwaarden komen rechtstreeks van ${store} en worden dagelijks ververst.`;
+  }
 }
 
 function RelatedSection({

@@ -127,11 +127,34 @@ function isRenderable(offer: Offer): boolean {
   );
 }
 
-/** Drop unrenderable records, and say so once per load rather than per page. */
+/**
+ * Offer ids an operator has pulled from the site.
+ *
+ * The moderation lever behind the "meld een fout" button: when a visitor
+ * reports a price that is wrong, the fix at the source can take a day (the
+ * next ingest) or longer (an adapter bug). Adding the id to this file hides it
+ * within one cache window, without a deploy. A JSON array of offer ids, e.g.
+ * `["kruidvat:123", "ah:456"]`. Applied to the live set and the archive alike,
+ * so a hidden offer cannot resurface through its old URL.
+ */
+function blockedIds(): Set<string> {
+  const path = process.env.OFFER_BLOCKLIST_PATH;
+  if (!path) return new Set();
+  try {
+    const parsed = JSON.parse(readFileSync(path, "utf-8")) as unknown;
+    return new Set(Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string") : []);
+  } catch {
+    // No file yet is the normal state; a broken one must not take the site down.
+    return new Set();
+  }
+}
+
+/** Drop unrenderable and blocked records, and say so once per load rather than per page. */
 function sanitise(offers: Offer[], label: string): Offer[] {
-  const clean = offers.filter(isRenderable);
+  const blocked = blockedIds();
+  const clean = offers.filter((o) => isRenderable(o) && !blocked.has(o.id));
   if (clean.length !== offers.length) {
-    console.warn(`[offers] dropped ${offers.length - clean.length} unrenderable ${label} records`);
+    console.warn(`[offers] dropped ${offers.length - clean.length} unrenderable or blocked ${label} records`);
   }
   return clean;
 }
