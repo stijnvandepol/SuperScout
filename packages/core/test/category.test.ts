@@ -128,3 +128,33 @@ describe("categorizeOffer", () => {
     }
   });
 });
+
+describe("categorieën buiten de supermarkt", () => {
+  test("keukenspullen en klusgoed krijgen een eigen categorie", () => {
+    expect(categorizeOffer(offer(undefined, "Tefal koekenpan 28 cm"))).toBe("koken-tafelen");
+    expect(categorizeOffer(offer(undefined, "Bestekset 24-delig"))).toBe("koken-tafelen");
+    expect(categorizeOffer(offer(undefined, "Bosch accuschroefmachine"))).toBe("bouw-tuin");
+    expect(categorizeOffer(offer(undefined, "Potgrond 40 liter"))).toBe("bouw-tuin");
+  });
+
+  test("voedsel blijft voorgaan op de generieke non-food woorden", () => {
+    expect(categorizeOffer(offer(undefined, "Tuinkers"))).toBe("groente-fruit");
+    expect(categorizeOffer(offer(undefined, "Barbecueworst"))).toBe("vlees-vis");
+  });
+});
+
+import { CATEGORIES, DEPARTMENTS, departmentOf } from "../src/category";
+
+describe("afdelingen", () => {
+  test("elke categorie hoort bij precies één afdeling", () => {
+    const assigned = DEPARTMENTS.flatMap((d) => [...d.categories]);
+    expect(new Set(assigned).size).toBe(assigned.length);
+    expect(new Set(assigned)).toEqual(new Set(CATEGORIES.map((c) => c.slug)));
+  });
+
+  test("departmentOf volgt de indeling", () => {
+    expect(departmentOf("zuivel")).toBe("eten-drinken");
+    expect(departmentOf("drogisterij")).toBe("drogisterij");
+    expect(departmentOf("bouw-tuin")).toBe("bouw-tuin");
+  });
+});

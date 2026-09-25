@@ -1,28 +1,20 @@
-/**
- * The supermarkets SuperScout can carry offers for. Extensible: add an entry
- * here and its slug becomes a valid `Offer.source` everywhere, type-checked.
- */
-export const SUPERMARKETS = {
-  ah: { name: "Albert Heijn", ingested: true },
-  jumbo: { name: "Jumbo", ingested: true },
-  lidl: { name: "Lidl", ingested: true },
-  aldi: { name: "Aldi", ingested: true },
-  plus: { name: "Plus", ingested: true },
-  dirk: { name: "Dirk", ingested: true },
-  hoogvliet: { name: "Hoogvliet", ingested: true },
-  dekamarkt: { name: "DekaMarkt", ingested: true },
-  vomar: { name: "Vomar", ingested: false },
-  coop: { name: "Coop", ingested: false },
-  spar: { name: "Spar", ingested: false },
-  ekoplaza: { name: "Ekoplaza", ingested: false },
-  poiesz: { name: "Poiesz", ingested: true },
-  sligro: { name: "Sligro", ingested: true },
-} as const;
+import { RETAILERS, RETAILER_SLUGS, type RetailerSlug } from "./retailer";
 
-export type SupermarketSlug = keyof typeof SUPERMARKETS;
+/**
+ * The retailers SuperScout can carry offers for.
+ *
+ * Historical name: this started as a supermarket list, and `SupermarketSlug`
+ * is threaded through every adapter, page and test. The registry itself now
+ * lives in `retailer.ts` and covers drugstores, department stores and DIY
+ * chains too; these names stay as aliases so that widening the scope did not
+ * turn into a rename across fifty files.
+ */
+export const SUPERMARKETS = RETAILERS;
+
+export type SupermarketSlug = RetailerSlug;
 
 export function supermarketName(slug: SupermarketSlug): string {
-  return SUPERMARKETS[slug].name;
+  return RETAILERS[slug].name;
 }
 
 /**
@@ -38,6 +30,4 @@ export function supermarketName(slug: SupermarketSlug): string {
  * A chain in this list with no offers today is a broken adapter. A chain
  * outside it is simply not built yet. Only the first is worth apologising for.
  */
-export const INGESTED_SUPERMARKETS = (
-  Object.keys(SUPERMARKETS) as SupermarketSlug[]
-).filter((slug) => SUPERMARKETS[slug].ingested);
+export const INGESTED_SUPERMARKETS = RETAILER_SLUGS.filter((slug) => RETAILERS[slug].ingested);

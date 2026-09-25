@@ -20,6 +20,18 @@ services:
       - GOOGLE_SITE_VERIFICATION=${GOOGLE_SITE_VERIFICATION:-}
       - BING_SITE_VERIFICATION=${BING_SITE_VERIFICATION:-}
       - INDEXNOW_KEY=${INDEXNOW_KEY:-}
+      # Meldingen van bezoekers ("klopt niet"). /data is groepsschrijfbaar voor
+      # de web-container (zie packages/ingestion/src/shared-volume.ts); lukt
+      # schrijven niet, dan staan ze nog in `docker logs superscout-web`.
+      - REPORTS_PATH=/data/meldingen.jsonl
+      # JSON-lijst met offer-id's die van de site moeten, bijv. ["ah:123"].
+      - OFFER_BLOCKLIST_PATH=/data/verborgen.json
+      # /beheer staat uit tot hier een token van minstens 16 tekens staat.
+      - ADMIN_TOKEN=${ADMIN_TOKEN:-}
+      # Cookieloze, geaggregeerde statistieken (Plausible). Leeg = uit, en dan
+      # zegt de privacyverklaring ook dat er niets gemeten wordt.
+      - ANALYTICS_DOMAIN=${ANALYTICS_DOMAIN:-}
+      - ANALYTICS_SCRIPT_SRC=${ANALYTICS_SCRIPT_SRC:-}
     volumes:
       - offers-data:/data
     ports:
@@ -48,6 +60,9 @@ services:
       # accumulated time, so it must outlive every container rebuild.
       - PRICE_HISTORY_OUT=/data/price-history.jsonl
       - CATALOGUE_DB=/data/superscout.db
+      # Partner-, affiliate- en handmatige feeds: één JSON-bestand per retailer.
+      # Zie docs/FEEDS.md. Een lege of ontbrekende map is normaal.
+      - FEEDS_DIR=/data/feeds
       # Runs once on start, then every morning at this UTC hour (5 ≈ 07:00 NL).
       - INGEST_HOUR=5
     volumes:

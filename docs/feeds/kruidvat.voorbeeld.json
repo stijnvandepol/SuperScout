@@ -1,0 +1,28 @@
+{
+  "retailer": "kruidvat",
+  "provenance": "manual",
+  "licence": "VOORBEELD — vervang door de echte grondslag, bijv. 'schriftelijke toestemming Kruidvat, mail van 1 okt 2026' of 'Awin publisher agreement #12345'",
+  "updatedAt": "2026-10-01T09:00:00+02:00",
+  "offers": [
+    {
+      "id": "voorbeeld-001",
+      "title": "Voorbeeldmerk shampoo 250 ml",
+      "brand": "Voorbeeldmerk",
+      "category": "Haarverzorging",
+      "url": "https://www.kruidvat.nl/",
+      "priceCents": 299,
+      "originalPriceCents": 499,
+      "validFrom": "2026-10-01",
+      "validUntil": "2026-10-12"
+    },
+    {
+      "id": "voorbeeld-002",
+      "title": "Voorbeeldmerk tandpasta",
+      "brand": "Voorbeeldmerk",
+      "label": "1+1 gratis",
+      "priceCents": 349,
+      "validFrom": "2026-10-01",
+      "validUntil": "2026-10-12"
+    }
+  ]
+}
