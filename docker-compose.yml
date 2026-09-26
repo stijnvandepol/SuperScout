@@ -26,6 +26,8 @@ services:
       - REPORTS_PATH=/data/meldingen.jsonl
       # JSON-lijst met offer-id's die van de site moeten, bijv. ["ah:123"].
       - OFFER_BLOCKLIST_PATH=/data/verborgen.json
+      # Resultaat van de laatste ingest per bron, voor /beheer en /api/health.
+      - INGEST_STATUS_PATH=/data/ingest-status.json
       # /beheer staat uit tot hier een token van minstens 16 tekens staat.
       - ADMIN_TOKEN=${ADMIN_TOKEN:-}
       # Cookieloze, geaggregeerde statistieken (Plausible). Leeg = uit, en dan
@@ -63,6 +65,7 @@ services:
       # Partner-, affiliate- en handmatige feeds: één JSON-bestand per retailer.
       # Zie docs/FEEDS.md. Een lege of ontbrekende map is normaal.
       - FEEDS_DIR=/data/feeds
+      - STATUS_OUT=/data/ingest-status.json
       # Runs once on start, then every morning at this UTC hour (5 ≈ 07:00 NL).
       - INGEST_HOUR=5
     volumes:

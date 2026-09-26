@@ -11,6 +11,7 @@
  *   INGEST_HOUR  UTC hour of the daily run (default 5 ≈ 07:00 NL summer)
  *   INGEST_ONCE  set to "1" to run a single pass and exit
  *   FEEDS_DIR    directory of partner/affiliate/manual feed files (default /data/feeds)
+ *   STATUS_OUT   per-source result of the last run (default /data/ingest-status.json)
  */
 import { appendFileSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
@@ -26,7 +27,7 @@ import {
   parseObservations,
   serialiseObservations,
 } from "@superscout/core";
-import { runIngestion } from "./runner";
+import { runIngestion, type IngestionReport } from "./runner";
 import { crawlAhAssortment, crawlJumboAssortment } from "./assortment-runner";
 import { SqliteProductStore } from "./store/sqlite-product-store";
 import { apiAdapters } from "./sources";
@@ -64,6 +65,39 @@ const HISTORY_OUT = process.env.PRICE_HISTORY_OUT ?? "/data/price-history.jsonl"
 const CATALOGUE_DB = process.env.CATALOGUE_DB ?? "/data/superscout.db";
 const INGEST_HOUR = Number(process.env.INGEST_HOUR ?? 5);
 const FEEDS_DIR = process.env.FEEDS_DIR ?? "/data/feeds";
+const STATUS_OUT = process.env.STATUS_OUT ?? "/data/ingest-status.json";
+
+/**
+ * What the last run did, per source, for the web app's /beheer and /api/health.
+ *
+ * The runner already knew which chain failed and why; it only ever said so in
+ * the container log, which nobody reads on a quiet day. Four adapters once
+ * stopped producing for weeks before anyone noticed. Best-effort like the
+ * archive: a status that fails to write must not stop the offers.
+ */
+function writeStatus(
+  report: IngestionReport,
+  written: number,
+  startedAt: string,
+  browserError: string | null,
+): void {
+  try {
+    writeAtomic(
+      STATUS_OUT,
+      JSON.stringify({
+        startedAt,
+        finishedAt: new Date().toISOString(),
+        written,
+        // Without a browser seven chains never even start, so they are absent
+        // from `results` rather than failed — this is the only trace of them.
+        browserError,
+        results: report.results,
+      }),
+    );
+  } catch (e) {
+    console.error("[ingest] status write failed:", e);
+  }
+}
 
 /**
  * Append today's prices to the running history.
@@ -176,16 +210,19 @@ async function ingestOnce(): Promise<void> {
   // chains' websites are unreachable.
   const adapters = [...feedAdapters(FEEDS_DIR), ...apiAdapters()];
   let browser: Browser | null = null;
+  let browserError: string | null = null;
   try {
     browser = await launchBrowser();
     adapters.push(...browserSources(browser));
   } catch (e) {
     console.error("[ingest] browser unavailable, skipping browser-driven chains:", e);
+    browserError = e instanceof Error ? e.message : String(e);
   }
 
   let all;
+  let report: IngestionReport;
   try {
-    const report = await runIngestion(adapters, store, { timeoutMs: 60_000 });
+    report = await runIngestion(adapters, store, { timeoutMs: 60_000 });
     logReport(report);
     all = await store.all();
   } finally {
@@ -194,6 +231,7 @@ async function ingestOnce(): Promise<void> {
 
   // Only keep offers that are actually valid today (drop next-week/expired).
   const offers = all.filter((o) => isActive(o.validFrom, o.validUntil, nowIso));
+  writeStatus(report, offers.length, nowIso, browserError);
 
   if (offers.length === 0) {
     // Never overwrite good data with an empty pull (all sources failed).

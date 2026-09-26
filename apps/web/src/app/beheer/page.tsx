@@ -5,6 +5,7 @@ import { RETAILER_SLUGS, RETAILERS, SECTOR_LABEL, categorizeOffer } from "@super
 import { getOffers, getArchivedOffers } from "@/lib/offers";
 import { offerSlug, provenanceLabel } from "@/lib/format";
 import { readReports, REPORT_REASONS } from "@/lib/reports";
+import { health as siteHealth, readIngestStatus } from "@/lib/health";
 
 export const dynamic = "force-dynamic";
 
@@ -83,6 +84,8 @@ export default function BeheerPage() {
       <p className="mt-2 font-mono text-xs text-ink-soft">
         {offers.length} live aanbiedingen · {reports.length} recente meldingen
       </p>
+
+      <IngestPanel />
 
       <h2 className="mt-10 font-display text-xl font-bold">Datakwaliteit per winkel</h2>
       <div className="mt-4 overflow-x-auto">
@@ -165,5 +168,35 @@ export default function BeheerPage() {
         URL. Nieuwe winkels via een feed: zie <code>docs/FEEDS.md</code>.
       </p>
     </div>
+  );
+}
+
+/** The last ingest run and the health verdict, as /api/health reports it. */
+function IngestPanel() {
+  const h = siteHealth();
+  const status = readIngestStatus();
+  return (
+    <section className="mt-8 rounded-2xl border border-line bg-surface p-5">
+      <p className={`font-display text-lg font-bold ${h.ok ? "text-fresh" : "text-urgent"}`}>
+        {h.ok ? "Gezond" : `Aandacht nodig: ${h.problems.join(", ")}`}
+      </p>
+      <p className="mt-1 font-mono text-xs text-ink-soft">
+        Data {h.dataAgeHours ?? "?"} uur oud · {h.chains} ketens live · laatste ingest{" "}
+        {status ? new Date(status.finishedAt).toLocaleString("nl-NL") : "onbekend (INGEST_STATUS_PATH niet ingesteld of nog niet gedraaid)"}
+      </p>
+      {status ? (
+        <ul className="mt-4 grid gap-1 font-mono text-xs sm:grid-cols-2">
+          {status.browserError ? (
+            <li className="text-urgent sm:col-span-2">Browser startte niet: {status.browserError}</li>
+          ) : null}
+          {status.results.map((r) => (
+            <li key={r.source} className={r.ok && r.offerCount > 0 ? "" : "text-urgent"}>
+              {r.ok ? "✓" : "✗"} {r.source}: {r.ok ? `${r.offerCount} aanbiedingen` : r.error ?? "mislukt"} ·{" "}
+              {Math.round(r.durationMs / 1000)} s
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </section>
   );
 }

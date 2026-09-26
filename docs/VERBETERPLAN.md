@@ -65,6 +65,18 @@ Nog open, bewust niet in deze ronde:
 | **Interne links naar onderwerpen**: "Populair" op homepage en categoriepagina's, kolom in de footer, en op elke aanbieding "Vergelijk alle 18 koffie-aanbiedingen". | `TopicLinks`, aanbiedingspagina | Linkwaarde naar de nieuwe pagina's; de logische vervolgvraag na één aanbieding. |
 | **Lijstpagina's renderen 48 kaarten, de rest via "Toon meer"** (`/api/lijst`). Eén definitie van elke lijst (`lib/lists.ts`) voor pagina en API, zodat er niets dubbel of weg valt. | `OfferGrid`, `LoadMoreOffers` | `/acties/1-plus-1-gratis` van 805 KB naar 327 KB HTML en van 146 naar 48 kaarten om te hydrateren. Beter voor LCP/INP op goedkope telefoons. |
 
+### Ronde 3 (26 september)
+
+| Wijziging | Waar | Verwachte impact |
+|---|---|---|
+| **Gedeelde links toonden "Aanbiedingen van 0 supermarkten".** De OG-afbeelding van de site werd tijdens `docker build` gemaakt, zonder data. Nu per request. | `app/opengraph-image.tsx` | Elke gedeelde SuperScout-link ziet er weer geloofwaardig uit. |
+| **Deelkaarten met de deals erop** voor `/beste-aanbiedingen` en elke onderwerppagina: titel, aantal acties en winkels, en de top 3 met korting. | `lib/og.tsx` | Een WhatsApp- of Facebook-preview laat zien wát er te halen is, niet alleen een logo. |
+| **Slimmer zoeken.** Accenten maken niet uit ("creme" vindt "crème"). Korte woorden alleen aan het begin van een woord (zoeken op "ijs" gaf elke "2e halve prijs"). De onderwerpen werken als synoniemenlijst: "wasmiddel" vindt ook "Alle Ariel t/m 30 wasbeurten", "wc papier" vindt toiletpapier, "kattenbrokken" vindt Whiskas. | `lib/search.ts`, `lib/topics.ts` | Minder lege zoekresultaten — die zijn nu bijna altijd vraag die we wél konden beantwoorden. |
+| **Ingest-status per bron.** Na elke run schrijft de worker per bron: gelukt, aantal, duur, foutmelding — en of de browser voor zeven ketens wel startte. Zichtbaar op `/beheer`. | `cli.ts`, `/beheer` | Een stilgevallen scraper valt binnen een dag op in plaats van na weken. |
+| **`/api/health`** voor een uptime-monitor: 200 als de data te vertrouwen is, 503 bij geen aanbiedingen, data ouder dan 36 uur, meer dan de helft van de ketens weg, of een browser die niet start. | `lib/health.ts` | "De server draait" was nooit de vraag; "de prijzen kloppen" wel. |
+
+**Uptime-monitoring instellen (5 minuten):** maak bij UptimeRobot of Better Stack (beide hebben een gratis laag) een HTTP-monitor op `https://superscout.nl/api/health`, interval 5–15 minuten, alarm bij een andere status dan 200. Zet een tweede, simpele monitor op `https://superscout.nl/` voor echte uitval.
+
 Bewust niet gedaan: **prijs per kilo/liter**. Het klinkt als de logische volgende stap, maar de titels geven de inhoud te vaak niet of als bereik ("zak 450 of 500 gram", "Alle Pampers luiers"). Een vergelijking die bij de helft gokt, is misleidender dan geen vergelijking. Pas zinvol met de productcatalogus (AH/Jumbo hebben inhoud per product) — koppelen via `productForOffer`.
 
 ---
