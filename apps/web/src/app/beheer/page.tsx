@@ -184,6 +184,11 @@ function IngestPanel() {
         Data {h.dataAgeHours ?? "?"} uur oud · {h.chains} ketens live · laatste ingest{" "}
         {status ? new Date(status.finishedAt).toLocaleString("nl-NL") : "onbekend (INGEST_STATUS_PATH niet ingesteld of nog niet gedraaid)"}
       </p>
+      {status?.robotsMode === "report" ? (
+        <p className="mt-2 font-mono text-xs text-urgent">
+          ROBOTS_MODE=report: robots.txt wordt gecontroleerd maar niet afgedwongen.
+        </p>
+      ) : null}
       {status ? (
         <ul className="mt-4 grid gap-1 font-mono text-xs sm:grid-cols-2">
           {status.browserError ? (
@@ -193,6 +198,8 @@ function IngestPanel() {
             <li key={r.source} className={r.ok && r.offerCount > 0 ? "" : "text-urgent"}>
               {r.ok ? "✓" : "✗"} {r.source}: {r.ok ? `${r.offerCount} aanbiedingen` : r.error ?? "mislukt"} ·{" "}
               {Math.round(r.durationMs / 1000)} s
+              {r.blockedSince ? ` · geweigerd sinds ${r.blockedSince.slice(0, 10)}` : ""}
+              {r.robotsWarning ? ` · robots.txt: ${r.robotsWarning}` : ""}
             </li>
           ))}
         </ul>

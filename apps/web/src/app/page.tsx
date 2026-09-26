@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { toCardOffer } from "@superscout/core";
+import { categorizeOffer, toCardOffer } from "@superscout/core";
 import { chainSentence, dutchList, headlineChains, missingChains } from "@/lib/chains";
 import { byBiggestDiscount, dataFetchedAt, getOffers, stats } from "@/lib/offers";
 import { offerSlug } from "@/lib/format";
@@ -157,12 +157,14 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Projected, not passed whole: OfferExplorer is a client component, so
-            every field crosses the RSC serialisation boundary into the HTML.
-            The full set was ~277 KB of the homepage's 403 KB, a quarter of it
-            fields no component reads. */}
+        {/* Only the first 48 cross into the page: OfferExplorer is a client
+            component, so everything handed to it is serialised into the HTML.
+            The full set loads from /api/aanbiedingen on first use or when idle. */}
         <OfferExplorer
-          offers={cards}
+          offers={cards.slice(0, 48)}
+          total={cards.length}
+          storeOptions={[...new Set(cards.map((c) => c.source))].sort()}
+          categoryOptions={[...new Set(offers.map(categorizeOffer))]}
           nowIso={nowIso}
           dataDate={dataDate}
           stat={`${total} aanbiedingen · ${stores} winkels`}

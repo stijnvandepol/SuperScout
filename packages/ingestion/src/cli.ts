@@ -12,6 +12,9 @@
  *   INGEST_ONCE  set to "1" to run a single pass and exit
  *   FEEDS_DIR    directory of partner/affiliate/manual feed files (default /data/feeds)
  *   STATUS_OUT   per-source result of the last run (default /data/ingest-status.json)
+ *   ROBOTS_CACHE last-known-good robots.txt per origin (default /data/robots-cache.json)
+ *   ROBOTS_MODE  "enforce" (default) skips chains whose robots.txt forbids us;
+ *                "report" only records it in the status
  */
 import { appendFileSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
@@ -35,6 +38,9 @@ import { feedAdapters } from "./adapters/feed/feed.adapter";
 import { browserSources } from "./browser/browser-sources";
 import { launchBrowser } from "./browser/intercept";
 import { DIR_FOR_WEB, READ_FOR_WEB, shareWithWeb } from "./shared-volume";
+import { RobotsPolicy, type RobotsEntry } from "./robots";
+import { gateAdapters, isBlockError, type RobotsMode } from "./gate";
+import { SOURCE_URLS } from "./source-urls";
 
 /**
  * Write a file so that a reader never sees it half-written.
@@ -66,6 +72,49 @@ const CATALOGUE_DB = process.env.CATALOGUE_DB ?? "/data/superscout.db";
 const INGEST_HOUR = Number(process.env.INGEST_HOUR ?? 5);
 const FEEDS_DIR = process.env.FEEDS_DIR ?? "/data/feeds";
 const STATUS_OUT = process.env.STATUS_OUT ?? "/data/ingest-status.json";
+const ROBOTS_CACHE = process.env.ROBOTS_CACHE ?? "/data/robots-cache.json";
+const ROBOTS_MODE: RobotsMode = process.env.ROBOTS_MODE === "report" ? "report" : "enforce";
+
+/** How we introduce ourselves when reading robots.txt — by name, with a way to reach us. */
+const BOT_USER_AGENT = "Mozilla/5.0 (compatible; SuperScoutBot/1.0; +https://superscout.nl/ethiek)";
+
+async function fetchRobots(url: string): Promise<{ status: number; body: string }> {
+  const res = await fetch(url, {
+    headers: { "user-agent": BOT_USER_AGENT },
+    signal: AbortSignal.timeout(10_000),
+    redirect: "follow",
+  });
+  // robots.txt is small by definition; RFC 9309 lets us stop at 500 KiB.
+  return { status: res.status, body: (await res.text()).slice(0, 500_000) };
+}
+
+function readJson<T>(path: string, fallback: T): T {
+  try {
+    return JSON.parse(readFileSync(path, "utf-8")) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+interface StatusResult {
+  source: string;
+  ok: boolean;
+  offerCount: number;
+  durationMs: number;
+  error?: string;
+  /** When the retailer last refused us; set while the backoff runs. */
+  blockedSince?: string;
+  /** robots.txt objection recorded in "report" mode. */
+  robotsWarning?: string;
+}
+
+/** Who refused us, and since when, from the last run's status. */
+function previousBlocks(): Record<string, string> {
+  const prev = readJson<{ results?: StatusResult[] }>(STATUS_OUT, {});
+  return Object.fromEntries(
+    (prev.results ?? []).filter((r) => r.blockedSince).map((r) => [r.source, r.blockedSince!]),
+  );
+}
 
 /**
  * What the last run did, per source, for the web app's /beheer and /api/health.
@@ -76,7 +125,7 @@ const STATUS_OUT = process.env.STATUS_OUT ?? "/data/ingest-status.json";
  * archive: a status that fails to write must not stop the offers.
  */
 function writeStatus(
-  report: IngestionReport,
+  results: StatusResult[],
   written: number,
   startedAt: string,
   browserError: string | null,
@@ -91,7 +140,8 @@ function writeStatus(
         // Without a browser seven chains never even start, so they are absent
         // from `results` rather than failed — this is the only trace of them.
         browserError,
-        results: report.results,
+        robotsMode: ROBOTS_MODE,
+        results,
       }),
     );
   } catch (e) {
@@ -186,7 +236,22 @@ async function crawlCatalogue(): Promise<void> {
 
     // Sequential, not parallel: two crawls hammering two chains at once is both
     // rude and a good way to get rate-limited off one of them.
-    for (const crawl of [crawlAhAssortment, crawlJumboAssortment]) {
+    const robots = new RobotsPolicy(fetchRobots, readJson<Record<string, RobotsEntry>>(ROBOTS_CACHE, {}));
+    const blocked = previousBlocks();
+    const crawls = [
+      { source: "ah", crawl: crawlAhAssortment },
+      { source: "jumbo", crawl: crawlJumboAssortment },
+    ] as const;
+    for (const { source, crawl } of crawls) {
+      if (blocked[source]) {
+        console.log(`[assortment] ${source} overgeslagen: winkel weigerde ons op ${blocked[source]}`);
+        continue;
+      }
+      const reason = await robots.checkAll(SOURCE_URLS[source] ?? []);
+      if (reason && ROBOTS_MODE === "enforce") {
+        console.log(`[assortment] ${source} overgeslagen: ${reason}`);
+        continue;
+      }
       const report = await crawl(store, { onProgress: log });
       if (report.aislesFailed > 0) {
         console.error(
@@ -219,10 +284,25 @@ async function ingestOnce(): Promise<void> {
     browserError = e instanceof Error ? e.message : String(e);
   }
 
+  // robots.txt and recent refusals decide which adapters run at all.
+  const robots = new RobotsPolicy(fetchRobots, readJson<Record<string, RobotsEntry>>(ROBOTS_CACHE, {}));
+  const blockedBefore = previousBlocks();
+  const gate = await gateAdapters(adapters, {
+    robots,
+    mode: ROBOTS_MODE,
+    blockedSince: blockedBefore,
+    now: Date.now(),
+  });
+  try {
+    writeAtomic(ROBOTS_CACHE, JSON.stringify(robots.snapshot()));
+  } catch (e) {
+    console.error("[ingest] robots cache write failed:", e);
+  }
+
   let all;
   let report: IngestionReport;
   try {
-    report = await runIngestion(adapters, store, { timeoutMs: 60_000 });
+    report = await runIngestion(gate.adapters, store, { timeoutMs: 60_000 });
     logReport(report);
     all = await store.all();
   } finally {
@@ -231,7 +311,19 @@ async function ingestOnce(): Promise<void> {
 
   // Only keep offers that are actually valid today (drop next-week/expired).
   const offers = all.filter((o) => isActive(o.validFrom, o.validUntil, nowIso));
-  writeStatus(report, offers.length, nowIso, browserError);
+  const results: StatusResult[] = report.results.map((r) => {
+    // Still inside an earlier backoff: keep the original date, or the wait
+    // would restart every morning and never end.
+    const stillWaiting = r.error?.startsWith("geweigerd door de winkel") ? blockedBefore[r.source] : undefined;
+    const refusedNow = !r.ok && !stillWaiting && isBlockError(r.error) ? nowIso : undefined;
+    const blockedSince = stillWaiting ?? refusedNow;
+    return {
+      ...r,
+      ...(blockedSince ? { blockedSince } : {}),
+      ...(gate.warnings[r.source] ? { robotsWarning: gate.warnings[r.source] } : {}),
+    };
+  });
+  writeStatus(results, offers.length, nowIso, browserError);
 
   if (offers.length === 0) {
     // Never overwrite good data with an empty pull (all sources failed).

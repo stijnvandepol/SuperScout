@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { OfferExplorer } from "@/components/OfferExplorer";
@@ -274,5 +274,34 @@ describe("Gebruikersscenario's", () => {
     await user.type(search(), "bananen");
     await user.click(screen.getByRole("button", { name: "Wis filters" }));
     expect(screen.getByRole("heading", { name: "Bananen" })).toBeInTheDocument();
+  });
+
+  test("35 — de homepage start met een deel en haalt de rest op zodra je zoekt", async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ offers: OFFERS })));
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const user = userEvent.setup();
+      render(
+        <OfferExplorer
+          offers={OFFERS.slice(0, 2)}
+          total={OFFERS.length}
+          storeOptions={["ah", "dirk", "jumbo", "plus"]}
+          nowIso={NOW}
+          stat="5 aanbiedingen · 4 winkels"
+        />,
+      );
+      // First paint: only the window, but the page already knows the total.
+      expect(screen.getByText("5 aanbiedingen · 4 winkels")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Toon meer (3)" })).toBeInTheDocument();
+      expect(screen.getByLabelText("Winkel")).toHaveTextContent("Jumbo");
+
+      // "Valess" is not in the first window.
+      await user.type(search(), "valess");
+      expect(await screen.findByRole("heading", { name: "Valess vleesvervangers" })).toBeInTheDocument();
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(fetchMock).toHaveBeenCalledWith("/api/aanbiedingen");
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

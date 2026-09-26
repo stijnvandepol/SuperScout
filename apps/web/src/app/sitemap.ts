@@ -74,7 +74,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })),
   ];
 
-  const infoPages: MetadataRoute.Sitemap = ["product", "privacy", "voorwaarden", "ethiek"].map(
+  const infoPages: MetadataRoute.Sitemap = ["product", "privacy", "voorwaarden", "ethiek", "status"].map(
     (slug) => ({ url: `${SITE_URL}/${slug}`, changeFrequency: "monthly", priority: 0.3 }),
   );
 
