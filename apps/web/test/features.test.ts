@@ -79,3 +79,24 @@ describe("winkelgegevens komen uit het register", () => {
     expect(provenanceLabel({ source: "hema", provenance: "manual" })).toBe("Handmatig ingevoerd");
   });
 });
+
+describe("slimmer zoeken", () => {
+  test("accenten maken niet uit", () => {
+    expect(offerMatches({ title: "Nivea crème" }, "creme")).toBe(true);
+    expect(offerMatches({ title: "Nivea creme" }, "crème")).toBe(true);
+  });
+
+  test("korte woorden alleen aan het begin van een woord", () => {
+    expect(offerMatches({ title: "Magnum ijs" }, "ijs")).toBe(true);
+    expect(offerMatches({ title: "Lipton ijsthee" }, "ijs")).toBe(true);
+    expect(offerMatches({ title: "Robijn", rawLabel: "2e halve prijs" }, "ijs")).toBe(false);
+  });
+
+  test("een onderwerp werkt als synoniemenlijst", () => {
+    expect(offerMatches({ title: "Alle Ariel t/m 30 wasbeurten" }, "wasmiddel")).toBe(true);
+    expect(offerMatches({ title: "Edet toiletpapier 24 rollen" }, "wc papier")).toBe(true);
+    expect(offerMatches({ title: "Whiskas grootverpakking" }, "kattenbrokken")).toBe(true);
+    // Does not over-reach: an unrelated offer stays out.
+    expect(offerMatches({ title: "Heinz ketchup" }, "wasmiddel")).toBe(false);
+  });
+});

@@ -24,6 +24,8 @@ export interface Topic {
   label: string;
   /** What the watchlist and search use for this topic. */
   term: string;
+  /** Other ways people search for it: "wc papier", "kattenbrokken". Lowercase. */
+  aliases?: string[];
   /**
    * Keywords against title + brand. "=word" matches a whole word only; a
    * phrase with a space matches as a phrase; anything else matches inside a
@@ -44,6 +46,7 @@ export const TOPICS: Topic[] = [
     slug: "koffie",
     label: "Koffie",
     term: "koffie",
+    aliases: ["koffiebonen", "koffiecups", "koffiepads", "koffiecapsules"],
     match: ["koffie", "koffiebonen", "koffiepads", "koffiecups", "nespresso", "dolce gusto", "senseo", "douwe egberts", "=l'or", "=lavazza"],
     exclude: ["ijskoffie", "koffiemelk", "koffiecreamer", "koffiezet", "koffiefilter"],
     category: "koffie-thee",
@@ -62,6 +65,7 @@ export const TOPICS: Topic[] = [
     slug: "wasmiddel",
     label: "Wasmiddel",
     term: "wasmiddel",
+    aliases: ["waspoeder", "wascapsules", "wasmiddelen"],
     match: ["wasmiddel", "waspoeder", "wascapsules", "wasstrips", "=ariel", "=persil", "=omo", "witte reus", "=robijn"],
     exclude: ["afwasmiddel", "wasverzachter", "toiletblok"],
     category: "huishouden",
@@ -79,6 +83,7 @@ export const TOPICS: Topic[] = [
     slug: "vaatwastabletten",
     label: "Vaatwastabletten",
     term: "vaatwas",
+    aliases: ["vaatwastablet", "vaatwasmiddel", "vaatwasser tabletten", "vaatwascapsules"],
     match: ["vaatwas", "=finish", "sun vaatwas"],
     category: "huishouden",
     tip: "Vergelijk vaatwastabletten per tablet: verpakkingen van 30, 46 of 80 stuks maken de prijs op het schap misleidend. Huismerken doen in consumententests regelmatig niet onder voor A-merken, dus een actie op het huismerk is het bekijken waard.",
@@ -96,6 +101,7 @@ export const TOPICS: Topic[] = [
     slug: "toiletpapier",
     label: "Toiletpapier",
     term: "toiletpapier",
+    aliases: ["wc papier", "wc-papier", "wcpapier", "wc rollen", "closetpapier"],
     match: ["toiletpapier", "wc-papier", "=page", "=edet", "=kleenex"],
     exclude: ["keukenpapier", "tissues", "zakdoek"],
     category: "huishouden",
@@ -105,6 +111,7 @@ export const TOPICS: Topic[] = [
     slug: "luiers",
     label: "Luiers",
     term: "luiers",
+    aliases: ["luier", "luierbroekjes"],
     match: ["luier", "luierbroek", "=pampers", "=pants", "=bonbebe", "=bonbébé", "=huggies"],
     category: "baby",
     tip: "Luiers zijn per stuk het eerlijkst te vergelijken, en maten lopen per merk net anders uit. Sla niet te ver vooruit in: kinderen groeien sneller dan een voorraad op is. Een pak in de volgende maat meenemen bij een 2+1-actie is meestal wel verstandig.",
@@ -121,6 +128,7 @@ export const TOPICS: Topic[] = [
     slug: "tandpasta",
     label: "Tandpasta",
     term: "tandpasta",
+    aliases: ["tandpasta's"],
     match: ["tandpasta", "=sensodyne", "=prodent", "=zendium", "=aquafresh", "=parodontax", "=elmex"],
     exclude: ["tandenborstel", "mondwater", "flosdraad"],
     category: "drogisterij",
@@ -138,6 +146,7 @@ export const TOPICS: Topic[] = [
     slug: "deodorant",
     label: "Deodorant",
     term: "deodorant",
+    aliases: ["deo"],
     match: ["deodorant", "=deo", "deospray", "deoroller"],
     category: "drogisterij",
     tip: "Deodorant is een klassiek 1+1- of 2e-halve-prijsproduct. Omdat je het elke dag gebruikt en het jaren goed blijft, is een paar stuks tegelijk kopen in de aanbieding bijna altijd voordelig.",
@@ -146,6 +155,7 @@ export const TOPICS: Topic[] = [
     slug: "kattenvoer",
     label: "Kattenvoer",
     term: "kattenvoer",
+    aliases: ["kattenbrokken", "katten voer", "kattenvoeding"],
     match: ["kattenvoer", "kattenbrok", "kattensnack", "=whiskas", "=felix", "=sheba", "=gourmet", "catisfactions", "=kitekat"],
     category: "huisdier",
     tip: "Katten zijn kieskeurig, dus sla niet in met een smaak die je kat nog niet kent. Voor het vaste merk loont een multipack-actie, en droogvoer blijft na openen weken goed als je de zak goed sluit.",
@@ -154,6 +164,7 @@ export const TOPICS: Topic[] = [
     slug: "hondenvoer",
     label: "Hondenvoer",
     term: "hondenvoer",
+    aliases: ["hondenbrokken", "honden voer", "hondenvoeding"],
     match: ["hondenvoer", "hondenbrok", "hondensnack", "=pedigree", "=frolic", "=cesar", "=dentastix"],
     category: "huisdier",
     tip: "Grote zakken brokken zijn per kilo vrijwel altijd goedkoper, ook zonder actie. Een aanbieding op een kleiner formaat is dus pas echt een deal als de kiloprijs onder die van de grote zak zakt.",
@@ -162,6 +173,7 @@ export const TOPICS: Topic[] = [
     slug: "bier",
     label: "Bier",
     term: "bier",
+    aliases: ["pils", "biertje"],
     match: ["bier", "=pils", "=heineken", "=grolsch", "=amstel", "hertog jan", "=bavaria", "=jupiler", "=brand", "=palm", "=affligem", "=leffe", "speciaalbier"],
     exclude: ["bierworst", "gemberbier", "0.0 azijn"],
     category: "bier-wijn",
@@ -171,6 +183,7 @@ export const TOPICS: Topic[] = [
     slug: "wijn",
     label: "Wijn",
     term: "wijn",
+    aliases: ["wijnen"],
     match: ["wijn", "=rosé", "=rose", "=prosecco", "=cava", "champagne", "=merlot", "=chardonnay", "sauvignon", "=rioja"],
     exclude: ["wijnazijn", "wijngum", "wijnglas", "radler"],
     category: "bier-wijn",
@@ -180,6 +193,7 @@ export const TOPICS: Topic[] = [
     slug: "frisdrank",
     label: "Frisdrank",
     term: "frisdrank",
+    aliases: ["fris", "frisdranken"],
     match: ["frisdrank", "=cola", "coca-cola", "=pepsi", "=fanta", "=sprite", "=7up", "dubbelfris", "=sisi", "=lipton ice", "ice tea", "=fuze"],
     exclude: ["cola-snoep", "colaflesjes"],
     category: "frisdrank",
@@ -189,6 +203,7 @@ export const TOPICS: Topic[] = [
     slug: "energiedrank",
     label: "Energiedrank",
     term: "energy",
+    aliases: ["energy drink", "energydrink", "energiedrankje"],
     match: ["energy", "energiedrank", "red bull", "=monster", "=rockstar"],
     category: "frisdrank",
     tip: "Energiedrank is per blikje duur, en juist daardoor maakt een 1+1-actie veel uit. Multipacks zijn buiten de aanbieding vaak al goedkoper per blik dan losse.",
@@ -205,6 +220,7 @@ export const TOPICS: Topic[] = [
     slug: "chocolade",
     label: "Chocolade",
     term: "chocolade",
+    aliases: ["chocola", "chocoladereep"],
     match: ["chocola", "=milka", "tony's", "=tony", "=verkade", "côte d'or", "cote d'or", "=ritter", "=lindt", "=kitkat", "=twix", "=mars", "=snickers"],
     exclude: ["chocolademelk", "chocomel", "hagelslag", "chocoladepasta"],
     category: "snoep-koek",
@@ -223,6 +239,7 @@ export const TOPICS: Topic[] = [
     slug: "eieren",
     label: "Eieren",
     term: "eieren",
+    aliases: ["ei", "eitjes"],
     match: ["=eieren", "=ei", "scharreleieren", "vrije-uitloopeieren", "biologische eieren"],
     exclude: ["paasei", "chocolade", "eiersalade"],
     category: "zuivel",
@@ -249,6 +266,7 @@ export const TOPICS: Topic[] = [
     slug: "kip",
     label: "Kip",
     term: "kip",
+    aliases: ["kipfilet", "kippenvlees"],
     match: ["=kip", "kipfilet", "kippendij", "kippenpoot", "drumstick", "kipgehakt", "kippenbout"],
     exclude: ["kippensoep", "kipcorn", "kipsaté", "kip-pastasalade"],
     category: "vlees-vis",
@@ -301,6 +319,7 @@ export const TOPICS: Topic[] = [
     slug: "ijs",
     label: "IJs",
     term: "ijs",
+    aliases: ["ijsjes", "roomijs", "schepijs"],
     match: ["=ijs", "roomijs", "ijsjes", "=magnum", "=ola", "ben & jerry", "=cornetto", "=hertog", "=haagen", "=häagen"],
     exclude: ["ijsthee", "ijskoffie", "ijsblokjes", "ijsberg", "hertog jan"],
     category: "ijs",
@@ -353,4 +372,23 @@ export function offersInTopic<T extends Pick<Offer, "title" | "brand">>(offers: 
 /** Enough offers at enough stores to deserve an indexed page. */
 export function isIndexableTopic(offers: Pick<Offer, "source">[]): boolean {
   return offers.length >= MIN_TOPIC_OFFERS && new Set(offers.map((o) => o.source)).size >= MIN_TOPIC_STORES;
+}
+
+/**
+ * The topic a search term names, if any: "luiers", "luier", "wc papier".
+ *
+ * Lets search use the topic's curated vocabulary. Searching "wasmiddel" by
+ * substring misses "Alle Ariel t/m 30 wasbeurten"; the topic knows Ariel is
+ * wasmiddel.
+ */
+export function topicForTerm(term: string): Topic | undefined {
+  const t = fold(term.trim().replace(/\s+/g, " "));
+  if (!t) return undefined;
+  return TOPICS.find(
+    (topic) =>
+      fold(topic.term) === t ||
+      topic.slug === t ||
+      fold(topic.label) === t ||
+      (topic.aliases ?? []).some((a) => fold(a) === t),
+  );
 }
