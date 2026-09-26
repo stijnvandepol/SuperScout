@@ -1,4 +1,5 @@
 import type { Product } from "@superscout/core";
+import { stopOnRefusal } from "../../gate";
 
 /**
  * Jumbo's catalogue.
@@ -158,8 +159,13 @@ export class JumboAssortmentSource {
 
   constructor(private readonly options: JumboAssortmentOptions = {}) {}
 
+  private readonly refusal = { refused: null as number | null };
+  private guarded: Fetcher | undefined;
+
   private get fetcher(): Fetcher {
-    return this.options.fetcher ?? ((url, init) => fetch(url, init));
+    // Wrapped once per source instance, so one refusal stops the whole crawl.
+    this.guarded ??= stopOnRefusal(this.options.fetcher ?? ((url, init) => fetch(url, init)), this.refusal);
+    return this.guarded;
   }
 
   private async gql<T>(query: string, variables?: Record<string, unknown>): Promise<T> {

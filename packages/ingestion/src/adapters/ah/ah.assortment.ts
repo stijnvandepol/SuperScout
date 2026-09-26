@@ -1,4 +1,5 @@
 import type { Product } from "@superscout/core";
+import { isBlockError, stopOnRefusal } from "../../gate";
 
 /**
  * Albert Heijn's full catalogue — 42.354 products, against 242 promotions.
@@ -197,8 +198,13 @@ export class AhAssortmentSource {
 
   constructor(private readonly options: AhAssortmentOptions = {}) {}
 
+  private readonly refusal = { refused: null as number | null };
+  private guarded: Fetcher | undefined;
+
   private get fetcher(): Fetcher {
-    return this.options.fetcher ?? ((url, init) => fetch(url, init));
+    // Wrapped once per source instance, so one refusal stops the whole crawl.
+    this.guarded ??= stopOnRefusal(this.options.fetcher ?? ((url, init) => fetch(url, init)), this.refusal);
+    return this.guarded;
   }
 
   private async authorise(): Promise<string> {
@@ -264,6 +270,8 @@ export class AhAssortmentSource {
         return await this.page(taxonomyId, page);
       } catch (error) {
         lastError = error;
+        // A refusal is an answer, not a hiccup: do not ask again.
+        if (isBlockError(error instanceof Error ? error.message : String(error))) break;
         if (attempt < PAGE_ATTEMPTS) await sleep(RETRY_MS * attempt);
       }
     }
