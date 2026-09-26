@@ -17,7 +17,16 @@ export interface IngestStatus {
   finishedAt: string;
   written: number;
   browserError: string | null;
-  results: { source: string; ok: boolean; offerCount: number; durationMs: number; error?: string }[];
+  robotsMode?: "enforce" | "report";
+  results: {
+    source: string;
+    ok: boolean;
+    offerCount: number;
+    durationMs: number;
+    error?: string;
+    blockedSince?: string;
+    robotsWarning?: string;
+  }[];
 }
 
 /** Data older than this means the daily ingest missed at least one run. */

@@ -77,6 +77,19 @@ Nog open, bewust niet in deze ronde:
 
 **Uptime-monitoring instellen (5 minuten):** maak bij UptimeRobot of Better Stack (beide hebben een gratis laag) een HTTP-monitor op `https://superscout.nl/api/health`, interval 5–15 minuten, alarm bij een andere status dan 200. Zet een tweede, simpele monitor op `https://superscout.nl/` voor echte uitval.
 
+### Ronde 4 (26 september) — respect voor de bron, en een snellere homepage
+
+Doel, zoals Stijn het formuleerde: niet geld verdienen, maar *de* plek worden voor aanbiedingen, omdat het aantal aanbiedingen-sites zelf onoverzichtelijk is geworden. Dat vraagt vooral vertrouwen en rust. Deze ronde gaat over beide.
+
+| Wijziging | Waar | Verwachte impact |
+|---|---|---|
+| **robots.txt wordt gerespecteerd** (RFC 9309): vóór elke run haalt de worker per website robots.txt op, voor `SuperScoutBot` en `*`. Verbiedt die een adres dat een adapter nodig heeft, dan wordt die keten overgeslagen, met reden. Onbereikbaar: laatst bekende kopie (max. 30 dagen), anders niet ophalen. Een test controleert dat elke URL in een adapter ook in de controlelijst staat. `ROBOTS_MODE=report` meet alleen, zonder af te dwingen. | `ingestion/src/robots.ts`, `gate.ts`, `source-urls.ts` | Doet wat `/ethiek` belooft. |
+| **Stoppen bij een “nee”.** 401/403/429 of een captcha: deze run geen verzoek meer naar die winkel (ook de catalogus-crawl, die anders honderden pagina's zou blijven proberen), en daarna zeven dagen niet, dan één poging. | `gate.ts`, AH/Jumbo-assortiment | Geen gedrag dat op omzeilen lijkt. |
+| **Openbare statuspagina** `/status`: per winkel hoe vers de aanbiedingen zijn, en waarom een winkel ontbreekt — ook als dat is omdat de winkel het niet wil. | `/status` | Geen enkele folder-site vertelt dit. Vertrouwen is het onderscheid. |
+| **Homepage laadt eerst 48 aanbiedingen, de rest bij gebruik** (eerste zoekopdracht, filter, "Toon meer" of als de browser niets te doen heeft). Filteropties en teller kloppen al vóór het laden. | `OfferExplorer`, `/api/aanbiedingen` | Homepage van 749 KB naar 213 KB HTML (90 → 24 KB gzip). Sneller bruikbaar op een gewone telefoon. |
+
+**Nog open, en jouw beslissing:** een deel van de adapters doet zich voor als iets anders. De AH-adapter stuurt `user-agent: Appie/9.39` mee (de AH-app), Jumbo en de browser-adapters doen zich voor als een iPhone. Dat past slecht bij "we respecteren de winkel" en bij de zin op `/ethiek` over "geen besloten systemen". Eerlijk zijn (`SuperScoutBot/1.0 (+https://superscout.nl/ethiek)`) kan betekenen dat een of meer ketens ons weigeren. Dan zie je dat op `/status` en houdt de site ermee op, zoals nu is ingebouwd. Mijn advies: per keten omzetten en kijken wat er gebeurt, te beginnen bij de ketens met een openbare webpagina (ALDI, Lidl, DekaMarkt).
+
 Bewust niet gedaan: **prijs per kilo/liter**. Het klinkt als de logische volgende stap, maar de titels geven de inhoud te vaak niet of als bereik ("zak 450 of 500 gram", "Alle Pampers luiers"). Een vergelijking die bij de helft gokt, is misleidender dan geen vergelijking. Pas zinvol met de productcatalogus (AH/Jumbo hebben inhoud per product) — koppelen via `productForOffer`.
 
 ---

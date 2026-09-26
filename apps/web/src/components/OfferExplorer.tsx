@@ -14,16 +14,74 @@ import { FollowButton } from "./FollowButton";
 type SortKey = "relevant" | "price-asc" | "price-desc" | "discount";
 
 export function OfferExplorer({
-  offers,
+  offers: initialOffers,
   nowIso,
   stat,
   dataDate = null,
+  total,
+  storeOptions,
+  categoryOptions,
 }: {
+  /**
+   * The offers to explore. With `total` set, this is only the first window
+   * and the full set is fetched from /api/aanbiedingen when needed.
+   */
   offers: CardOffer[];
   dataDate?: string | null;
   nowIso: string;
   stat?: string;
+  /**
+   * Size of the full set when `offers` is only its first window.
+   *
+   * The homepage used to serialise all ~1.070 offers into the page — ~600 KB
+   * of flight data parsed before the page responds, for a first screen that
+   * shows 48. It now sends those 48 and loads the rest on the first search,
+   * filter or "Toon meer", or when the browser is idle.
+   */
+  total?: number;
+  /** Filter options for the full set, so the dropdowns are right before it loads. */
+  storeOptions?: SupermarketSlug[];
+  categoryOptions?: CategorySlug[];
 }) {
+  const [offers, setOffers] = useState(initialOffers);
+  const [complete, setComplete] = useState(total === undefined || total <= initialOffers.length);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const loading = useRef<Promise<void> | null>(null);
+
+  const ensureAll = (): Promise<void> => {
+    if (complete) return Promise.resolve();
+    loading.current ??= fetch("/api/aanbiedingen")
+      .then((res) => {
+        if (!res.ok) throw new Error(String(res.status));
+        return res.json() as Promise<{ offers: CardOffer[] }>;
+      })
+      .then((body) => {
+        setOffers(body.offers);
+        setComplete(true);
+      })
+      .catch(() => {
+        // Keep working on the window we have; a later interaction retries.
+        loading.current = null;
+        setLoadFailed(true);
+      });
+    return loading.current;
+  };
+
+  // Idle prefetch: the watchlist banner and the first filter should not wait
+  // on a request the visitor can see.
+  useEffect(() => {
+    if (complete) return;
+    const idle =
+      typeof window.requestIdleCallback === "function"
+        ? window.requestIdleCallback(() => void ensureAll(), { timeout: 4000 })
+        : window.setTimeout(() => void ensureAll(), 2500);
+    return () => {
+      if (typeof window.cancelIdleCallback === "function") window.cancelIdleCallback(idle);
+      else window.clearTimeout(idle);
+    };
+    // Once, on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<CategorySlug | null>(null);
   const [store, setStore] = useState<SupermarketSlug | null>(null);
@@ -46,7 +104,8 @@ export function OfferExplorer({
     const winkel = params.get("winkel");
     const categorie = params.get("categorie");
     if (q) setQuery(q);
-    if (winkel && offers.some((o) => o.source === winkel)) setStore(winkel as SupermarketSlug);
+    if (winkel && winkel in STORE_META) setStore(winkel as SupermarketSlug);
+    if (q || winkel || categorie) void ensureAll();
     if (categorie && CATEGORIES.some((c) => c.slug === categorie)) {
       setCategory(categorie as CategorySlug);
     }
@@ -77,11 +136,14 @@ export function OfferExplorer({
   // Precompute each offer's category once.
   const catOf = useMemo(() => new Map(offers.map((o) => [o.id, categorizeOffer(o)])), [offers]);
 
-  const stores = useMemo(() => [...new Set(offers.map((o) => o.source))].sort(), [offers]);
+  const stores = useMemo(
+    () => (complete || !storeOptions ? [...new Set(offers.map((o) => o.source))].sort() : storeOptions),
+    [offers, complete, storeOptions],
+  );
   const categories = useMemo(() => {
-    const present = new Set(catOf.values());
+    const present = complete || !categoryOptions ? new Set(catOf.values()) : new Set(categoryOptions);
     return CATEGORIES.filter((c) => present.has(c.slug));
-  }, [catOf]);
+  }, [catOf, complete, categoryOptions]);
 
   const filtered = useMemo(() => {
     const needle = normalizeTerm(deferredQuery);
@@ -107,7 +169,7 @@ export function OfferExplorer({
     return () => clearTimeout(timer);
   }, [deferredQuery, filtered.length]);
 
-  const hasExVat = useMemo(() => offers.some((o) => isExVat(o.source)), [offers]);
+  const hasExVat = useMemo(() => stores.some((s) => isExVat(s)), [stores]);
 
   const sorted = useMemo(() => {
     const price = (o: CardOffer) => o.pricing.currentPriceCents;
@@ -131,9 +193,12 @@ export function OfferExplorer({
 
   const term = normalizeTerm(deferredQuery);
 
+  const filtering = Boolean(normalizeTerm(deferredQuery) || category || store || expiringOnly || exVatOnly);
+
   return (
-    <section>
-      <WatchlistNews offers={offers} />
+    <section onFocusCapture={() => void ensureAll()} onPointerDownCapture={() => void ensureAll()}>
+      {/* Only on the full set: counting "new for you" on a partial window would undercount. */}
+      {complete ? <WatchlistNews offers={offers} /> : null}
 
       {/* Search */}
       <div className="relative">
@@ -228,14 +293,18 @@ export function OfferExplorer({
         <p className="font-mono text-xs text-ink-soft" aria-live="polite">
           {stat && !query && !category && !store && !expiringOnly && !exVatOnly
             ? stat
-            : `${filtered.length} ${filtered.length === 1 ? "aanbieding" : "aanbiedingen"}`}
+            : !complete
+              ? loadFailed
+                ? "Niet alle aanbiedingen konden worden geladen — probeer het zo nog eens."
+                : "Alle aanbiedingen laden…"
+              : `${filtered.length} ${filtered.length === 1 ? "aanbieding" : "aanbiedingen"}`}
         </p>
         {term.length >= 2 ? (
           <FollowButton term={term} matchIds={filtered.map((o) => o.id)} />
         ) : null}
       </div>
 
-      {filtered.length === 0 ? (
+      {filtered.length === 0 && (complete || !filtering) ? (
         <div className="mt-8 rounded-2xl border border-dashed border-line px-6 py-14 text-center">
           <p className="font-display text-lg">
             {term ? `Deze week geen aanbiedingen voor “${term}”` : "Niets gevonden"}
@@ -269,14 +338,16 @@ export function OfferExplorer({
               <OfferCard key={o.id} offer={o} nowIso={nowIso} dataDate={dataDate} priority={i === 0} />
             ))}
           </div>
-          {filtered.length > visible.length ? (
+          {filtered.length > visible.length || (!complete && !filtering && total! > visible.length) ? (
             <div className="mt-8 text-center">
               <button
                 type="button"
-                onClick={() => setLimit((l) => l + 48)}
+                onClick={() => {
+                  void ensureAll().then(() => setLimit((l) => l + 48));
+                }}
                 className="rounded-full bg-ink px-6 py-3 font-display text-sm font-bold text-bg transition-opacity hover:opacity-90"
               >
-                Toon meer ({filtered.length - visible.length})
+                Toon meer ({(complete ? filtered.length : total!) - visible.length})
               </button>
             </div>
           ) : null}

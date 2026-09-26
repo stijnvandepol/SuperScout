@@ -35,6 +35,7 @@ const REQUEST_TIME_ROUTES = [
   "feed.xml/route.ts",
   "mandje/page.tsx",
   "privacy/page.tsx",
+  "status/page.tsx",
   "product/page.tsx",
   "volgende-week/page.tsx",
   "winkels/page.tsx",

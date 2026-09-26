@@ -40,6 +40,20 @@ export default function EthiekPage() {
         </section>
 
         <section>
+          <h2 className="font-display text-lg font-bold text-ink">Robots.txt en een “nee” van een winkel</h2>
+          <p className="mt-2">
+            Voordat SuperScout een winkel bezoekt, lezen we de <em>robots.txt</em> van die website:
+            het bestand waarin een site zegt wat automatische bezoekers wel en niet mogen. Staat daar
+            dat het niet mag, dan halen we het niet op. Weigert een winkel ons verzoek, dan houden we
+            meteen op, wachten we een week en proberen we het daarna één keer opnieuw. Op de{" "}
+            <a href="/status" className="underline underline-offset-2 hover:text-ink">
+              statuspagina
+            </a>{" "}
+            zie je per winkel hoe actueel de aanbiedingen zijn, en waarom een winkel ontbreekt.
+          </p>
+        </section>
+
+        <section>
           <h2 className="font-display text-lg font-bold text-ink">Geen betaalde rangschikking</h2>
           <p className="mt-2">
             Geen enkele winkel betaalt voor plaatsing, volgorde of uitlichting. Er zijn geen

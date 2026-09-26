@@ -10,6 +10,7 @@ const ABOUT_LINKS = [
   { href: "/privacy", label: "Privacy" },
   { href: "/voorwaarden", label: "Voorwaarden" },
   { href: "/ethiek", label: "Ethiek" },
+  { href: "/status", label: "Status van de data" },
 ] as const;
 
 /**
