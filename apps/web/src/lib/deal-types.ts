@@ -1,4 +1,5 @@
 import type { Offer } from "@superscout/core";
+import { chainSentence, headlineChains } from "@/lib/chains";
 
 /**
  * Landing pages built around *how* a deal works rather than what it sells.
@@ -27,7 +28,7 @@ export const DEAL_TYPES: DealType[] = [
     label: "1+1 gratis",
     title: "1+1 gratis aanbiedingen deze week",
     description:
-      "Alle 1+1 gratis en 2+1 gratis acties van Albert Heijn, Jumbo, Lidl, ALDI, PLUS, Dirk en meer, deze week naast elkaar. Dagelijks ververst.",
+      "Alle 1+1 gratis en 2+1 gratis acties van {ketens}, deze week naast elkaar. Dagelijks ververst.",
     intro: [
       "Bij een 1+1 gratis actie betaal je één product en krijg je het tweede erbij. Reken je het om naar stuksprijs, dan is dat 50% korting — meestal de scherpste korting die supermarkten geven, en daarom de actievorm waar het meeste op wordt gejaagd.",
       "Hieronder staan alle lopende gratis-acties van alle chains bij elkaar, gesorteerd op korting. Let op de einddatum: dit type actie loopt vrijwel altijd precies één week, en de meeste ketens beperken het aantal per klant.",
@@ -36,7 +37,7 @@ export const DEAL_TYPES: DealType[] = [
       {
         q: "Welke supermarkt heeft deze week 1+1 gratis?",
         aText:
-          "Dat wisselt per week. Op deze pagina staan alle lopende 1+1 gratis en 2+1 gratis acties van Albert Heijn, Jumbo, Lidl, ALDI, PLUS, Dirk, Hoogvliet, DekaMarkt, Poiesz en Sligro bij elkaar, dagelijks ververst.",
+          "Dat wisselt per week. Op deze pagina staan alle lopende 1+1 gratis en 2+1 gratis acties van {alleKetens} bij elkaar, dagelijks ververst.",
       },
       {
         q: "Moet ik bij 1+1 gratis twee dezelfde producten kopen?",
@@ -104,7 +105,7 @@ export const DEAL_TYPES: DealType[] = [
     label: "Prijsverlagingen",
     title: "Afgeprijsde producten deze week",
     description:
-      "Alle producten met een directe prijsverlaging bij Albert Heijn, Jumbo, Lidl, ALDI, PLUS, Dirk en meer — van hoog naar laag op korting gesorteerd.",
+      "Alle producten met een directe prijsverlaging bij {ketens} — van hoog naar laag op korting gesorteerd.",
     intro: [
       "De eenvoudigste actievorm: de prijs gaat gewoon omlaag, zonder dat je meerdere stuks hoeft te kopen. Dit is de eerlijkste vergelijking tussen supermarkten, omdat je oude en nieuwe prijs naast elkaar ziet staan.",
       "Alle prijsverlagingen hieronder staan gesorteerd op kortingspercentage, over alle ketens heen. Handig als je wilt zien waar de grootste afprijzing van deze week zit zonder per folder te bladeren.",
@@ -125,6 +126,27 @@ export const DEAL_TYPES: DealType[] = [
   },
 ];
 
+/**
+ * Fill in which chains are live, at render time.
+ *
+ * These texts used to name ten chains outright, and the FAQ answers go to
+ * Google as FAQPage markup. When four adapters stopped producing, that became
+ * a claim about the page that the page did not support — the same failure the
+ * homepage and layout already had fixed. `{ketens}` is the short headline
+ * form ("Albert Heijn, Jumbo en 4 andere"), `{alleKetens}` names them all.
+ */
+export function withLiveChains(type: DealType): DealType {
+  const fill = (text: string) =>
+    text.replaceAll("{ketens}", headlineChains()).replaceAll("{alleKetens}", chainSentence(12));
+  return {
+    ...type,
+    description: fill(type.description),
+    intro: type.intro.map(fill),
+    faq: type.faq.map((item) => ({ ...item, aText: fill(item.aText) })),
+  };
+}
+
 export function dealTypeBySlug(slug: string): DealType | undefined {
-  return DEAL_TYPES.find((d) => d.slug === slug);
+  const type = DEAL_TYPES.find((d) => d.slug === slug);
+  return type ? withLiveChains(type) : undefined;
 }

@@ -29,6 +29,7 @@ import { OfferCard } from "@/components/OfferCard";
 import { OutboundLink } from "@/components/OutboundLink";
 import { ShareOfferButton } from "@/components/ShareOfferButton";
 import { ReportOfferButton } from "@/components/ReportOfferButton";
+import { inTopic, isIndexableTopic, offersInTopic, TOPICS } from "@/lib/topics";
 import { StoreBadge } from "@/components/StoreBadge";
 import { DiscountSticker } from "@/components/DiscountSticker";
 import { AddToBasketButton } from "@/components/AddToBasketButton";
@@ -303,6 +304,7 @@ export default async function OfferPage({ params }: Params) {
             </p>
           ) : null}
 
+          <TopicComparisonLink offer={offer} />
           <CataloguePermalink offer={offer} />
           <PriceHistoryNote offer={offer} />
 
@@ -320,6 +322,33 @@ export default async function OfferPage({ params }: Params) {
       ) : null}
       <RelatedSection title="Gerelateerde aanbiedingen" offers={related} nowIso={nowIso} />
     </div>
+  );
+}
+
+/**
+ * "And at the other stores?" — the question after every single offer.
+ *
+ * Links to the topic page when this offer belongs to one that is worth
+ * indexing; otherwise nothing, so the link never leads to a thin page.
+ */
+function TopicComparisonLink({ offer }: { offer: Offer }) {
+  const live = getOffers();
+  const match = TOPICS.filter((t) => inTopic(offer, t))
+    .map((t) => ({ topic: t, list: offersInTopic(live, t) }))
+    .find((t) => isIndexableTopic(t.list));
+  if (!match) return null;
+  const stores = new Set(match.list.map((o) => o.source)).size;
+
+  return (
+    <p className="mt-6 text-sm leading-relaxed text-ink-soft">
+      <Link
+        href={`/aanbiedingen/${match.topic.slug}`}
+        className="font-medium text-ink underline decoration-deal decoration-2 underline-offset-2"
+      >
+        Vergelijk alle {match.list.length} {match.topic.label.toLowerCase()}-aanbiedingen
+      </Link>{" "}
+      bij {stores} winkels deze week.
+    </p>
   );
 }
 

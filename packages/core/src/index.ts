@@ -16,3 +16,4 @@ export * from "./category";
 export * from "./weekly-picks";
 export * from "./basket-plan";
 export * from "./price-history";
+export * from "./promo-label";

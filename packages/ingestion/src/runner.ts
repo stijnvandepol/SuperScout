@@ -1,4 +1,5 @@
 import type { OfferStore, SourceAdapter, SupermarketSlug } from "@superscout/core";
+import { refineMechanism } from "@superscout/core";
 
 export interface SourceResult {
   source: SupermarketSlug;
@@ -47,7 +48,10 @@ async function runOne(
 ): Promise<SourceResult> {
   const start = now();
   try {
-    const offers = await withTimeout(adapter.fetchOffers(), timeoutMs);
+    // Every adapter gets the same safety net: a deal its parser left as
+    // "unknown" but whose label says "2+1 gratis" is recovered here, once,
+    // instead of in each of eleven normalisers.
+    const offers = (await withTimeout(adapter.fetchOffers(), timeoutMs)).map(refineMechanism);
     await store.upsertMany(offers);
     return { source: adapter.source, ok: true, offerCount: offers.length, durationMs: now() - start };
   } catch (error) {

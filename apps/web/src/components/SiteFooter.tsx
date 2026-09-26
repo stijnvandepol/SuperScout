@@ -3,6 +3,7 @@ import { categoriesPresent, getOffers } from "@/lib/offers";
 import { STORE_META } from "@/lib/format";
 import { DEAL_TYPES } from "@/lib/deal-types";
 import { SAVINGS_CAMPAIGNS } from "@/lib/spaaracties";
+import { isIndexableTopic, offersInTopic, TOPICS } from "@/lib/topics";
 
 const ABOUT_LINKS = [
   { href: "/product", label: "Over SuperScout" },
@@ -26,11 +27,15 @@ export function SiteFooter() {
   );
   const categories = categoriesPresent().slice(0, 8);
   const dealTypes = DEAL_TYPES.filter((type) => offers.some(type.matches));
+  const topics = TOPICS.map((topic) => ({ topic, list: offersInTopic(offers, topic) }))
+    .filter((t) => isIndexableTopic(t.list))
+    .sort((a, b) => b.list.length - a.list.length)
+    .slice(0, 8);
 
   return (
     <footer className="border-t border-line">
       <div className="mx-auto max-w-6xl px-5 pt-12 pb-28 md:pb-8">
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-6">
           <FooterColumn title="Supermarkten" href="/winkels">
             {stores.map((slug) => (
               <FooterLink key={slug} href={`/winkel/${slug}`}>
@@ -46,6 +51,16 @@ export function SiteFooter() {
               </FooterLink>
             ))}
           </FooterColumn>
+
+          {topics.length > 0 ? (
+            <FooterColumn title="Per product" href="/aanbiedingen">
+              {topics.map(({ topic }) => (
+                <FooterLink key={topic.slug} href={`/aanbiedingen/${topic.slug}`}>
+                  {topic.label} aanbiedingen
+                </FooterLink>
+              ))}
+            </FooterColumn>
+          ) : null}
 
           <FooterColumn title="Actievormen" href="/acties">
             {dealTypes.map((type) => (

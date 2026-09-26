@@ -4,10 +4,11 @@ import { notFound } from "next/navigation";
 import type { Offer, SupermarketSlug } from "@superscout/core";
 import type { CycleStart } from "@superscout/core";
 import { CATEGORY_LABEL, categorizeOffer, cycleStart } from "@superscout/core";
-import { byBiggestDiscount, dataFetchedAt, getOffers } from "@/lib/offers";
+import { dataFetchedAt, getOffers } from "@/lib/offers";
 import { formatEuro, isExVat, STORE_META, offerSlug, validUntilShort } from "@/lib/format";
 import { DEAL_TYPES } from "@/lib/deal-types";
 import { OfferGrid } from "@/components/OfferGrid";
+import { listOffers } from "@/lib/lists";
 import { ImageHostPreconnect } from "@/components/ImageHostPreconnect";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd, faqJsonLd, offerListJsonLd, SITE_URL } from "@/lib/seo";
@@ -53,7 +54,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 export default async function StorePage({ params }: Params) {
   const { slug } = await params;
   const meta = STORE_META[slug as SupermarketSlug];
-  const offers = byBiggestDiscount(storeOffers(slug));
+  const offers = listOffers("winkel", slug) ?? [];
   if (!meta || offers.length === 0) notFound();
 
   const nowIso = new Date().toISOString();
@@ -112,7 +113,7 @@ export default async function StorePage({ params }: Params) {
       </header>
 
       <div className="mt-2">
-        <OfferGrid offers={offers} nowIso={nowIso} dataDate={dataFetchedAt()} />
+        <OfferGrid offers={offers} nowIso={nowIso} dataDate={dataFetchedAt()} list={{ kind: "winkel", slug }} />
       </div>
 
       <StoreProse store={meta.name} slug={slug} offers={offers} faq={faq} />

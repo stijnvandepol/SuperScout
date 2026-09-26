@@ -6,6 +6,7 @@ import {
   isActive,
   offerStatus,
   priceKey,
+  refineMechanism,
   SUPERMARKETS,
   type CategorySlug,
 } from "@superscout/core";
@@ -152,7 +153,9 @@ function blockedIds(): Set<string> {
 /** Drop unrenderable and blocked records, and say so once per load rather than per page. */
 function sanitise(offers: Offer[], label: string): Offer[] {
   const blocked = blockedIds();
-  const clean = offers.filter((o) => isRenderable(o) && !blocked.has(o.id));
+  // `refineMechanism` here as well as in the ingestion runner: the runner only
+  // fixes new pulls, and the archive holds 120 days written before it did.
+  const clean = offers.filter((o) => isRenderable(o) && !blocked.has(o.id)).map(refineMechanism);
   if (clean.length !== offers.length) {
     console.warn(`[offers] dropped ${offers.length - clean.length} unrenderable or blocked ${label} records`);
   }

@@ -28,7 +28,6 @@ Het probleem zit dus niet in het fundament. Ik denk dat het drie dingen zijn:
 | 10 | Geen security-headers | Geen `nosniff`, geen frame-bescherming, en `X-Powered-By: Next.js` wees scanners de weg. |
 
 Nog open, bewust niet in deze ronde:
-- `lib/deal-types.ts` noemt in beschrijvingen en FAQ-antwoorden nog tien ketens bij naam. Die FAQ gaat als structured data naar Google. Zelfde patroon als `chains.ts` gebruiken.
 - De categoriepagina zegt op een paar plekken nog letterlijk "supermarkten". Klopt nu, maar niet meer zodra de eerste drogisterij live is: doe een copy-ronde tegelijk met de eerste feed.
 - `/categorie/drogisterij` is één bak. Met Kruidvat erbij moet die splitsen (haar, mond, gezondheid & vitamines, make-up, parfum). Nu nog niet: dat zou een goede pagina in vijf dunne veranderen.
 
@@ -53,7 +52,20 @@ Nog open, bewust niet in deze ronde:
 | **Betere lege staat**: noemt de zoekterm, biedt "volg" aan en "wis filters". | `OfferExplorer` | Een doodlopend pad wordt een reden om terug te komen. |
 | **SEO-reparaties**: geen "Geldig ." meer, homepage-intro uit live data, `robots.txt` sluit `/api`, `/volglijst`, `/beheer` uit. | diverse | Schonere snippets, geen crawlbudget op JSON. |
 | **Security & a11y**: security-headers, geen `X-Powered-By`, cache voor winkeliconen, skip-link, `aria-current` in de onderbalk, `aria-live` op het aantal resultaten. | `next.config.mjs`, `layout.tsx` | Basishygiëne. |
-| **Tests**: register, taxonomie, feed-validatie (inclusief het voorbeeldbestand in de docs), zoeken, meldingen, rate limiter, en scenario's voor volgen, terugkomen en deeplinks. | `*/test/` | 387 tests, alles groen. |
+| **Tests**: register, taxonomie, feed-validatie (inclusief het voorbeeldbestand in de docs), zoeken, meldingen, rate limiter, en scenario's voor volgen, terugkomen en deeplinks. | `*/test/` | 387 tests, alles groen (na ronde 2: 419). |
+
+### Ronde 2 (26 september)
+
+| Wijziging | Waar | Verwachte impact |
+|---|---|---|
+| **AH-acties zonder mechanisme hersteld.** AH zet de meeste acties onder een generiek "BONUS" en schrijft "2+1 gratis" alleen in de labeltekst. 148 van de 221 AH-aanbiedingen (14% van alles) kwamen daardoor binnen als `unknown`: onzichtbaar op de 1+1-pagina, in de top 10 en bij sorteren op korting. De labelparser zit nu in `core` en draait als vangnet in de ingest-runner (elke adapter) én bij het inlezen op de site (dus ook het archief). Herkent nu ook "3 stuks 29.99". | `core/src/promo-label.ts`, `runner.ts`, `lib/offers.ts` | Honderden acties extra op de actiepagina's en in de toplijsten, zonder nieuwe databron. |
+| **Actiepagina's gaven na elke deploy tot 30 minuten een 404.** `acties/[slug]` werd tijdens `docker build` vooraf gerenderd, zonder data, en die 404 werd gecachet. Nu per request, zoals de andere lijstpagina's, en vastgelegd in de render-mode-test. | `acties/[slug]` | Geen 404's meer voor Googlebot na een deploy. |
+| **Ketennamen op actiepagina's uit live data.** Ook in de FAQ-structured data. | `lib/deal-types.ts` | Geen claims meer over ketens die er even niet zijn. |
+| **Onderwerppagina's** `/aanbiedingen/koffie`, `/wasmiddel`, `/luiers`, `/kattenvoer`, `/bier` … (31 onderwerpen) met vergelijkingstabel per winkel (aantal, grootste korting, laagste actieprijs), handgeschreven bespaartip, FAQ uit de data en een volgknop. Indexeerbaar pas bij ≥ 6 aanbiedingen bij ≥ 2 winkels; anders noindex, niet in de sitemap, niet gelinkt. Overzicht op `/aanbiedingen`. | `lib/topics.ts`, `app/aanbiedingen/` | Richt zich op de zoektermen met het meeste volume in de niche — waar de categorieën te breed voor zijn. Op een testset van 1.071 echte aanbiedingen: 19 van de 31 indexeerbaar. |
+| **Interne links naar onderwerpen**: "Populair" op homepage en categoriepagina's, kolom in de footer, en op elke aanbieding "Vergelijk alle 18 koffie-aanbiedingen". | `TopicLinks`, aanbiedingspagina | Linkwaarde naar de nieuwe pagina's; de logische vervolgvraag na één aanbieding. |
+| **Lijstpagina's renderen 48 kaarten, de rest via "Toon meer"** (`/api/lijst`). Eén definitie van elke lijst (`lib/lists.ts`) voor pagina en API, zodat er niets dubbel of weg valt. | `OfferGrid`, `LoadMoreOffers` | `/acties/1-plus-1-gratis` van 805 KB naar 327 KB HTML en van 146 naar 48 kaarten om te hydrateren. Beter voor LCP/INP op goedkope telefoons. |
+
+Bewust niet gedaan: **prijs per kilo/liter**. Het klinkt als de logische volgende stap, maar de titels geven de inhoud te vaak niet of als bereik ("zak 450 of 500 gram", "Alle Pampers luiers"). Een vergelijking die bij de helft gokt, is misleidender dan geen vergelijking. Pas zinvol met de productcatalogus (AH/Jumbo hebben inhoud per product) — koppelen via `productForOffer`.
 
 ---
 
@@ -179,7 +191,7 @@ Aanzetten: Plausible-account (EU-gehost) of self-hosted Plausible CE, dan `ANALY
 - [ ] `ADMIN_TOKEN` zetten (≥ 16 tekens) en `/beheer` elke maandag openen.
 - [ ] Mail aan Kruidvat en Etos: toestemming of feed vragen. Tegelijk nagaan welke affiliateprogramma's er zijn.
 - [ ] Beslissen over affiliate (ja/nee) en `/ethiek` daarop aanpassen vóór de eerste affiliatefeed.
-- [ ] `deal-types.ts`: ketennamen uit live data halen (zelfde fout als de homepage had).
+- [x] `deal-types.ts`: ketennamen uit live data halen (zelfde fout als de homepage had).
 - [ ] Eerste 4 weken Facebook-experiment (#1).
 
 ### Dag 31–60 — eerste niet-supermarkt
