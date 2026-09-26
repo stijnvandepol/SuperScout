@@ -92,3 +92,30 @@ describe("runIngestion", () => {
     expect(resultFor(report, "dirk").durationMs).toBeGreaterThanOrEqual(0);
   });
 });
+
+describe("vangnet voor mechanismen", () => {
+  test("een 'unknown' met een leesbaar label wordt in de runner herkend", async () => {
+    const { InMemoryOfferStore } = await import("@superscout/core");
+    const store = new InMemoryOfferStore();
+    const adapter = {
+      source: "ah" as const,
+      fetchOffers: async () => [
+        {
+          id: "ah:1",
+          source: "ah" as const,
+          sourceOfferId: "1",
+          title: "Alle Pampers luiers",
+          pricing: { currentPriceCents: null, originalPriceCents: null, savingsAbsoluteCents: null, savingsPercent: null },
+          mechanism: { type: "unknown" as const },
+          rawLabel: "2+1 gratis",
+          validFrom: "2026-09-22",
+          validUntil: "2026-09-28",
+          flags: {},
+          fetchedAt: "2026-09-22T05:00:00Z",
+        },
+      ],
+    };
+    await runIngestion([adapter], store);
+    expect((await store.get("ah:1"))?.mechanism).toEqual({ type: "buy_x_get_y_free", buyQuantity: 2, freeQuantity: 1 });
+  });
+});

@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { feedAdapters, FeedFileAdapter } from "../src/adapters/feed/feed.adapter";
-import { parseFeedLabel } from "../src/adapters/feed/feed.label";
+import { parsePromoLabel as parseFeedLabel } from "@superscout/core";
 import { normalizeFeed, type FeedFile, type FeedOffer } from "../src/adapters/feed/feed.normalize";
 
 const NOW = "2026-10-05T08:00:00.000Z";

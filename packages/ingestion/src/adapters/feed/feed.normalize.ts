@@ -1,6 +1,6 @@
 import type { DiscountMechanism, Offer, OfferProvenance, RetailerSlug } from "@superscout/core";
 import { computeSavings, isRetailerSlug, priceKey, RETAILERS } from "@superscout/core";
-import { parseFeedLabel } from "./feed.label";
+import { parsePromoLabel } from "@superscout/core";
 
 /**
  * Offers from a file instead of a scraper.
@@ -172,7 +172,7 @@ function normalizeRow(
   }
 
   const label = typeof row.label === "string" && row.label.trim() ? row.label.trim() : undefined;
-  let mechanism: DiscountMechanism = label ? parseFeedLabel(label) : { type: "unknown" };
+  let mechanism: DiscountMechanism = label ? parsePromoLabel(label) : { type: "unknown" };
   if (mechanism.type === "unknown" && original !== null) mechanism = { type: "price_drop" };
   if (mechanism.type === "unknown" && !label) return "geen actie: geef een label of een hogere originalPriceCents";
 
