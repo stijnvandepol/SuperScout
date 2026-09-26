@@ -5,6 +5,11 @@ export const alt = "SuperScout — alle supermarktaanbiedingen van deze week op 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
+// Per request: prerendered during `docker build` this card said "Aanbiedingen
+// van 0 supermarkten", because there is no offer data at build time — and that
+// is the image every shared SuperScout link showed.
+export const dynamic = "force-dynamic";
+
 // Social share card: brand look, no external font fetches (build-safe).
 export default function OpenGraphImage() {
   return new ImageResponse(
