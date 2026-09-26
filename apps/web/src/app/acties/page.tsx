@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getOffers } from "@/lib/offers";
-import { DEAL_TYPES } from "@/lib/deal-types";
+import { DEAL_TYPES, withLiveChains } from "@/lib/deal-types";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd, SITE_FEED_ALTERNATE } from "@/lib/seo";
 
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 export default function DealTypesPage() {
   const offers = getOffers();
 
-  const types = DEAL_TYPES.map((type) => ({
+  const types = DEAL_TYPES.map(withLiveChains).map((type) => ({
     ...type,
     count: offers.filter(type.matches).length,
   })).filter((type) => type.count > 0);

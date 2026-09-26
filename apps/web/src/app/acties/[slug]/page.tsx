@@ -1,19 +1,21 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { byBiggestDiscount, dataFetchedAt, getOffers } from "@/lib/offers";
+import { dataFetchedAt } from "@/lib/offers";
 import { offerSlug } from "@/lib/format";
-import { DEAL_TYPES, dealTypeBySlug } from "@/lib/deal-types";
+import { dealTypeBySlug } from "@/lib/deal-types";
 import { OfferGrid } from "@/components/OfferGrid";
+import { listOffers } from "@/lib/lists";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd, faqJsonLd, offerListJsonLd, SITE_URL } from "@/lib/seo";
 
-export const revalidate = 1800;
+// Per request, not ISR. With `generateStaticParams` these four pages were
+// prerendered during `docker build`, when there is no offer data yet — so each
+// one hit the `notFound()` below and that 404 was cached for the revalidate
+// window. Every deploy took them offline for up to half an hour, crawlers
+// included. See `loadRaw` in lib/offers.ts for the same failure elsewhere.
+export const dynamic = "force-dynamic";
 
 type Params = { params: Promise<{ slug: string }> };
-
-export function generateStaticParams() {
-  return DEAL_TYPES.map((d) => ({ slug: d.slug }));
-}
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
@@ -40,7 +42,7 @@ export default async function DealTypePage({ params }: Params) {
   const type = dealTypeBySlug(slug);
   if (!type) notFound();
 
-  const offers = byBiggestDiscount(getOffers().filter(type.matches));
+  const offers = listOffers("actie", slug) ?? [];
   // An empty landing page is worse than no landing page: it would be indexed
   // as a soft 404. The sitemap applies the same rule.
   if (offers.length === 0) notFound();
@@ -83,7 +85,7 @@ export default async function DealTypePage({ params }: Params) {
         </div>
       </header>
 
-      <OfferGrid offers={offers} nowIso={nowIso} dataDate={dataFetchedAt()} />
+      <OfferGrid offers={offers} nowIso={nowIso} dataDate={dataFetchedAt()} list={{ kind: "actie", slug }} />
 
       <section className="mt-20 border-t border-line pt-12" aria-labelledby="faq-heading">
         <h2 id="faq-heading" className="font-display text-2xl font-bold tracking-tight">

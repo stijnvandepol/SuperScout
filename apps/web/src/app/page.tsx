@@ -5,6 +5,7 @@ import { chainSentence, dutchList, headlineChains, missingChains } from "@/lib/c
 import { byBiggestDiscount, dataFetchedAt, getOffers, stats } from "@/lib/offers";
 import { offerSlug } from "@/lib/format";
 import { OfferExplorer } from "@/components/OfferExplorer";
+import { TopicLinks } from "@/components/TopicLinks";
 import { ImageHostPreconnect } from "@/components/ImageHostPreconnect";
 import { JsonLd } from "@/components/JsonLd";
 import {
@@ -151,6 +152,9 @@ export default function Home() {
             </Link>
             .
           </p>
+          <div className="mt-4">
+            <TopicLinks limit={8} label="Populair" />
+          </div>
         </header>
 
         {/* Projected, not passed whole: OfferExplorer is a client component, so

@@ -5,6 +5,7 @@ import { offerSlug } from "@/lib/format";
 import { DEAL_TYPES } from "@/lib/deal-types";
 import { SAVINGS_CAMPAIGNS } from "@/lib/spaaracties";
 import { SITE_URL } from "@/lib/seo";
+import { isIndexableTopic, offersInTopic, TOPICS } from "@/lib/topics";
 
 // Read at request time, never baked into the build: see `loadRaw` in
 // lib/offers.ts for what a build-time prerender of this page contains.
@@ -62,6 +63,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }));
 
+  // Only topics that clear the thin-content bar; the rest say noindex.
+  const topicPages: MetadataRoute.Sitemap = [
+    { url: `${SITE_URL}/aanbiedingen`, lastModified: siteModified, changeFrequency: "daily", priority: 0.8 },
+    ...TOPICS.filter((topic) => isIndexableTopic(offersInTopic(offers, topic))).map((topic) => ({
+      url: `${SITE_URL}/aanbiedingen/${topic.slug}`,
+      lastModified: siteModified,
+      changeFrequency: "daily" as const,
+      priority: 0.8,
+    })),
+  ];
+
   const infoPages: MetadataRoute.Sitemap = ["product", "privacy", "voorwaarden", "ethiek"].map(
     (slug) => ({ url: `${SITE_URL}/${slug}`, changeFrequency: "monthly", priority: 0.3 }),
   );
@@ -106,6 +118,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     ...storePages,
     ...categoryPages,
+    ...topicPages,
     ...dealTypePages,
     ...savingsPages,
     ...offerPages,

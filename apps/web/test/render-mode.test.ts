@@ -22,7 +22,10 @@ const APP = join(__dirname, "..", "src", "app");
 const REQUEST_TIME_ROUTES = [
   "page.tsx",
   "sitemap.ts",
+  "aanbiedingen/page.tsx",
+  "aanbiedingen/[onderwerp]/page.tsx",
   "acties/page.tsx",
+  "acties/[slug]/page.tsx",
   "beheer/page.tsx",
   "beste-aanbiedingen/page.tsx",
   "categorieen/page.tsx",

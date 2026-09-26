@@ -5,7 +5,6 @@ import type { Offer, SupermarketSlug } from "@superscout/core";
 import { CATEGORY_LABEL, retailerNoun, type CategorySlug } from "@superscout/core";
 import {
   allCategoriesPresent,
-  byBiggestDiscount,
   dataFetchedAt,
   isIndexableCategory,
   offersInCategory,
@@ -13,6 +12,8 @@ import {
 import { formatEuro, isExVat, offerSlug, STORE_META, validUntilShort } from "@/lib/format";
 import { DEAL_TYPES } from "@/lib/deal-types";
 import { OfferGrid } from "@/components/OfferGrid";
+import { listOffers } from "@/lib/lists";
+import { TopicLinks } from "@/components/TopicLinks";
 import { ImageHostPreconnect } from "@/components/ImageHostPreconnect";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd, faqJsonLd, offerListJsonLd, SITE_URL } from "@/lib/seo";
@@ -85,7 +86,7 @@ function perStore(offers: Offer[]): StoreSlice[] {
 export default async function CategoryPage({ params }: Params) {
   const { slug } = await params;
   const label = CATEGORY_LABEL[slug as CategorySlug];
-  const offers = byBiggestDiscount(offersInCategory(slug));
+  const offers = listOffers("categorie", slug) ?? [];
   if (!label || offers.length === 0) notFound();
 
   const nowIso = new Date().toISOString();
@@ -123,12 +124,17 @@ export default async function CategoryPage({ params }: Params) {
         </h1>
         <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-ink-soft">
           Alle {offers.length} actuele aanbiedingen in {label.toLowerCase()} van deze week, van{" "}
-          {slices.length} supermarkten naast elkaar en gesorteerd op de grootste korting.
+          {slices.length} {retailerNoun(slices.map((x) => x.source))} naast elkaar en gesorteerd op de
+          grootste korting.
         </p>
       </header>
 
+      <div className="mb-6">
+        <TopicLinks category={slug as CategorySlug} label="Populair" />
+      </div>
+
       <div className="mt-2">
-        <OfferGrid offers={offers} nowIso={nowIso} dataDate={dataFetchedAt()} />
+        <OfferGrid offers={offers} nowIso={nowIso} dataDate={dataFetchedAt()} list={{ kind: "categorie", slug }} />
       </div>
 
       <CategoryProse label={label} slug={slug} offers={offers} slices={slices} faq={faq} />
