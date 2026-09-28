@@ -3,6 +3,7 @@ import ah from "./ah";
 import aldi from "./aldi";
 import dekamarkt from "./dekamarkt";
 import dirk from "./dirk";
+import ekoplaza from "./ekoplaza";
 import hoogvliet from "./hoogvliet";
 import jumbo from "./jumbo";
 import lidl from "./lidl";
@@ -23,6 +24,7 @@ export const RETAILER_MODULES: readonly RetailerModule[] = [
   aldi,
   dekamarkt,
   dirk,
+  ekoplaza,
   hoogvliet,
   jumbo,
   lidl,

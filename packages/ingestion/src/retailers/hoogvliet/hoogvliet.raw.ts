@@ -9,6 +9,10 @@ export interface HoogvlietRawOffer {
   description?: string;
   /** `.promotion-short-title` text. */
   promoLabel: string;
+  /** `.non-strikethrough` text, e.g. "2. 05" (euro and cent spans). */
+  priceNow?: string;
+  /** First `.strikethrough` value, the regular price, e.g. "4.10". */
+  priceWas?: string;
   url?: string;
   image?: string;
 }

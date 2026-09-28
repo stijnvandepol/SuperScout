@@ -41,7 +41,7 @@ afterEach(() => {
   delete process.env.INGEST_STATUS_PATH;
 });
 
-const ALL = ["ah", "jumbo", "lidl", "aldi", "plus", "dirk", "hoogvliet", "dekamarkt", "poiesz", "sligro"];
+const ALL = ["ah", "jumbo", "lidl", "aldi", "plus", "dirk", "hoogvliet", "dekamarkt", "poiesz", "sligro", "ekoplaza"];
 
 describe("gezondheid van de data", () => {
   test("verse data van alle ketens is gezond", async () => {

@@ -43,3 +43,22 @@ describe("normalizeHoogvlietOffer", () => {
     expect(o.imageUrl).toBe("https://www.hoogvliet.com/INTERSHOP/static/x.jpg");
   });
 });
+
+describe("tile prices from /aanbiedingen", () => {
+  test("a 1+1 tile keeps its per-piece price and the struck-through regular price", () => {
+    // Markup of 28 September 2026: "Daily Chef verse pasta of saus", 1+1 gratis,
+    // struck 4.10 - 7.60, now 2.05 - 3.80 (euro and cent spans).
+    const o = normalizeHoogvlietOffer(
+      raw("1+1 gratis", { title: "Daily Chef verse pasta of saus", priceNow: "2. 05 - 3. 80", priceWas: "4.10" }),
+      FETCHED,
+    );
+    expect(o.mechanism).toEqual({ type: "buy_x_get_y_free", buyQuantity: 1, freeQuantity: 1 });
+    expect(o.pricing).toEqual({ currentPriceCents: 205, originalPriceCents: 410, savingsAbsoluteCents: 205, savingsPercent: 50 });
+  });
+
+  test("a regular price that is not higher is not a saving", () => {
+    const o = normalizeHoogvlietOffer(raw("per stuk 1.99", { priceNow: "1. 99", priceWas: "1.99" }), FETCHED);
+    expect(o.pricing.originalPriceCents).toBeNull();
+    expect(o.pricing.currentPriceCents).toBe(199);
+  });
+});

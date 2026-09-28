@@ -70,12 +70,13 @@ export const RETAILERS = {
   vomar: retailer({ name: "Vomar", sector: "supermarkt", ingested: false, bg: "#d4021d", fg: "#ffffff", offersUrl: "https://www.vomar.nl/aanbiedingen" }),
   coop: retailer({ name: "Coop", sector: "supermarkt", ingested: false, bg: "#e2001a", fg: "#ffffff", offersUrl: "https://www.coop.nl/aanbiedingen" }),
   spar: retailer({ name: "Spar", sector: "supermarkt", ingested: false, bg: "#009640", fg: "#ffffff", offersUrl: "https://www.spar.nl/aanbiedingen" }),
-  ekoplaza: retailer({ name: "Ekoplaza", sector: "supermarkt", ingested: false, bg: "#4b9b3f", fg: "#ffffff", offersUrl: "https://www.ekoplaza.nl/aanbiedingen" }),
+  ekoplaza: retailer({ name: "Ekoplaza", sector: "supermarkt", ingested: true, bg: "#4b9b3f", fg: "#ffffff", offersUrl: "https://www.ekoplaza.nl/aanbiedingen" }),
   poiesz: retailer({ name: "Poiesz", sector: "supermarkt", ingested: true, bg: "#5a9e2f", fg: "#ffffff", offersUrl: "https://webwinkel.poiesz-supermarkten.nl/aanbiedingen", icon: "/store-icons/poiesz.png" }),
   // Nog geen module. Kleur is een neutrale placeholder en de link de homepage,
   // tot `capture` laat zien waar de aanbiedingen staan (zie
-  // packages/ingestion/src/retailers/README.md). Coop gaat op in PLUS; de
-  // module komt er alleen als coop.nl zelf nog aanbiedingen publiceert.
+  // packages/ingestion/src/retailers/README.md). Coop gaat op in PLUS: de capture
+  // van 28 september 2026 liet coop.nl/aanbiedingen doorsturen naar plus.nl,
+  // dus die aanbiedingen komen al binnen via de PLUS-module.
   janlinders: retailer({ name: "Jan Linders", sector: "supermarkt", ingested: false, bg: "#3d4035", fg: "#ffffff", offersUrl: "https://www.janlinders.nl" }),
   boni: retailer({ name: "Boni", sector: "supermarkt", ingested: false, bg: "#3d4035", fg: "#ffffff", offersUrl: "https://www.boni.nl" }),
   nettorama: retailer({ name: "Nettorama", sector: "supermarkt", ingested: false, bg: "#3d4035", fg: "#ffffff", offersUrl: "https://www.nettorama.nl" }),
