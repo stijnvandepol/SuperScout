@@ -25,6 +25,11 @@ export default defineRetailer({
   needs: "browser",
   create: ({ browser }) =>
     withBrowser("plus", browser, (b) =>
-      new PlusAdapter(() => interceptJson<PlusPromotionListResponse>(b, PLUS_OFFERS_URL, isPlusPromotionList)),
+      new PlusAdapter(() => interceptJson<PlusPromotionListResponse>(b, PLUS_OFFERS_URL, isPlusPromotionList, {
+          // The run of 28 September saw only OutSystems start-up calls within
+          // ten seconds: the list is requested later, below the fold.
+          settleMs: 15000,
+          scroll: true,
+        })),
     ),
 });
