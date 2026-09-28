@@ -14,6 +14,10 @@ on:
         description: "Ketens, spatiegescheiden; slug=url voor een andere pagina dan de standaard"
         required: true
         default: "janlinders vomar spar ekoplaza boni nettorama mcd boonsmarkt dagwinkel coop"
+      alleen_rapport:
+        description: "Niets ophalen; alleen de laatste capture opnieuw samenvatten"
+        type: boolean
+        default: false
 
 concurrency:
   group: capture
@@ -45,11 +49,12 @@ jobs:
       - name: Capture and summarise
         env:
           TARGET: ${{ matrix.target }}
+          REPORT_ONLY: ${{ inputs.alleen_rapport }}
         run: |
           slug="${TARGET%%=*}"
           url=""
           [ "$slug" != "$TARGET" ] && url="${TARGET#*=}"
           # Exit 2 (robots.txt) and 3 (refused) are answers, not failures.
-          docker exec superscout-ingestion node packages/ingestion/dist/capture.cjs "$slug" $url || echo "capture $slug stopte met code $?"
+          [ "$REPORT_ONLY" = "true" ] || docker exec superscout-ingestion node packages/ingestion/dist/capture.cjs "$slug" $url || echo "capture $slug stopte met code $?"
           docker exec -i -e SLUG="$slug" superscout-ingestion \
             node --input-type=module - < packages/ingestion/scripts/capture-report.mjs
