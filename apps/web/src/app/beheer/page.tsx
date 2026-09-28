@@ -200,6 +200,8 @@ function IngestPanel() {
               {Math.round(r.durationMs / 1000)} s
               {r.blockedSince ? ` · geweigerd sinds ${r.blockedSince.slice(0, 10)}` : ""}
               {r.robotsWarning ? ` · robots.txt: ${r.robotsWarning}` : ""}
+              {r.warning ? ` · ⚠ ${r.warning}` : ""}
+              {r.held !== undefined ? ` · ${r.held} eerdere vastgehouden` : ""}
             </li>
           ))}
         </ul>

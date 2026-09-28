@@ -41,7 +41,13 @@ export default function StatusPage() {
     const chain = live.get(slug);
     const r = result.get(slug);
     let state: { label: string; tone: "ok" | "warn" | "off"; detail?: string };
-    if (chain) {
+    if (chain && r?.held !== undefined) {
+      state = {
+        label: "Vorige aanbiedingen",
+        tone: "warn",
+        detail: `De laatste ophaalronde leverde bij ${STORE_META[slug].name} niets bruikbaars op. We tonen de aanbiedingen van de ronde daarvoor die nog lopen, en kijken wat er misging.`,
+      };
+    } else if (chain) {
       state = { label: "Actueel", tone: "ok" };
     } else if (r?.blockedSince) {
       state = {
@@ -105,11 +111,10 @@ export default function StatusPage() {
                 </span>
               </div>
               <p className="mt-1 text-sm text-ink-soft">
-                {chain
-                  ? `${chain.count} aanbiedingen · opgehaald ${ago(chain.fetchedAt, now)}`
-                  : "detail" in state
-                    ? state.detail
-                    : null}
+                {chain ? `${chain.count} aanbiedingen · opgehaald ${ago(chain.fetchedAt, now)}` : null}
+                {"detail" in state && state.detail ? (
+                  <span className={chain ? "mt-1 block" : undefined}>{state.detail}</span>
+                ) : null}
               </p>
             </li>
           ),

@@ -90,6 +90,27 @@ Doel, zoals Stijn het formuleerde: niet geld verdienen, maar *de* plek worden vo
 
 **Nog open, en jouw beslissing:** een deel van de adapters doet zich voor als iets anders. De AH-adapter stuurt `user-agent: Appie/9.39` mee (de AH-app), Jumbo en de browser-adapters doen zich voor als een iPhone. Dat past slecht bij "we respecteren de winkel" en bij de zin op `/ethiek` over "geen besloten systemen". Eerlijk zijn (`SuperScoutBot/1.0 (+https://superscout.nl/ethiek)`) kan betekenen dat een of meer ketens ons weigeren. Dan zie je dat op `/status` en houdt de site ermee op, zoals nu is ingebouwd. Mijn advies: per keten omzetten en kijken wat er gebeurt, te beginnen bij de ketens met een openbare webpagina (ALDI, Lidl, DekaMarkt).
 
+### Ronde 5 (28 september) — scrapers per keten, eerlijk en robuust
+
+Uitgangspunt: elke Nederlandse supermarkt, en per keten alles bij elkaar.
+
+**Wat de verkenning opleverde** (deploylogs 18–26 september): Dirk, Jumbo, Lidl, DekaMarkt, Poiesz en Sligro stabiel; **PLUS faalde in elke gelogde run**; **Aldi wisselde stil tussen ~220 en 0** zonder foutmelding; AH en Hoogvliet vallen sinds ronde 4 af door hun robots.txt. Geen enkele adapter stelde zich herkenbaar voor (iPhone, AH-app) en Dirk stuurde 18 verzoeken direct achter elkaar. Twee ingest-runs tegelijk lieten op 25 september het archief crashen.
+
+**Scrapling:** bewust (nog) niet. Het project is TypeScript; Scrapling is Python en brengt een tweede runtime en testomgeving mee. Aldi, DekaMarkt en Poiesz zetten hun data al als JSON in de pagina — die lezen is robuuster dan welke adaptieve selector ook. Scrapling komt pas in beeld als Lidl of Sligro (de ketens zonder bekende JSON) vaak breken; `/data/snapshots` gaat dat laten zien.
+
+| Wijziging | Waar |
+|---|---|
+| **Eén map per keten**: adapter, parser, normalizer, tests én fixtures in `retailers/<slug>/`, met een `index.ts` die de module beschrijft (URL's, http/browser, factory, optionele catalogus). Eén register (`retailers/index.ts`) vervangt `sources.ts`, `browser-sources.ts` en `source-urls.ts`. Tests eisen dat elke map geregistreerd is en dat elke URL in de robots-controle zit. Handleiding: `retailers/README.md`. | `packages/ingestion/src/retailers/` |
+| **Eerlijk en rustig ophalen**: elke request heet `SuperScoutBot/1.0 (+https://superscout.nl/ethiek)` — nagemaakte User-Agents zijn weg — en per site minstens 3 s tussen verzoeken, ook voor browserpagina's. | `http/polite.ts`, `browser/intercept.ts` |
+| **Health check per keten**: 0 aanbiedingen, of minder dan de helft van de mediaan van de laatste 14 dagen, telt als mislukt. Dan: waarschuwing, de vorige nog lopende aanbiedingen blijven staan (max. 7 dagen oud), en de pagina wordt bewaard in `/data/snapshots/`. Zichtbaar op `/beheer` en `/status`. | `source-health.ts` |
+| **Lock** tegen twee gelijktijdige ingest-runs. | `run-lock.ts` |
+| **PLUS**: de promotielijst wordt op vorm herkend in plaats van op de naam van de endpoint, en bij falen staat in de fout welke JSON-endpoints de pagina wél aanriep. | `retailers/plus/index.ts` |
+| **Capture-commando** voor nieuwe ketens: pagina + álle JSON die de site laadt, met aanwijzing welke op een aanbiedingenlijst lijkt. | `capture-cli.ts` |
+| **`unit`-veld** (inhoud/eenheid) in het model; Aldi, Sligro, DekaMarkt en feeds vullen het. | `core/src/offer.ts` |
+| **Register** aangevuld met Jan Linders, Boni, Nettorama, MCD, Boon's Markt en Dagwinkel (nog zonder module). | `core/src/retailer.ts` |
+
+**Volgende stap per keten:** `capture` draaien op de server voor Aldi, DekaMarkt en Poiesz (JSON-first ombouwen) en voor elke keten zonder module. Zie `retailers/README.md`.
+
 Bewust niet gedaan: **prijs per kilo/liter**. Het klinkt als de logische volgende stap, maar de titels geven de inhoud te vaak niet of als bereik ("zak 450 of 500 gram", "Alle Pampers luiers"). Een vergelijking die bij de helft gokt, is misleidender dan geen vergelijking. Pas zinvol met de productcatalogus (AH/Jumbo hebben inhoud per product) — koppelen via `productForOffer`.
 
 ---

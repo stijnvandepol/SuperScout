@@ -26,6 +26,10 @@ export interface IngestStatus {
     error?: string;
     blockedSince?: string;
     robotsWarning?: string;
+    /** The health check found this pull suspicious (0, or far below usual). */
+    warning?: string;
+    /** Previous offers kept in its place. */
+    held?: number;
   }[];
 }
 
