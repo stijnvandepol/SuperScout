@@ -56,10 +56,35 @@ jobs:
       # and served it as this week's offers.
       - name: Refresh offers
         run: |
-          # Offers only: the catalogue crawl takes twenty minutes and has its
-          # own nightly pass, so a deploy should not wait on it.
+          # The restarted worker ingests on start, and the run lock (see
+          # packages/ingestion/src/run-lock.ts) makes a second, explicit run skip
+          # while it is busy. So wait for that run's status — written as soon as
+          # the offers are done, before the twenty-minute catalogue crawl — and
+          # only start an offers-only run ourselves if none turns up.
+          since=$(date -u +%s)
+          status() {
+            docker exec superscout-ingestion node -e "
+              const fs = require('fs');
+              try {
+                const s = JSON.parse(fs.readFileSync(process.env.STATUS_OUT || '/data/ingest-status.json', 'utf8'));
+                if (Date.parse(s.finishedAt) / 1000 < $1) process.exit(1);
+                console.log('ingest klaar om ' + s.finishedAt + ', ' + s.written + ' aanbiedingen geschreven');
+                if (s.browserError) console.log('  browser: ' + s.browserError);
+                for (const r of s.results) console.log('  ' + r.source + ': ' + (r.ok ? r.offerCount : 'MISLUKT (' + (r.error || '?') + ')') +
+                  (r.warning ? ' | waarschuwing: ' + r.warning : '') + (r.held !== undefined ? ' | ' + r.held + ' vastgehouden' : '') +
+                  (r.blockedSince ? ' | geweigerd sinds ' + r.blockedSince : ''));
+              } catch { process.exit(1); }
+            "
+          }
+          for _ in $(seq 1 36); do
+            status "$since" && exit 0
+            sleep 10
+          done
+          echo "Geen verse status van de startrun na 6 minuten; start zelf een run."
+          # Offers only: the catalogue crawl has its own nightly pass.
           docker exec -e INGEST_ONCE=1 -e SKIP_ASSORTMENT=1 superscout-ingestion \
             node --experimental-sqlite packages/ingestion/dist/ingest.cjs 2>&1 | tail -20
+          status 0 || true
 
       # Verified from inside the web container, not the worker. The worker
       # reading its own output proves nothing: it runs as root and wrote the
