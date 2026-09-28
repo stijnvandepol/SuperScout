@@ -72,6 +72,16 @@ export const RETAILERS = {
   spar: retailer({ name: "Spar", sector: "supermarkt", ingested: false, bg: "#009640", fg: "#ffffff", offersUrl: "https://www.spar.nl/aanbiedingen" }),
   ekoplaza: retailer({ name: "Ekoplaza", sector: "supermarkt", ingested: false, bg: "#4b9b3f", fg: "#ffffff", offersUrl: "https://www.ekoplaza.nl/aanbiedingen" }),
   poiesz: retailer({ name: "Poiesz", sector: "supermarkt", ingested: true, bg: "#5a9e2f", fg: "#ffffff", offersUrl: "https://webwinkel.poiesz-supermarkten.nl/aanbiedingen", icon: "/store-icons/poiesz.png" }),
+  // Nog geen module. Kleur is een neutrale placeholder en de link de homepage,
+  // tot `capture` laat zien waar de aanbiedingen staan (zie
+  // packages/ingestion/src/retailers/README.md). Coop gaat op in PLUS; de
+  // module komt er alleen als coop.nl zelf nog aanbiedingen publiceert.
+  janlinders: retailer({ name: "Jan Linders", sector: "supermarkt", ingested: false, bg: "#3d4035", fg: "#ffffff", offersUrl: "https://www.janlinders.nl" }),
+  boni: retailer({ name: "Boni", sector: "supermarkt", ingested: false, bg: "#3d4035", fg: "#ffffff", offersUrl: "https://www.boni.nl" }),
+  nettorama: retailer({ name: "Nettorama", sector: "supermarkt", ingested: false, bg: "#3d4035", fg: "#ffffff", offersUrl: "https://www.nettorama.nl" }),
+  mcd: retailer({ name: "MCD", sector: "supermarkt", ingested: false, bg: "#3d4035", fg: "#ffffff", offersUrl: "https://www.mcd-supermarkt.nl" }),
+  boonsmarkt: retailer({ name: "Boon's Markt", sector: "supermarkt", ingested: false, bg: "#3d4035", fg: "#ffffff", offersUrl: "https://www.boonsmarkt.nl" }),
+  dagwinkel: retailer({ name: "Dagwinkel", sector: "supermarkt", ingested: false, bg: "#3d4035", fg: "#ffffff", offersUrl: "https://www.dagwinkel.nl" }),
 
   // ---- Groothandel ----
   sligro: retailer({ name: "Sligro", sector: "groothandel", ingested: true, bg: "#e64415", fg: "#ffffff", offersUrl: "https://www.sligro.nl/aanbiedingen.html", icon: "/store-icons/sligro.png", exVat: true }),

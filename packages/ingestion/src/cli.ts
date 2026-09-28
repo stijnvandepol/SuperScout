@@ -16,7 +16,7 @@
  *   ROBOTS_MODE  "enforce" (default) skips chains whose robots.txt forbids us;
  *                "report" only records it in the status
  */
-import { appendFileSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdirSync, readdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import type { Browser } from "playwright";
 import type { Offer, PriceObservation } from "@superscout/core";
@@ -31,16 +31,17 @@ import {
   serialiseObservations,
 } from "@superscout/core";
 import { runIngestion, type IngestionReport } from "./runner";
-import { crawlAhAssortment, crawlJumboAssortment } from "./assortment-runner";
 import { SqliteProductStore } from "./store/sqlite-product-store";
-import { apiAdapters } from "./sources";
-import { feedAdapters } from "./adapters/feed/feed.adapter";
-import { browserSources } from "./browser/browser-sources";
+import { feedAdapters } from "./feed/feed.adapter";
 import { launchBrowser } from "./browser/intercept";
 import { DIR_FOR_WEB, READ_FOR_WEB, shareWithWeb } from "./shared-volume";
 import { RobotsPolicy, type RobotsEntry } from "./robots";
 import { gateAdapters, isBlockError, type RobotsMode } from "./gate";
-import { SOURCE_URLS } from "./source-urls";
+import { RETAILER_MODULES } from "./retailers";
+import { polite } from "./http/polite";
+import { lastHtml } from "./browser/intercept";
+import { assessCount, heldOffers, parseHistory, type RunCounts } from "./source-health";
+import { acquireLock } from "./run-lock";
 
 /**
  * Write a file so that a reader never sees it half-written.
@@ -74,16 +75,39 @@ const FEEDS_DIR = process.env.FEEDS_DIR ?? "/data/feeds";
 const STATUS_OUT = process.env.STATUS_OUT ?? "/data/ingest-status.json";
 const ROBOTS_CACHE = process.env.ROBOTS_CACHE ?? "/data/robots-cache.json";
 const ROBOTS_MODE: RobotsMode = process.env.ROBOTS_MODE === "report" ? "report" : "enforce";
+const COUNTS_OUT = process.env.COUNTS_OUT ?? "/data/ingest-history.jsonl";
+const SNAPSHOT_DIR = process.env.SNAPSHOT_DIR ?? "/data/snapshots";
+const LOCK_PATH = process.env.LOCK_PATH ?? "/data/ingest.lock";
+/** Set to "1" to keep the rendered page of every browser chain — for new fixtures. */
+const SNAPSHOT_ALL = process.env.SNAPSHOT_ALL === "1";
 
-/** How we introduce ourselves when reading robots.txt — by name, with a way to reach us. */
-const BOT_USER_AGENT = "Mozilla/5.0 (compatible; SuperScoutBot/1.0; +https://superscout.nl/ethiek)";
+/**
+ * Keep what a chain's pages looked like when its pull went wrong.
+ *
+ * The five newest per chain are kept; each is also a ready-made test fixture
+ * for the parser fix it prompts.
+ */
+function saveSnapshots(source: string, urls: readonly string[], nowIso: string): void {
+  try {
+    mkdirSync(SNAPSHOT_DIR, { recursive: true });
+    const stamp = nowIso.slice(0, 16).replace(/[:T]/g, "-");
+    urls.forEach((url, i) => {
+      const html = lastHtml.get(url);
+      if (!html) return;
+      writeFileSync(`${SNAPSHOT_DIR}/${source}-${stamp}${urls.length > 1 ? `-${i}` : ""}.html`, html, "utf-8");
+    });
+    const own = readdirSync(SNAPSHOT_DIR)
+      .filter((f) => f.startsWith(`${source}-`) && f.endsWith(".html"))
+      .sort();
+    for (const old of own.slice(0, Math.max(0, own.length - 5))) unlinkSync(`${SNAPSHOT_DIR}/${old}`);
+  } catch (e) {
+    console.error(`[ingest] snapshot voor ${source} mislukt:`, e);
+  }
+}
+
 
 async function fetchRobots(url: string): Promise<{ status: number; body: string }> {
-  const res = await fetch(url, {
-    headers: { "user-agent": BOT_USER_AGENT },
-    signal: AbortSignal.timeout(10_000),
-    redirect: "follow",
-  });
+  const res = await polite(url, { signal: AbortSignal.timeout(10_000), redirect: "follow" });
   // robots.txt is small by definition; RFC 9309 lets us stop at 500 KiB.
   return { status: res.status, body: (await res.text()).slice(0, 500_000) };
 }
@@ -106,6 +130,10 @@ interface StatusResult {
   blockedSince?: string;
   /** robots.txt objection recorded in "report" mode. */
   robotsWarning?: string;
+  /** Why this pull looked wrong, from the health check. */
+  warning?: string;
+  /** How many previous offers were kept in its place. */
+  held?: number;
 }
 
 /** Who refused us, and since when, from the last run's status. */
@@ -238,16 +266,14 @@ async function crawlCatalogue(): Promise<void> {
     // rude and a good way to get rate-limited off one of them.
     const robots = new RobotsPolicy(fetchRobots, readJson<Record<string, RobotsEntry>>(ROBOTS_CACHE, {}));
     const blocked = previousBlocks();
-    const crawls = [
-      { source: "ah", crawl: crawlAhAssortment },
-      { source: "jumbo", crawl: crawlJumboAssortment },
-    ] as const;
-    for (const { source, crawl } of crawls) {
+    for (const module of RETAILER_MODULES) {
+      const { source, catalogue: crawl, urls } = module;
+      if (!crawl) continue;
       if (blocked[source]) {
         console.log(`[assortment] ${source} overgeslagen: winkel weigerde ons op ${blocked[source]}`);
         continue;
       }
-      const reason = await robots.checkAll(SOURCE_URLS[source] ?? []);
+      const reason = await robots.checkAll(urls);
       if (reason && ROBOTS_MODE === "enforce") {
         console.log(`[assortment] ${source} overgeslagen: ${reason}`);
         continue;
@@ -268,21 +294,38 @@ async function crawlCatalogue(): Promise<void> {
 }
 
 async function ingestOnce(): Promise<void> {
+  const release = acquireLock(LOCK_PATH);
+  if (!release) {
+    console.log("[ingest] een andere ingest-run is bezig; deze wordt overgeslagen.");
+    return;
+  }
+  try {
+    await ingestLocked();
+  } finally {
+    release();
+  }
+}
+
+async function ingestLocked(): Promise<void> {
   const nowIso = new Date().toISOString();
   const store = new InMemoryOfferStore();
 
   // Feed files first: they need no network, so they report even on a day the
   // chains' websites are unreachable.
-  const adapters = [...feedAdapters(FEEDS_DIR), ...apiAdapters()];
   let browser: Browser | null = null;
   let browserError: string | null = null;
-  try {
-    browser = await launchBrowser();
-    adapters.push(...browserSources(browser));
-  } catch (e) {
-    console.error("[ingest] browser unavailable, skipping browser-driven chains:", e);
-    browserError = e instanceof Error ? e.message : String(e);
+  if (RETAILER_MODULES.some((m) => m.needs === "browser")) {
+    try {
+      browser = await launchBrowser();
+    } catch (e) {
+      console.error("[ingest] browser unavailable, browser-driven chains will report as failed:", e);
+      browserError = e instanceof Error ? e.message : String(e);
+    }
   }
+  const adapters = [
+    ...feedAdapters(FEEDS_DIR),
+    ...RETAILER_MODULES.map((module) => module.create({ browser })),
+  ];
 
   // robots.txt and recent refusals decide which adapters run at all.
   const robots = new RobotsPolicy(fetchRobots, readJson<Record<string, RobotsEntry>>(ROBOTS_CACHE, {}));
@@ -302,7 +345,9 @@ async function ingestOnce(): Promise<void> {
   let all;
   let report: IngestionReport;
   try {
-    report = await runIngestion(gate.adapters, store, { timeoutMs: 60_000 });
+    // Three minutes: the polite throttle spaces requests three seconds apart per
+    // host, so Dirk's eighteen department calls alone take about a minute.
+    report = await runIngestion(gate.adapters, store, { timeoutMs: 180_000 });
     logReport(report);
     all = await store.all();
   } finally {
@@ -311,6 +356,49 @@ async function ingestOnce(): Promise<void> {
 
   // Only keep offers that are actually valid today (drop next-week/expired).
   const offers = all.filter((o) => isActive(o.validFrom, o.validUntil, nowIso));
+
+  // Health per chain: a failure, a zero or a collapse against the chain's own
+  // recent runs keeps its previous offers instead of leaving an empty slot.
+  const history = (() => {
+    try {
+      return parseHistory(readFileSync(COUNTS_OUT, "utf-8"));
+    } catch {
+      return [] as RunCounts[];
+    }
+  })();
+  const previousOffers = readJson<Offer[]>(OUT, []);
+  const health: Record<string, { warning?: string; held?: number }> = {};
+  for (const r of report.results) {
+    const verdict = r.ok ? assessCount(r.source, r.offerCount, history, nowIso) : { ok: false as const, reason: r.error ?? "mislukt" };
+    if (verdict.ok) continue;
+    const held = heldOffers(previousOffers, r.source, nowIso);
+    // Only replace a suspicious pull when there is something better to show.
+    if (r.ok && held.length <= r.offerCount) {
+      health[r.source] = { warning: verdict.reason };
+    } else {
+      if (r.ok) {
+        for (let i = offers.length - 1; i >= 0; i -= 1) if (offers[i]!.source === r.source) offers.splice(i, 1);
+      }
+      offers.push(...held);
+      health[r.source] = { warning: verdict.reason, held: held.length };
+    }
+    console.warn(
+      `[health] ${r.source}: ${verdict.reason}` +
+        (health[r.source]!.held !== undefined ? ` — ${health[r.source]!.held} eerdere aanbiedingen vastgehouden` : ""),
+    );
+    const module = RETAILER_MODULES.find((m) => m.source === r.source);
+    if (module?.needs === "browser") saveSnapshots(r.source, module.urls, nowIso);
+  }
+  if (SNAPSHOT_ALL) {
+    for (const module of RETAILER_MODULES) if (module.needs === "browser") saveSnapshots(module.source, module.urls, nowIso);
+  }
+  try {
+    const counts = Object.fromEntries(report.results.filter((r) => r.ok).map((r) => [r.source, r.offerCount]));
+    appendFileSync(COUNTS_OUT, `${JSON.stringify({ at: nowIso, counts } satisfies RunCounts)}\n`, "utf-8");
+  } catch (e) {
+    console.error("[ingest] tellingen wegschrijven mislukt:", e);
+  }
+
   const results: StatusResult[] = report.results.map((r) => {
     // Still inside an earlier backoff: keep the original date, or the wait
     // would restart every morning and never end.
@@ -321,6 +409,7 @@ async function ingestOnce(): Promise<void> {
       ...r,
       ...(blockedSince ? { blockedSince } : {}),
       ...(gate.warnings[r.source] ? { robotsWarning: gate.warnings[r.source] } : {}),
+      ...(health[r.source] ?? {}),
     };
   });
   writeStatus(results, offers.length, nowIso, browserError);
@@ -332,7 +421,11 @@ async function ingestOnce(): Promise<void> {
   }
 
   writeAtomic(OUT, JSON.stringify(offers));
-  console.log(`[ingest] ${nowIso} wrote ${offers.length}/${all.length} active offers -> ${OUT}.`);
+  const heldTotal = Object.values(health).reduce((sum, h) => sum + (h.held ?? 0), 0);
+  console.log(
+    `[ingest] ${nowIso} wrote ${offers.length} active offers -> ${OUT} ` +
+      `(${offers.length - heldTotal} fresh of ${all.length} fetched, ${heldTotal} held from the previous run).`,
+  );
 
   retainArchive(all, nowIso);
   recordPrices(offers, nowIso);

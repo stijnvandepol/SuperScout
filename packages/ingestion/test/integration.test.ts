@@ -1,15 +1,15 @@
 import { describe, expect, test } from "vitest";
 import { InMemoryOfferStore, type SupermarketSlug } from "@superscout/core";
 import { runIngestion } from "../src/runner";
-import { DirkAdapter } from "../src/adapters/dirk/dirk.adapter";
-import { JumboAdapter } from "../src/adapters/jumbo/jumbo.adapter";
-import { AhAdapter } from "../src/adapters/ah/ah.adapter";
-import { PlusAdapter } from "../src/adapters/plus/plus.adapter";
+import { DirkAdapter } from "../src/retailers/dirk/dirk.adapter";
+import { JumboAdapter } from "../src/retailers/jumbo/jumbo.adapter";
+import { AhAdapter } from "../src/retailers/ah/ah.adapter";
+import { PlusAdapter } from "../src/retailers/plus/plus.adapter";
 
-import dirkFixture from "./fixtures/dirk-offers.json" with { type: "json" };
-import jumboFixture from "./fixtures/jumbo-nutab.json" with { type: "json" };
-import ahFixture from "./fixtures/ah-bonus-promotions.json" with { type: "json" };
-import plusFixture from "./fixtures/plus-promotions.json" with { type: "json" };
+import dirkFixture from "../src/retailers/dirk/fixtures/dirk-offers.json" with { type: "json" };
+import jumboFixture from "../src/retailers/jumbo/fixtures/jumbo-nutab.json" with { type: "json" };
+import ahFixture from "../src/retailers/ah/fixtures/ah-bonus-promotions.json" with { type: "json" };
+import plusFixture from "../src/retailers/plus/fixtures/plus-promotions.json" with { type: "json" };
 
 const clock = () => "2026-07-01T12:00:00.000Z";
 

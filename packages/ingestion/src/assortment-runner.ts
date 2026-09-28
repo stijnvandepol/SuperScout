@@ -1,7 +1,7 @@
 import type { Product, ProductStore } from "@superscout/core";
-import { AhAssortmentSource } from "./adapters/ah/ah.assortment";
-import { AH_AISLES, AH_MEASURED_TOTAL } from "./adapters/ah/ah.taxonomy";
-import { JumboAssortmentSource } from "./adapters/jumbo/jumbo.assortment";
+import { AhAssortmentSource } from "./retailers/ah/ah.assortment";
+import { AH_AISLES, AH_MEASURED_TOTAL } from "./retailers/ah/ah.taxonomy";
+import { JumboAssortmentSource } from "./retailers/jumbo/jumbo.assortment";
 
 /**
  * Crawl the Albert Heijn catalogue into the product store.
