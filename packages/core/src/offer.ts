@@ -51,6 +51,12 @@ export interface Offer {
   flags: OfferFlags;
 
   url?: string;
+  /**
+   * Content or sales unit as the retailer states it: "500 g", "Per stuk",
+   * "Stazak 1 kg". Free text on purpose — chains are too inconsistent for a
+   * parsed quantity to be trustworthy, and a wrong per-kilo price misleads.
+   */
+  unit?: string;
   /** Product EANs, for cross-store price comparison later. */
   productEans?: string[];
 

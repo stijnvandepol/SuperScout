@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 import type { Offer, SourceAdapter } from "@superscout/core";
 import { isAllowed, parseRobots, RobotsPolicy } from "../src/robots";
 import { gateAdapters, isBlockError, stopOnRefusal } from "../src/gate";
-import { SOURCE_URLS } from "../src/source-urls";
+import { RETAILER_MODULES } from "../src/retailers";
 
 describe("robots.txt lezen (RFC 9309)", () => {
   const txt = `
@@ -159,22 +159,31 @@ describe("weigeringen", () => {
   });
 });
 
-describe("volledigheid van de URL-lijst", () => {
-  test("elke URL-constante in een adapter staat in source-urls.ts", () => {
-    const listed = Object.values(SOURCE_URLS).flat().join("\n");
-    const dir = join(__dirname, "..", "src", "adapters");
+describe("volledigheid van de URL-lijst per keten", () => {
+  test("elke URL-constante in een ketenmap staat in de urls van die module", () => {
+    const dir = join(__dirname, "..", "src", "retailers");
     const missing: string[] = [];
-    for (const chain of readdirSync(dir)) {
-      if (chain === "feed") continue;
-      for (const file of readdirSync(join(dir, chain)).filter((f) => f.endsWith(".adapter.ts") || f.endsWith(".assortment.ts"))) {
-        const source = readFileSync(join(dir, chain, file), "utf-8");
+    for (const module of RETAILER_MODULES) {
+      const listed = module.urls;
+      for (const file of readdirSync(join(dir, module.source)).filter((f) => f.endsWith(".ts") && !f.endsWith(".test.ts"))) {
+        // Multi-line declarations too: `const X_URL =\n  "https://…"`.
+        const source = readFileSync(join(dir, module.source, file), "utf-8").replace(/=\s*\n\s*/g, "= ");
         for (const m of source.matchAll(/const \w+_URL\w* = "(https:\/\/[^"]+)"/g)) {
           const url = m[1]!;
-          // Base URLs that get a suffix (Dirk's department number) count as listed when a listed URL starts with them.
-          if (!listed.split("\n").some((l) => l.startsWith(url))) missing.push(`${chain}/${file}: ${url}`);
+          // A base URL that gets a suffix (Dirk's department number) counts as listed.
+          if (!listed.some((l) => l.startsWith(url))) missing.push(`${module.source}/${file}: ${url}`);
         }
       }
     }
     expect(missing).toEqual([]);
+  });
+
+  test("elke ketenmap is geregistreerd, en elke module hoort bij een map", () => {
+    const dir = join(__dirname, "..", "src", "retailers");
+    const folders = readdirSync(dir, { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name)
+      .sort();
+    expect(RETAILER_MODULES.map((m) => m.source).sort()).toEqual(folders);
   });
 });

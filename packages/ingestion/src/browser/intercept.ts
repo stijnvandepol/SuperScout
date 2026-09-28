@@ -1,7 +1,5 @@
-import { chromium, type Browser } from "playwright";
-
-const UA_IPHONE =
-  "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1";
+import { chromium, type Browser, type Page } from "playwright";
+import { HONEST_USER_AGENT, sharedThrottle, type HostThrottle } from "../http/polite";
 
 /** Launch a headless Chromium suitable for a container (no sandbox as root). */
 export function launchBrowser(): Promise<Browser> {
@@ -18,29 +16,66 @@ export interface InterceptOptions {
   timeoutMs?: number;
   /** For scrapePage: wait until this selector appears before extracting. */
   waitForSelector?: string;
+  throttle?: HostThrottle;
 }
 
 /**
- * Load a page and return the JSON body of the first successful response whose
- * URL contains `matchUrl`. This is how we read a chain's own offers API through
- * its website — the browser handles JS, cookies and bot-protection for us.
+ * The last rendered HTML per page URL, kept for the length of one run.
+ *
+ * When a chain suddenly returns nothing, the first question is always "what
+ * did the page look like?" — and by the time anyone asks, the page has moved
+ * on. The worker writes this to /data/snapshots when a source looks wrong
+ * (see source-health.ts), which also makes it the next test fixture.
+ */
+export const lastHtml = new Map<string, string>();
+
+/**
+ * Open a page the way SuperScout visits any site: under its own name, after
+ * waiting its turn for that host. The page's own sub-requests (images, scripts)
+ * are the site's doing and are not throttled; the navigation is ours.
+ */
+async function openPage(browser: Browser, pageUrl: string, options: InterceptOptions): Promise<Page> {
+  await (options.throttle ?? sharedThrottle).wait(new URL(pageUrl).host);
+  return browser.newPage({ userAgent: HONEST_USER_AGENT, locale: "nl-NL" });
+}
+
+/** Decides whether a JSON response is the one we came for. */
+export type JsonMatcher = (url: string, body: unknown) => boolean;
+
+/**
+ * Load a page and return the first JSON response the matcher accepts.
+ *
+ * Matching on the *shape* of the body rather than a fixed endpoint name is
+ * what keeps this working when a site renames an internal endpoint — PLUS's
+ * adapter failed every run for weeks because one OutSystems action got a new
+ * name while the data it returned stayed the same. A string still works and
+ * means "URL contains".
+ *
+ * On failure the error lists the JSON endpoints the page did call, so the fix
+ * starts from evidence instead of a guess.
  */
 export async function interceptJson<T>(
   browser: Browser,
   pageUrl: string,
-  matchUrl: string,
+  match: string | JsonMatcher,
   options: InterceptOptions = {},
 ): Promise<T> {
   const { settleMs = 4000, timeoutMs = 45000 } = options;
-  const page = await browser.newPage({ userAgent: UA_IPHONE, locale: "nl-NL" });
+  const accepts: JsonMatcher = typeof match === "string" ? (url) => url.includes(match) : match;
+  const page = await openPage(browser, pageUrl, options);
+  const seen: string[] = [];
   try {
     let captured: T | null = null;
     page.on("response", (resp) => {
-      if (captured || !resp.url().includes(matchUrl) || !resp.ok()) return;
+      if (captured || !resp.ok()) return;
+      const type = resp.headers()["content-type"] ?? "";
+      if (!type.includes("json")) return;
+      const url = resp.url();
       resp
         .json()
-        .then((body: T) => {
-          captured = body;
+        .then((body: unknown) => {
+          seen.push(new URL(url).pathname);
+          if (!captured && accepts(url, body)) captured = body as T;
         })
         .catch(() => {});
     });
@@ -50,7 +85,11 @@ export async function interceptJson<T>(
     while (!captured && Date.now() < deadline) {
       await page.waitForTimeout(300);
     }
-    if (!captured) throw new Error(`no response matching "${matchUrl}" at ${pageUrl}`);
+    lastHtml.set(pageUrl, await page.content().catch(() => ""));
+    if (!captured) {
+      const sample = [...new Set(seen)].slice(0, 8).join(", ") || "geen";
+      throw new Error(`geen passende JSON-response op ${pageUrl}; wel gezien: ${sample}`);
+    }
     return captured;
   } finally {
     await page.close();
@@ -69,7 +108,7 @@ export async function scrapePage<T>(
   options: InterceptOptions = {},
 ): Promise<T[]> {
   const { timeoutMs = 45000, waitForSelector } = options;
-  const page = await browser.newPage({ userAgent: UA_IPHONE, locale: "nl-NL" });
+  const page = await openPage(browser, pageUrl, options);
   try {
     await page.goto(pageUrl, { waitUntil: "domcontentloaded", timeout: timeoutMs });
     if (waitForSelector) {
@@ -82,6 +121,7 @@ export async function scrapePage<T>(
       await page.waitForTimeout(400);
     }
     await page.waitForTimeout(1000);
+    lastHtml.set(pageUrl, await page.content().catch(() => ""));
     return await page.evaluate(extractor);
   } finally {
     await page.close();

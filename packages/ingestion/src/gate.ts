@@ -1,6 +1,8 @@
 import type { Offer, SourceAdapter } from "@superscout/core";
 import type { RobotsPolicy } from "./robots";
-import { SOURCE_URLS } from "./source-urls";
+import { moduleFor } from "./retailers";
+
+export { isBlockError, stopOnRefusal } from "./http/refusal";
 
 /**
  * Which adapters may run today, and why the others may not.
@@ -16,11 +18,6 @@ import { SOURCE_URLS } from "./source-urls";
  */
 
 export const BLOCK_BACKOFF_DAYS = 7;
-
-/** An error that means "the retailer does not want this", not "something broke". */
-export function isBlockError(message: string | undefined): boolean {
-  return !!message && /\b(401|403|429)\b|captcha|access denied|too many requests|forbidden|blocked/i.test(message);
-}
 
 export type RobotsMode = "enforce" | "report";
 
@@ -48,6 +45,8 @@ export async function gateAdapters(
     /** Source -> ISO date it last refused us, from the previous run's status. */
     blockedSince: Record<string, string>;
     now: number;
+    /** URLs a source requests; defaults to the retailer module's own list. */
+    urlsFor?: (source: string) => readonly string[] | undefined;
   },
 ): Promise<GateResult> {
   const warnings: Record<string, string> = {};
@@ -62,7 +61,7 @@ export async function gateAdapters(
         }
       }
 
-      const urls = SOURCE_URLS[adapter.source];
+      const urls = (opts.urlsFor ?? ((source: string) => moduleFor(source)?.urls))(adapter.source);
       if (!urls) return adapter; // feeds: no retailer website involved
       const reason = await opts.robots.checkAll(urls);
       if (!reason) return adapter;
@@ -74,27 +73,4 @@ export async function gateAdapters(
     }),
   );
   return { adapters: gated, warnings };
-}
-
-/**
- * Wrap a fetch so that one refusal ends the conversation.
- *
- * The catalogue crawls make hundreds of requests per run, page by page and
- * with retries. Without this, a 403 on the first page would be followed by
- * every remaining page — each one refused, each one a little more like an
- * attempt to get through. After the first 401/403/429 nothing more is sent;
- * the error names the status, so the run is recorded as a refusal.
- */
-export function stopOnRefusal<A extends unknown[]>(
-  inner: (url: string, ...rest: A) => Promise<Response>,
-  state: { refused: number | null },
-): (url: string, ...rest: A) => Promise<Response> {
-  return async (url, ...rest) => {
-    if (state.refused !== null) {
-      throw new Error(`eerder in deze run geweigerd (${state.refused}); geen nieuwe verzoeken`);
-    }
-    const res = await inner(url, ...rest);
-    if (res.status === 401 || res.status === 403 || res.status === 429) state.refused = res.status;
-    return res;
-  };
 }

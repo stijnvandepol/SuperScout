@@ -1,9 +1,9 @@
 import { describe, expect, test, vi } from "vitest";
 import type { Product } from "@superscout/core";
 import { crawlAhAssortment } from "../src/assortment-runner";
-import { AH_AISLES } from "../src/adapters/ah/ah.taxonomy";
+import { AH_AISLES } from "../src/retailers/ah/ah.taxonomy";
 import { SqliteProductStore } from "../src/store/sqlite-product-store";
-import type { AhAssortmentSource } from "../src/adapters/ah/ah.assortment";
+import type { AhAssortmentSource } from "../src/retailers/ah/ah.assortment";
 
 function product(id: string, fetchedAt: string): Product {
   return {

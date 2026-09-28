@@ -52,4 +52,5 @@ COPY packages ./packages
 COPY apps ./apps
 RUN pnpm install --frozen-lockfile
 COPY --from=build /app/packages/ingestion/dist/ingest.cjs ./packages/ingestion/dist/ingest.cjs
+COPY --from=build /app/packages/ingestion/dist/capture.cjs ./packages/ingestion/dist/capture.cjs
 CMD ["node", "--experimental-sqlite", "packages/ingestion/dist/ingest.cjs"]
