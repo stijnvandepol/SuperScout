@@ -23,7 +23,7 @@ retailers/jumbo/
 docker exec superscout-ingestion node packages/ingestion/dist/capture.cjs <slug> [url]
 ```
 
-Dat controleert robots.txt, opent de pagina als `SuperScoutBot` en schrijft naar `/data/captures/<slug>/<tijd>/`: de gerenderde `page.html`, élke JSON-response die de pagina laadt, en een `index.json` die aanwijst welke response op een lijst aanbiedingen lijkt. Weigert de site of verbiedt robots.txt het, dan stopt het — en dan bouwen we die module niet.
+Of zonder serverlogin: start de workflow **Capture** in GitHub Actions met de slug(s); die draait hetzelfde commando op de server en zet een samenvatting in de log (`scripts/capture-report.mjs`). Het commando controleert robots.txt, opent de pagina als `SuperScoutBot` en schrijft naar `/data/captures/<slug>/<tijd>/`: de gerenderde `page.html`, élke JSON-response die de pagina laadt, en een `index.json` die aanwijst welke response op een lijst aanbiedingen lijkt. Weigert de site of verbiedt robots.txt het, dan stopt het — en dan bouwen we die module niet.
 
 **3. Kies de bron, in deze volgorde:**
 

@@ -78,11 +78,13 @@ async function main(): Promise<void> {
       console.error(`[capture] de site weigerde ons (${res.status()}); gestopt.`);
       process.exit(3);
     }
-    for (let i = 0; i < 12; i++) {
-      await page.mouse.wheel(0, 2000);
-      await page.waitForTimeout(400);
+    // Generous on purpose: PLUS only requests its list once it scrolls into
+    // view, well after the page looks loaded. One capture is one visit.
+    for (let i = 0; i < 20; i++) {
+      await page.mouse.wheel(0, 1500);
+      await page.waitForTimeout(600);
     }
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(4000);
     await Promise.all(pending);
     writeFileSync(join(dir, "page.html"), await page.content(), "utf-8");
   } finally {
