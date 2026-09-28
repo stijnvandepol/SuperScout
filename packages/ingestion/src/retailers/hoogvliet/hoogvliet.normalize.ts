@@ -1,9 +1,15 @@
-import { type DiscountMechanism, type Offer } from "@superscout/core";
+import { computeSavings, type DiscountMechanism, type Offer } from "@superscout/core";
 import type { HoogvlietRawOffer } from "./hoogvliet.raw";
 
 function toCents(value: string): number | null {
   const n = Number.parseFloat(value.replace(",", "."));
   return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : null;
+}
+
+/** "2. 05" or "4.10 - 7.60" -> cents of the first price. */
+function tilePrice(text: string | undefined): number | null {
+  const m = (text ?? "").replace(/\s+/g, "").match(/(\d+[.,]\d{2})/);
+  return m ? toCents(m[1]!) : null;
 }
 
 /**
@@ -32,6 +38,14 @@ export function normalizeHoogvlietOffer(raw: HoogvlietRawOffer, fetchedAt: strin
     if (price) currentPriceCents = toCents(price[1]!);
   }
 
+  // The tile's own prices, when it shows them: the promotion price and the
+  // struck-through regular price. They win over a price read from the label.
+  const now = tilePrice(raw.priceNow);
+  if (now !== null) currentPriceCents = now;
+  const was = tilePrice(raw.priceWas);
+  const originalPriceCents = was !== null && currentPriceCents !== null && was > currentPriceCents ? was : null;
+  const savings = computeSavings(currentPriceCents, originalPriceCents);
+
   const offer: Offer = {
     id: `hoogvliet:${raw.id}`,
     source: "hoogvliet",
@@ -39,9 +53,9 @@ export function normalizeHoogvlietOffer(raw: HoogvlietRawOffer, fetchedAt: strin
     title: raw.title.trim(),
     pricing: {
       currentPriceCents,
-      originalPriceCents: null,
-      savingsAbsoluteCents: null,
-      savingsPercent: null,
+      originalPriceCents,
+      savingsAbsoluteCents: savings.absoluteCents,
+      savingsPercent: savings.percent,
     },
     mechanism,
     validFrom: "",

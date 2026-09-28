@@ -4,13 +4,25 @@ import { scrapePage } from "../../browser/intercept";
 import type { HoogvlietRawOffer } from "./hoogvliet.raw";
 import { normalizeHoogvlietOffer } from "./hoogvliet.normalize";
 
-export const HOOGVLIET_OFFERS_URL =
-  "https://www.hoogvliet.com/INTERSHOP/web/WFS/org-webshop-Site/nl_NL/-/EUR/ViewStandardCatalog-Browse?CategoryName=aanbiedingen&CatalogID=schappen";
+/**
+ * The public offers page. The Intershop catalogue URL the adapter used before
+ * (`/INTERSHOP/web/WFS/…/ViewStandardCatalog-Browse`) is disallowed by
+ * Hoogvliet's robots.txt; this page is not, and the capture of 28 September
+ * 2026 showed it renders the same promotion tiles.
+ */
+export const HOOGVLIET_OFFERS_URL = "https://www.hoogvliet.com/aanbiedingen";
 
 /** Runs INSIDE the page (page.evaluate) — self-contained, no imports. */
 function extractHoogvlietOffers(): HoogvlietRawOffer[] {
   const clean = (s: string | null | undefined) => (s ?? "").replace(/\s+/g, " ").trim();
-  const tiles = Array.from(document.querySelectorAll(".promotionProductTile"));
+  // Tiles as the catalogue rendered them, or — on /aanbiedingen — the block
+  // around each offer link.
+  let tiles = Array.from(document.querySelectorAll(".promotionProductTile"));
+  if (!tiles.length) {
+    tiles = Array.from(document.querySelectorAll("a.product-title[href*='/aanbiedingen/']")).map(
+      (a) => a.closest(".product-all-info") ?? a.parentElement ?? a,
+    );
+  }
   const out: HoogvlietRawOffer[] = [];
 
   for (const tile of tiles) {
@@ -38,6 +50,10 @@ function extractHoogvlietOffers(): HoogvlietRawOffer[] {
       title,
       description: clean(tile.querySelector(".Short-Description")?.textContent) || undefined,
       promoLabel,
+      // Ranges ("2.05 - 3.80") keep their first, lowest price; spacing between
+      // the euro and cent spans is removed in the normalizer.
+      priceNow: clean(tile.querySelector(".non-strikethrough")?.textContent) || undefined,
+      priceWas: clean(tile.querySelector(".strikethrough div, .strikethrough")?.textContent) || undefined,
       url: href || undefined,
       image:
         tile.querySelector("img")?.getAttribute("src") ??

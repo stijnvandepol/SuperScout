@@ -1,7 +1,7 @@
 import { defineRetailer, withBrowser } from "../module";
 import { HoogvlietAdapter, HOOGVLIET_OFFERS_URL } from "./hoogvliet.adapter";
 
-/** Hoogvliet: Intershop catalogue page. Its robots.txt currently disallows this URL, so the gate skips it. */
+/** Hoogvliet: the public /aanbiedingen page, rendered in a browser. */
 export default defineRetailer({
   source: "hoogvliet",
   urls: [HOOGVLIET_OFFERS_URL],
