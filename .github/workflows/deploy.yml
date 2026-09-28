@@ -76,11 +76,19 @@ jobs:
               } catch { process.exit(1); }
             "
           }
-          for _ in $(seq 1 36); do
-            status "$since" && exit 0
-            sleep 10
-          done
-          echo "Geen verse status van de startrun na 6 minuten; start zelf een run."
+          # A deploy that only touches the web app leaves the worker image
+          # unchanged, so compose keeps the old container and no startrun comes.
+          # Waiting six minutes for it then is pure delay.
+          started=$(date -u -d "$(docker inspect -f '{{.State.StartedAt}}' superscout-ingestion)" +%s)
+          if [ $((since - started)) -lt 300 ]; then
+            for _ in $(seq 1 36); do
+              status "$since" && exit 0
+              sleep 10
+            done
+            echo "Geen verse status van de startrun na 6 minuten; start zelf een run."
+          else
+            echo "Worker niet herstart (draait al sinds $(date -u -d @"$started" +%H:%M)); start zelf een run."
+          fi
           # Offers only: the catalogue crawl has its own nightly pass.
           docker exec -e INGEST_ONCE=1 -e SKIP_ASSORTMENT=1 superscout-ingestion \
             node --experimental-sqlite packages/ingestion/dist/ingest.cjs 2>&1 | tail -20
@@ -131,4 +139,6 @@ jobs:
             curl -sf -o /dev/null "$SITE_URL/sitemap.xml" && break
             sleep 5
           done
-          node apps/web/scripts/indexnow.mjs
+          # The runner has no Node of its own; the web container does.
+          docker exec -i -e INDEXNOW_KEY -e SITE_URL superscout-web \
+            node --input-type=module - < apps/web/scripts/indexnow.mjs

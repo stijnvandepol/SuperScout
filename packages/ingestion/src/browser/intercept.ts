@@ -16,6 +16,11 @@ export interface InterceptOptions {
   timeoutMs?: number;
   /** For scrapePage: wait until this selector appears before extracting. */
   waitForSelector?: string;
+  /**
+   * For interceptJson: scroll while waiting. Some pages (PLUS) only request
+   * their offer list once the list scrolls into view.
+   */
+  scroll?: boolean;
   throttle?: HostThrottle;
 }
 
@@ -83,11 +88,12 @@ export async function interceptJson<T>(
     await page.goto(pageUrl, { waitUntil: "domcontentloaded", timeout: timeoutMs });
     const deadline = Date.now() + settleMs + 6000;
     while (!captured && Date.now() < deadline) {
+      if (options.scroll) await page.mouse.wheel(0, 1500).catch(() => {});
       await page.waitForTimeout(300);
     }
     lastHtml.set(pageUrl, await page.content().catch(() => ""));
     if (!captured) {
-      const sample = [...new Set(seen)].slice(0, 8).join(", ") || "geen";
+      const sample = [...new Set(seen)].slice(0, 12).join(", ") || "geen";
       throw new Error(`geen passende JSON-response op ${pageUrl}; wel gezien: ${sample}`);
     }
     return captured;
