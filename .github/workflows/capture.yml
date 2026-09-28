@@ -1,0 +1,55 @@
+name: Capture
+
+# Look at a chain's offers page from the production server, for building or
+# repairing its module (packages/ingestion/src/retailers/README.md, step 2).
+# Runs the worker's own `capture` — robots.txt checked, SuperScoutBot, one
+# visit per chain — and prints a summary to this job's log, so the module can
+# be written without shell access to the server. The files stay in
+# /data/captures for fixtures.
+
+on:
+  workflow_dispatch:
+    inputs:
+      slugs:
+        description: "Ketens, spatiegescheiden; slug=url voor een andere pagina dan de standaard"
+        required: true
+        default: "janlinders vomar spar ekoplaza boni nettorama mcd boonsmarkt dagwinkel coop"
+
+concurrency:
+  group: capture
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      slugs: ${{ steps.split.outputs.slugs }}
+    steps:
+      - id: split
+        env:
+          SLUGS: ${{ inputs.slugs }}
+        run: echo "slugs=$(jq -cn --arg s "$SLUGS" '$s | split(" ") | map(select(length > 0))')" >> "$GITHUB_OUTPUT"
+
+  capture:
+    needs: plan
+    runs-on: [self-hosted, linux]
+    strategy:
+      fail-fast: false
+      # One runner, and politeness is per site anyway; one chain at a time
+      # keeps each chain's summary in its own log.
+      max-parallel: 1
+      matrix:
+        target: ${{ fromJSON(needs.plan.outputs.slugs) }}
+    name: capture ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Capture and summarise
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          slug="${TARGET%%=*}"
+          url=""
+          [ "$slug" != "$TARGET" ] && url="${TARGET#*=}"
+          # Exit 2 (robots.txt) and 3 (refused) are answers, not failures.
+          docker exec superscout-ingestion node packages/ingestion/dist/capture.cjs "$slug" $url || echo "capture $slug stopte met code $?"
+          docker exec -i -e SLUG="$slug" superscout-ingestion \
+            node --input-type=module - < packages/ingestion/scripts/capture-report.mjs
