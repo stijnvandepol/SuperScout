@@ -76,7 +76,8 @@ export const RETAILERS = {
   // tot `capture` laat zien waar de aanbiedingen staan (zie
   // packages/ingestion/src/retailers/README.md). Coop gaat op in PLUS: de capture
   // van 28 september 2026 liet coop.nl/aanbiedingen doorsturen naar plus.nl,
-  // dus die aanbiedingen komen al binnen via de PLUS-module.
+  // dus die aanbiedingen komen al binnen via de PLUS-module. Stand per keten:
+  // packages/ingestion/src/retailers/README.md.
   janlinders: retailer({ name: "Jan Linders", sector: "supermarkt", ingested: false, bg: "#3d4035", fg: "#ffffff", offersUrl: "https://www.janlinders.nl" }),
   boni: retailer({ name: "Boni", sector: "supermarkt", ingested: false, bg: "#3d4035", fg: "#ffffff", offersUrl: "https://www.boni.nl" }),
   nettorama: retailer({ name: "Nettorama", sector: "supermarkt", ingested: false, bg: "#3d4035", fg: "#ffffff", offersUrl: "https://www.nettorama.nl" }),

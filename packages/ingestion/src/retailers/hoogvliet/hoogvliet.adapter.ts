@@ -9,6 +9,12 @@ import { normalizeHoogvlietOffer } from "./hoogvliet.normalize";
  * (`/INTERSHOP/web/WFS/…/ViewStandardCatalog-Browse`) is disallowed by
  * Hoogvliet's robots.txt; this page is not, and the capture of 28 September
  * 2026 showed it renders the same promotion tiles.
+ *
+ * It renders only the featured tiles, about twenty. The full list, and next
+ * week's, sit behind "toon alles" links into that same disallowed Intershop
+ * path (`ViewStandardCatalog-Browse?…PageSize=99,999`). So ~20 is what
+ * Hoogvliet lets a crawler see; do not "fix" the count by following those
+ * links. Asking Hoogvliet for permission or a feed is the way to more.
  */
 export const HOOGVLIET_OFFERS_URL = "https://www.hoogvliet.com/aanbiedingen";
 

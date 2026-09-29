@@ -56,3 +56,19 @@ export default defineRetailer({
 - **robots.txt.** De poort (`gate.ts`) controleert de `urls` van je module vóór elke run.
 - **Weigeringen.** Een 401/403/429 of captcha stopt die keten voor de run en zeven dagen daarna. Nooit omzeilen: geen andere User-Agent, geen stealth-plugins, geen proxy's.
 - **Een slechte dag.** Levert de keten ineens niets of minder dan de helft van normaal, dan houdt de worker de vorige, nog lopende aanbiedingen vast, bewaart de pagina in `/data/snapshots/` en meldt het op `/beheer` en `/status`.
+
+## Stand per keten (capture van 28–29 september 2026)
+
+| Keten | Bron | Opmerking |
+|---|---|---|
+| Dirk, Jumbo | eigen JSON-API | |
+| Ekoplaza | eigen zoek-API (`acties=true`) | |
+| PLUS | JSON die de pagina laadt, herkend op vorm | Coop stuurt door naar PLUS |
+| Aldi, DekaMarkt, Poiesz, Lidl, Sligro | pagina in de browser | geen JSON-bron gevonden |
+| Hoogvliet | `/aanbiedingen` in de browser | alleen de ~20 uitgelichte tegels; de volledige lijst staat op een pad dat robots.txt verbiedt |
+| AH, Jan Linders | — | weigeren SuperScoutBot (403) |
+| Dagwinkel | — | robots.txt onbereikbaar |
+| Vomar, Spar | — | alleen een bladerfolder, geen prijzen als data |
+| Boni, Nettorama, MCD, Boon's Markt | — | geen aanbiedingen op de site gevonden |
+
+Voor de ketens zonder bron is een feed (`docs/FEEDS.md`) of toestemming de nette weg.
