@@ -126,3 +126,32 @@ if (existsSync(htmlFile)) {
     console.log(`\n-- markup rond ${m[0].trim()}:\n${visible.slice(Math.max(0, m.index - 1500), m.index + 500).replace(/\s+/g, " ")}`);
   }
 }
+
+// How the page reaches the rest of its offers: links under the same path
+// (pages, weeks, categories, a folder), buttons ("Meer laden", "Volgende week")
+// and data-* attributes that point at a URL. Answers "why only 18 of them?".
+if (existsSync(htmlFile)) {
+  const html = readFileSync(htmlFile, "utf8");
+  const base = new URL(index.url);
+  const sameSection = new Set();
+  for (const [, href] of html.matchAll(/href="([^"#]+)"/g)) {
+    try {
+      const u = new URL(href.replace(/&amp;/g, "&"), base);
+      if (u.host.replace(/^www\./, "") === base.host.replace(/^www\./, "") && u.pathname.startsWith(base.pathname.replace(/\/$/, ""))) {
+        sameSection.add(u.pathname + u.search);
+      }
+    } catch {
+      // Not a URL.
+    }
+  }
+  console.log(`\n-- links onder ${base.pathname}: ${sameSection.size}`);
+  console.log(`   ${[...sameSection].slice(0, 40).join("\n   ")}`);
+  const buttons = new Set(
+    [...html.matchAll(/<button[^>]*>([\s\S]*?)<\/button>/g)]
+      .map(([, inner]) => inner.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim())
+      .filter((t) => t && t.length < 60),
+  );
+  console.log(`-- knoppen: ${[...buttons].slice(0, 30).join(" | ")}`);
+  const dataUrls = new Set([...html.matchAll(/data-[\w-]+="(https?:\/\/[^"]+|\/[^"]+)"/g)].map(([, v]) => v).filter((v) => !/\.(png|jpe?g|webp|svg|gif)/i.test(v)));
+  console.log(`-- data-url's: ${[...dataUrls].slice(0, 15).join("  ")}`);
+}
