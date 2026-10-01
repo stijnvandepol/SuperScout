@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { INGESTED_SUPERMARKETS } from "@superscout/core";
-import { liveChains } from "@/lib/chains";
+import { absenceReason, liveChains } from "@/lib/chains";
 import { readIngestStatus } from "@/lib/health";
 import { STORE_META } from "@/lib/format";
 
@@ -49,24 +49,10 @@ export default function StatusPage() {
       };
     } else if (chain) {
       state = { label: "Actueel", tone: "ok" };
-    } else if (r?.blockedSince) {
-      state = {
-        label: "Gepauzeerd",
-        tone: "off",
-        detail: `${STORE_META[slug].name} weigerde ons verzoek. We respecteren dat en proberen het over een week één keer opnieuw.`,
-      };
-    } else if (r?.error?.startsWith("robots.txt")) {
-      state = {
-        label: "Gepauzeerd",
-        tone: "off",
-        detail: `De robots.txt van ${STORE_META[slug].name} staat het ophalen niet toe. Dan halen we het niet op.`,
-      };
     } else {
-      state = {
-        label: "Tijdelijk niet beschikbaar",
-        tone: "warn",
-        detail: "Het ophalen lukte bij de laatste ronde niet. Meestal is dat de volgende dag verholpen.",
-      };
+      const reason = absenceReason(slug);
+      // Paused is our choice (the chain asked); anything else is a fault to fix.
+      state = { ...reason, tone: reason.label === "Gepauzeerd" ? "off" : "warn" };
     }
     return { slug, chain, state };
   }).sort((a, b) => STORE_META[a.slug].name.localeCompare(STORE_META[b.slug].name, "nl"));

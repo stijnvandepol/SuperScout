@@ -42,6 +42,7 @@ import { polite } from "./http/polite";
 import { lastHtml } from "./browser/intercept";
 import { assessCount, heldOffers, parseHistory, type RunCounts } from "./source-health";
 import { acquireLock } from "./run-lock";
+import { changedUrls, submitIndexNow } from "./indexnow";
 
 /**
  * Write a file so that a reader never sees it half-written.
@@ -78,6 +79,7 @@ const ROBOTS_MODE: RobotsMode = process.env.ROBOTS_MODE === "report" ? "report" 
 const COUNTS_OUT = process.env.COUNTS_OUT ?? "/data/ingest-history.jsonl";
 const SNAPSHOT_DIR = process.env.SNAPSHOT_DIR ?? "/data/snapshots";
 const LOCK_PATH = process.env.LOCK_PATH ?? "/data/ingest.lock";
+const SITE_URL = process.env.SITE_URL ?? "https://superscout.nl";
 /** Set to "1" to keep the rendered page of every browser chain — for new fixtures. */
 const SNAPSHOT_ALL = process.env.SNAPSHOT_ALL === "1";
 
@@ -429,7 +431,37 @@ async function ingestLocked(): Promise<void> {
 
   retainArchive(all, nowIso);
   recordPrices(offers, nowIso);
+  await notifyIndexNow(previousOffers, offers);
   await crawlCatalogue();
+}
+
+/**
+ * Announce today's changed pages to IndexNow; see indexnow.ts.
+ *
+ * Best-effort like the price history: a search engine being unreachable must
+ * never cost a day's offers, which are already written by now.
+ */
+async function notifyIndexNow(previous: Offer[], current: Offer[]): Promise<void> {
+  const key = process.env.INDEXNOW_KEY;
+  if (!key) return;
+
+  const urls = changedUrls(previous, current, {
+    site: SITE_URL,
+    catalogueChains: new Set(RETAILER_MODULES.filter((m) => m.catalogue).map((m) => m.source)),
+  });
+  if (urls.length === 0) {
+    console.log("[indexnow] niets veranderd, niets ingediend.");
+    return;
+  }
+
+  try {
+    const status = await submitIndexNow(urls, { key, site: SITE_URL });
+    // 200 accepted, 202 accepted while the key is being verified.
+    const ok = status === 200 || status === 202;
+    (ok ? console.log : console.error)(`[indexnow] ${urls.length} URL's ingediend -> HTTP ${status}`);
+  } catch (e) {
+    console.error("[indexnow] indienen mislukt (aanbiedingen staan er wel):", e);
+  }
 }
 
 function logReport(report: { results: { source: string; ok: boolean; offerCount: number; error?: string }[] }): void {

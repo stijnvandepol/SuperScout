@@ -11,7 +11,10 @@
  * matching `keyLocation`, which is why this lives at a fixed path rather than
  * at `/<key>.txt`.
  */
-export const dynamic = "force-static";
+// Per request, never static: the key is a runtime secret, and a static render
+// happens during `docker build`, where it does not exist — which baked a 404
+// into the image no matter what the container was started with.
+export const dynamic = "force-dynamic";
 
 export function GET() {
   const key = process.env.INDEXNOW_KEY;

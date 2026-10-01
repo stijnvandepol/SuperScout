@@ -41,6 +41,7 @@ const REQUEST_TIME_ROUTES = [
   "winkels/page.tsx",
   "prijs/[chain]/[slug]/page.tsx",
   "sitemap-prijzen.xml/route.ts",
+  "indexnow.txt/route.ts",
 ];
 
 describe("offer-driven routes are not baked into the build", () => {

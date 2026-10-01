@@ -53,7 +53,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const resolved = resolveBySlug(slug);
-  if (!resolved) return { title: "Aanbieding niet gevonden — SuperScout" };
+  if (!resolved) return { title: "Aanbieding niet gevonden" };
 
   const { offer, status } = resolved;
   const store = STORE_META[offer.source].name;
@@ -68,7 +68,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   // Expired promotions never render: the page redirects to the live offer for
   // the same product, or 404s. Metadata is computed in parallel with the page,
   // so this result is discarded — it exists only to keep the type honest.
-  if (status === "expired") return { title: "Aanbieding niet gevonden — SuperScout" };
+  if (status === "expired") return { title: "Aanbieding niet gevonden" };
 
   const upcoming = status === "upcoming";
   const title = `${offer.title}${price} bij ${store} — SuperScout`;

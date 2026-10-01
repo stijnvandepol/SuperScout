@@ -48,7 +48,7 @@ function liveOffer(product: Product) {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { chain, id } = await params;
   const product = resolve(chain, id);
-  if (!product) return { title: "Product niet gevonden — SuperScout" };
+  if (!product) return { title: "Product niet gevonden" };
 
   const store = STORE_META[product.source].name;
   const price = product.priceCents !== null ? formatEuro(product.priceCents) : null;

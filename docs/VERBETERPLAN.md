@@ -207,6 +207,14 @@ Opgelost in deze ronde:
 | **Bug: een ongedateerde gearchiveerde actie gold als "lopend"** (`archivedStatus` in `lib/offers.ts`). | Vijf ketens geven geen einddatum. Een DekaMarkt-actie uit augustus rendeerde daardoor 120 dagen lang als actie van deze week. Wat niet in het live bestand staat, is afgelopen. |
 | **Homepage: zoeken direct onder de kop**, populaire onderwerpen eronder en verborgen tijdens het zoeken. Voorbeeldtekst "Zoek bijv. koffie of kaas". | Wie voor het eerst komt, wil iets intypen. Op een telefoon stond de zoekbalk pas onder zeven knoppen. |
 
+**Export 1 oktober (laatste twee weken erbij).** De posities trekken aan (26–27 september: gemiddeld 27–34, was 50–85). De groei zit in de winkelpagina's: `/winkel/ah` +71 vertoningen (positie 44 → 35), "albert heijn korting" 35 → 23, "aanbiedingen van ah" op 9,7. Ook `/winkel/jumbo` +34 en `/winkel/poiesz` +32. "poiesz" staat op 23 en de tikfout "poeisz" op 20. Kleine ketens blijven de makkelijkste winst.
+
+| Wat | Waarom |
+|---|---|
+| **`/winkel/ah` gaf een 404** zodra AH geen aanbiedingen had, terwijl het de snelst groeiende pagina was. Een ondersteunde keten zonder data krijgt nu een eerlijke pagina: de reden (dezelfde als op `/status`, via `absenceReason`), een knop naar de site van de keten en de grootste kortingen elders. De pagina staat ook in de sitemap. | Een 404 vertelt Google een pagina te vergeten die net vertrouwen opbouwde. |
+| **IndexNow werkte nooit**: `/indexnow.txt` was `force-static` (gerenderd tijdens `docker build`, zonder sleutel, dus een ingebakken 404), en de deploy gaf `INDEXNOW_KEY` niet door aan `docker compose up`. Beide gerepareerd. Daarnaast dient de ingestion nu **elke ochtend** de veranderde URL's in (`packages/ingestion/src/indexnow.ts`), niet alleen bij een deploy. | Bing voedt ook DuckDuckGo, Ecosia en de zoekfunctie van ChatGPT en Copilot. Nieuwe acties staan er dan dezelfde dag in in plaats van na de volgende deploy. |
+| Dubbel "— SuperScout" in de niet-gevonden-titels. | Slordig in de zoekresultaten. |
+
 Open:
 
 1. **Waarom staat de Jumbo-catalogus stil sinds 18-09?** Controleer `docker logs superscout-ingestion | grep assortment`. Zonder verse catalogus vallen over 30 dagen ook die 15.000 pagina's uit de index.
