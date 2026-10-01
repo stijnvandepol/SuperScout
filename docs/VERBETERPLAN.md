@@ -185,6 +185,35 @@ Unieke titles en descriptions per winkel/categorie/actievorm, uit live data. Can
 5. **Productpagina's als lange termijn**: ze blijven bestaan als de actie voorbij is. Daar zit de prijshistorie, en die wordt met elke week waardevoller.
 6. **Core Web Vitals meten** in GSC (veldgegevens) en PageSpeed Insights op `/`, `/winkel/ah` en een aanbiedingspagina. Grootste bekende post: de homepage stuurt alle ~1.000 kaarten mee in de RSC-payload. Als INP of LCP op mobiel rood wordt: server-side zoeken via `/api/zoek` en alleen de eerste 48 kaarten meesturen.
 
+### Stand oktober 2026 (Search Console t/m 15 september)
+
+Drie maanden: 29 klikken, 2.376 vertoningen, gemiddelde positie ~47. Het verloop zegt meer dan het totaal:
+
+- **12–17 juli: positie ~10, 100–225 vertoningen per dag.** Bijna allemaal `/aanbieding/*`-pagina's op productzoekopdrachten ("sinji car display 7 inch" positie 6, "dirk ventilator" 11, "zibibbo terre siciliane aldi" 8,5). Productfragmenten met prijs zijn 31% van de vertoningen maar leveren 22 van de 29 klikken: de Product-markup doet zijn werk.
+- **Vanaf 18 juli: positie 60–85, 15–40 vertoningen per dag.** Die acties liepen af en hun URL's verdwenen. De twee best scorende pagina's ooit (`dekamarkt-136192` en `dirk-137769`, samen 13 van de 29 klikken) geven nu 404: ze verliepen vóór het archief bestond, en ketens zonder catalogus hebben bij een verlopen actie geen doel om naar door te sturen.
+- **Head-terms blijven onhaalbaar:** "supermarkt aanbiedingen", "supermarkt deals" en "beste aanbiedingen supermarkt" staan op 80–85. Winkel-zoekopdrachten ("jumbo aanbiedingen", "ah aanbieding") op 45–60. Kleine ketens doen het beter ("poiesz" 24).
+
+De conclusie is dezelfde als in augustus, nu met bewijs: **SuperScout rankt op producten, niet op "aanbiedingen"**. Elke week gaat die ranking verloren, omdat de URL bij een promotie hoort en niet bij een product.
+
+Opgelost in deze ronde:
+
+| Wat | Waarom |
+|---|---|
+| **Catalogusprijzen claimen niet meer dan ze waard zijn** (`lib/catalogue-freshness.ts`). Ouder dan 7 dagen: "laatst bekende prijs, opgehaald 18-09", geen prijs in de titel, geen Product-markup. Ouder dan 30 dagen: `noindex` en uit de productsitemap. | De AH-crawl staat op pauze (robots.txt) en ook de Jumbo-catalogus is sinds 18-09 niet ververst. Toch zeiden 38.000 pagina's "kost op dit moment" en "haalt dagelijks op", en gaven ze Google een prijs om als actueel te tonen. Dat is een misleidingsrisico voor de hele site. |
+| **Weeknummer in de titels**: homepage "Supermarkt aanbiedingen deze week (week 40)", winkelpagina's "Jumbo aanbiedingen deze week (week 40)". Het weeknummer volgt de cyclus van de keten (`promoWeek` in core), dus Jumbo staat op maandag nog op de folder van vorige week. | Zo wordt er gezocht ("jumbo aanbiedingen week 40"), en zo noemen de ketens hun eigen folder. Op de homepage staat het zoekwoord nu vooraan in plaats van het merk: op "superscout" zoekt nog niemand. |
+| **Geen verzonnen reden meer voor een ontbrekende keten** in de FAQ (en FAQPage-markup) en op `/winkels`. | De tekst zei "publiceert de folder op een manier die we niet kunnen inlezen". Voor AH is de echte reden de robots.txt. Nu staat er dat de keten ontbreekt, met een link naar `/status`. |
+
+| **Een blijvende pagina per product voor elke keten**: `/prijs/{keten}/{product}` (`lib/price-pages.ts`). Bovenaan staat wat je nu kunt kopen: de lopende actie, hetzelfde product bij een andere winkel, of vergelijkbare aanbiedingen. Daaronder volgen eerdere acties met datum en prijs. Een verlopen `/aanbieding/...` krijgt een 301 hierheen in plaats van een 404. Eigen sitemap (`sitemap-prijzen.xml`), en elke winkelpagina krijgt het blok "Komt vaak terug bij {winkel}". | Een terugkerende actie (de Dirk-ventilator) houdt nu zijn adres en zijn ranking. Bij AH en Jumbo stuurt de prijspagina door naar de catalogus: één product, één adres. De aparte sitemap laat in Search Console zien hoeveel prijspagina's Google opneemt; dat is het getal dat zegt of deze aanpak werkt. |
+| **Bug: een ongedateerde gearchiveerde actie gold als "lopend"** (`archivedStatus` in `lib/offers.ts`). | Vijf ketens geven geen einddatum. Een DekaMarkt-actie uit augustus rendeerde daardoor 120 dagen lang als actie van deze week. Wat niet in het live bestand staat, is afgelopen. |
+| **Homepage: zoeken direct onder de kop**, populaire onderwerpen eronder en verborgen tijdens het zoeken. Voorbeeldtekst "Zoek bijv. koffie of kaas". | Wie voor het eerst komt, wil iets intypen. Op een telefoon stond de zoekbalk pas onder zeven knoppen. |
+
+Open:
+
+1. **Waarom staat de Jumbo-catalogus stil sinds 18-09?** Controleer `docker logs superscout-ingestion | grep assortment`. Zonder verse catalogus vallen over 30 dagen ook die 15.000 pagina's uit de index.
+2. **Archiefretentie**: 120 dagen dekt geen seizoensproducten. De ventilator komt pas volgende zomer terug, en dan is zijn prijspagina inmiddels weg. Een slanke jaarindex (alleen sleutel, periode, prijs) zou dat oplossen zonder het archief van tientallen MB te laten groeien.
+3. **"Mijn winkels"**: de meeste mensen doen boodschappen bij één of twee ketens. Een voorkeur in `localStorage` die standaard filtert, scheelt elke bezoeker een handeling per bezoek.
+4. **Meten**: na de deploy `sitemap-prijzen.xml` indienen in Search Console en over vier weken vergelijken: hoeveel geïndexeerd, en welke zoekopdrachten erop binnenkomen.
+
 ### Monitoring
 
 | Wat | Waar | Hoe vaak |

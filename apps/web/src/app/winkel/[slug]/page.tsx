@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Offer, SupermarketSlug } from "@superscout/core";
 import type { CycleStart } from "@superscout/core";
-import { CATEGORY_LABEL, categorizeOffer, cycleStart } from "@superscout/core";
+import { CATEGORY_LABEL, categorizeOffer, cycleStart, promoWeek } from "@superscout/core";
 import { dataFetchedAt, getOffers } from "@/lib/offers";
 import { formatEuro, isExVat, STORE_META, offerSlug, validUntilShort } from "@/lib/format";
 import { DEAL_TYPES } from "@/lib/deal-types";
@@ -13,6 +13,8 @@ import { ImageHostPreconnect } from "@/components/ImageHostPreconnect";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd, faqJsonLd, offerListJsonLd, SITE_URL } from "@/lib/seo";
 import { liveNoun } from "@/lib/chains";
+import { productForOffer } from "@/lib/catalogue";
+import { allPricePages, promotionCount } from "@/lib/price-pages";
 
 export const revalidate = 1800;
 
@@ -30,9 +32,13 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const meta = STORE_META[slug as SupermarketSlug];
   if (!meta) return { title: "Winkel niet gevonden" };
-  const count = storeOffers(slug).length;
-  const title = `${meta.name} aanbiedingen deze week`;
-  const description = `Alle ${count} actuele ${meta.name}-aanbiedingen op één plek. Vergelijk de acties van deze week en vind direct de beste deal. Dagelijks ververst.`;
+  const offers = storeOffers(slug);
+  const count = offers.length;
+  // "Jumbo aanbiedingen week 40" is how this is searched, and how the chain
+  // labels its own folder — so the number is the chain's, not the calendar's.
+  const week = promoWeek(offers);
+  const title = `${meta.name} aanbiedingen deze week (week ${week})`;
+  const description = `Alle ${count} actuele ${meta.name}-aanbiedingen van week ${week} op één plek. Vergelijk de acties van deze week en vind direct de beste deal. Dagelijks ververst.`;
   const canonical = `/winkel/${slug}`;
   return {
     title,
@@ -105,7 +111,8 @@ export default async function StorePage({ params }: Params) {
           {meta.name} aanbiedingen deze week
         </h1>
         <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-ink-soft">
-          Alle {offers.length} acties uit de {meta.name} folder van deze week op één pagina,
+          Alle {offers.length} acties uit de {meta.name} folder van week {promoWeek(offers)} op één
+          pagina,
           gesorteerd op de grootste korting
           {cycle ? `. Nieuwe ${meta.name}-aanbiedingen starten op ${cycle.label}` : ""}. Zet je
           favorieten in je mandje en haal ze direct bij {meta.name}.
@@ -116,8 +123,64 @@ export default async function StorePage({ params }: Params) {
         <OfferGrid offers={offers} nowIso={nowIso} dataDate={dataFetchedAt()} list={{ kind: "winkel", slug }} />
       </div>
 
+      <Recurring store={meta.name} slug={slug as SupermarketSlug} />
+
       <StoreProse store={meta.name} slug={slug} offers={offers} faq={faq} />
     </div>
+  );
+}
+
+/**
+ * "Komt vaak terug" — the products this chain keeps putting on offer.
+ *
+ * Useful to a shopper (worth waiting for, worth stocking up on) and the main
+ * crawl path into the price pages: a store page is where Google already looks
+ * daily, and a page only reachable through a sitemap is a page Google does not
+ * think matters. Catalogue chains are skipped per item, since their price page
+ * redirects and a link should not.
+ */
+function Recurring({ store, slug }: { store: string; slug: SupermarketSlug }) {
+  const candidates = allPricePages()
+    .filter((page) => page.chain === slug && promotionCount(page) >= 2)
+    .sort((a, b) => promotionCount(b) - promotionCount(a) || a.latest.title.localeCompare(b.latest.title, "nl"));
+
+  const items: { href: string; title: string; count: number; now: boolean }[] = [];
+  for (const page of candidates) {
+    if (items.length === 12) break;
+    if (productForOffer(page.latest)) continue;
+    items.push({
+      href: `/prijs/${page.chain}/${page.slug}`,
+      title: page.latest.title,
+      count: promotionCount(page),
+      now: page.live.length > 0,
+    });
+  }
+  if (items.length < 3) return null;
+
+  return (
+    <section className="mt-14">
+      <h2 className="font-display text-xl font-bold tracking-tight">Komt vaak terug bij {store}</h2>
+      <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-ink-soft">
+        Deze producten zijn de afgelopen maanden het vaakst in de aanbieding geweest. Staat het nu
+        niet in de actie, dan is wachten meestal de moeite waard.
+      </p>
+      <ul className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((item) => (
+          <li key={item.href}>
+            <Link
+              href={item.href}
+              className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-3 transition-shadow hover:shadow-[0_8px_24px_rgba(0,0,0,0.07)]"
+            >
+              <span className="min-w-0 line-clamp-1 font-medium">{item.title}</span>
+              <span className="shrink-0 font-mono text-xs text-ink-soft">
+                {item.now ? <strong className="text-fresh">nu </strong> : null}
+                {item.count}×
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

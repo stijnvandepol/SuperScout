@@ -21,6 +21,7 @@ export function OfferExplorer({
   total,
   storeOptions,
   categoryOptions,
+  belowSearch,
 }: {
   /**
    * The offers to explore. With `total` set, this is only the first window
@@ -42,6 +43,15 @@ export function OfferExplorer({
   /** Filter options for the full set, so the dropdowns are right before it loads. */
   storeOptions?: SupermarketSlug[];
   categoryOptions?: CategorySlug[];
+  /**
+   * Rendered directly under the search box — the homepage's popular topics.
+   *
+   * Search is what a first-time visitor came to do, so it sits right under the
+   * heading; quick picks follow it rather than standing between the visitor
+   * and the box. Passed in as a server-rendered node, so its links stay in
+   * the HTML for crawlers.
+   */
+  belowSearch?: React.ReactNode;
 }) {
   const [offers, setOffers] = useState(initialOffers);
   const [complete, setComplete] = useState(total === undefined || total <= initialOffers.length);
@@ -217,11 +227,17 @@ export function OfferExplorer({
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Zoek een product…"
+          // An example tells a first-time visitor what kind of thing to type:
+          // a product, not a store or a recipe.
+          placeholder="Zoek bijv. koffie of kaas"
           aria-label="Zoek aanbiedingen"
           className="w-full rounded-2xl border border-line bg-surface py-4 pl-14 pr-5 font-display text-lg outline-none transition-colors placeholder:text-ink-soft/70 focus:border-deal focus:ring-4 focus:ring-deal/20"
         />
       </div>
+
+      {/* Hidden while searching: then the results are the answer, and the
+          quick picks would only push them further down a phone screen. */}
+      {belowSearch && !query ? <div className="mt-3">{belowSearch}</div> : null}
 
       {/* Filters — compact dropdowns keep the page calm (no chip walls) */}
       <div className="-mx-5 mt-4 flex gap-2 overflow-x-auto px-5 no-scrollbar sm:mx-0 sm:flex-wrap sm:px-0">

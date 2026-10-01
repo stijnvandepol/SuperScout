@@ -13,6 +13,7 @@ import {
 import { productPath } from "@superscout/core";
 import { currentEquivalent, getOffers, resolveBySlug } from "@/lib/offers";
 import { productForOffer } from "@/lib/catalogue";
+import { pricePath } from "@/lib/price-pages";
 import { insightFor } from "@/lib/price-history";
 
 import {
@@ -120,15 +121,19 @@ export default async function OfferPage({ params }: Params) {
    * a single hop forever. A stored redirect would point at last week's
    * promotion, which itself expires, and the chain would grow a link a week.
    *
-   * The product page is preferred over the current promotion because it is
-   * permanent: sending an expired URL to this week's offer only moves the
-   * problem to next week, while the catalogue entry is there whether or not
-   * anything is discounted. Only two chains have a catalogue so far, so the
-   * promotion remains the fallback.
+   * A permanent page is preferred over the current promotion: sending an
+   * expired URL to this week's offer only moves the problem to next week. The
+   * catalogue page where the chain has one, otherwise the product's price page
+   * (`/prijs/...`), which leads with what is on offer now — so the visitor
+   * still lands on something they can act on, and the ranking this URL earned
+   * moves to an address that survives the next rollover.
    */
   if (status === "expired") {
     const catalogued = productForOffer(offer);
     if (catalogued) permanentRedirect(productPath(catalogued));
+
+    const durable = pricePath(offer);
+    if (durable) permanentRedirect(durable);
 
     const replacement = currentEquivalent(offer);
     if (replacement) permanentRedirect(`/aanbieding/${offerSlug(replacement)}`);
@@ -364,15 +369,19 @@ function TopicComparisonLink({ offer }: { offer: Offer }) {
  */
 function CataloguePermalink({ offer }: { offer: Offer }) {
   const product = productForOffer(offer);
-  if (!product) return null;
+  // No catalogue for six of the chains; their permanent page is the price page.
+  const href = product ? productPath(product) : pricePath(offer);
+  if (!href) return null;
 
   return (
     <p className="mt-6 text-sm leading-relaxed text-ink-soft">
       <Link
-        href={productPath(product)}
+        href={href}
         className="font-medium text-ink underline decoration-deal decoration-2 underline-offset-2"
       >
-        Bekijk de vaste prijs en prijshistorie van dit product
+        {product
+          ? "Bekijk de vaste prijs en prijshistorie van dit product"
+          : "Hoe vaak is dit in de aanbieding?"}
       </Link>{" "}
       — die pagina blijft bestaan, ook als deze actie is afgelopen.
     </p>

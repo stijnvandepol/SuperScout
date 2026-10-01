@@ -287,7 +287,20 @@ export function resolveBySlug(slug: string): ResolvedOffer | undefined {
   const archived = getArchivedOffers().find((o) => offerSlug(o) === slug);
   if (!archived) return undefined;
 
-  return { offer: archived, status: offerStatus(archived, new Date().toISOString()) };
+  return { offer: archived, status: archivedStatus(archived, new Date().toISOString()) };
+}
+
+/**
+ * Where an offer that is *not* in the live set stands.
+ *
+ * `offerStatus` reads the dates, and five chains publish none: an undated
+ * offer can never be past its end, so it read as "active" for its whole 120
+ * days in the archive — an August DekaMarkt promotion rendered as this week's
+ * deal. The live file is the authority on what runs today; anything missing
+ * from it has ended, unless its dates say it has yet to start.
+ */
+export function archivedStatus(offer: Offer, nowIso: string): OfferStatus {
+  return offerStatus(offer, nowIso) === "upcoming" ? "upcoming" : "expired";
 }
 
 /**

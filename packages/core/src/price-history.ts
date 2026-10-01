@@ -1,4 +1,5 @@
 import type { Offer } from "./offer";
+import { titleSlug } from "./product-identity";
 
 /**
  * Recording what things cost, so that in six months we can say whether €2,99
@@ -38,6 +39,21 @@ export function priceKey(offer: Offer): string | null {
   const name = normaliseTitle(offer.title);
   if (name.length < 3) return null;
   return `${offer.source}|${name}`;
+}
+
+/**
+ * The URL tail of a product's durable price page: `/prijs/{chain}/{priceSlug}`.
+ *
+ * Derived from the same normalised title as `priceKey`, so the page, the price
+ * history and the "same product, still on offer" lookup all agree on what one
+ * product is. Title-keyed, which a catalogue id would beat (a chain rewording a
+ * product starts a new page) — but the promotion feeds of the chains without a
+ * catalogue carry no product id at all, only a promotion id that changes weekly.
+ */
+export function priceSlug(offer: Pick<Offer, "title">): string | null {
+  const name = normaliseTitle(offer.title);
+  if (name.length < 3) return null;
+  return titleSlug(name) || null;
 }
 
 /**

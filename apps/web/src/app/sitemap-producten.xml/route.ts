@@ -1,5 +1,6 @@
 import { INGESTED_SUPERMARKETS } from "@superscout/core";
 import { catalogueSize, SITEMAP_CHUNK_SIZE } from "@/lib/catalogue";
+import { indexableSince } from "@/lib/catalogue-freshness";
 import { SITE_URL } from "@/lib/seo";
 
 /**
@@ -34,9 +35,12 @@ export const dynamic = "force-dynamic";
 
 export async function GET(): Promise<Response> {
   const chunks: string[] = [];
+  // Products whose price we stopped confirming say noindex on their page; a
+  // sitemap that still listed them would ask Google to crawl what it may not keep.
+  const since = indexableSince();
 
   for (const chain of INGESTED_SUPERMARKETS) {
-    const total = catalogueSize(chain);
+    const total = catalogueSize(chain, since);
     if (total === 0) continue;
 
     const pages = Math.ceil(total / SITEMAP_CHUNK_SIZE);

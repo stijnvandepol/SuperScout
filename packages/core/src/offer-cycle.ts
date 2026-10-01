@@ -1,4 +1,5 @@
 import type { Offer } from "./offer";
+import { isoWeekNumber } from "./weekly-picks";
 
 /**
  * Which day of the week a chain starts a new promotion cycle.
@@ -88,4 +89,27 @@ export function cycleStartsBySource(offers: Offer[]): Map<string, CycleStart> {
     if (start) starts.set(source, start);
   }
   return starts;
+}
+
+/**
+ * The week number a chain's *current* folder carries.
+ *
+ * Search demand around weekly deals is quoted per week ("jumbo aanbiedingen
+ * week 40"), and every chain labels its folder that way. Today's ISO week is
+ * the wrong answer for half of them: Jumbo, PLUS and Dirk run Wednesday to
+ * Tuesday, so on a Monday their running folder is still last week's number.
+ *
+ * So the week is taken from the day the current cycle began — the most recent
+ * occurrence of the chain's start weekday — and only falls back to today's ISO
+ * week when the data supports no cycle (the chains that publish no dates).
+ */
+export function promoWeek(offers: Offer[], now: Date = new Date()): number {
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const start = cycleStart(offers);
+  if (!start) return isoWeekNumber(today);
+
+  const todayWeekday = (today.getUTCDay() + 6) % 7;
+  const daysSinceStart = (todayWeekday - start.weekday + 7) % 7;
+  const cycleBegan = new Date(today.getTime() - daysSinceStart * 86_400_000);
+  return isoWeekNumber(cycleBegan);
 }

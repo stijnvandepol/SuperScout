@@ -20,10 +20,23 @@ import {
 // lib/offers.ts for what a build-time prerender of this page contains.
 export const dynamic = "force-dynamic";
 
-// Filtered/searched variants (?q=…) all canonicalise to the clean homepage.
-export const metadata: Metadata = {
-  alternates: { canonical: "/", types: SITE_FEED_ALTERNATE },
-};
+/**
+ * The query first, the brand last.
+ *
+ * The layout's default title led with "SuperScout", a name nobody searches for
+ * yet — Search Console shows no query containing it. What people do type is
+ * "supermarkt aanbiedingen (deze week / week 40)", and a title is read and
+ * weighted from the front. `absolute` because a root layout's template does not
+ * apply to the page in its own segment.
+ */
+export function generateMetadata(): Metadata {
+  const week = isoWeek(new Date());
+  return {
+    title: { absolute: `Supermarkt aanbiedingen deze week (week ${week}) — SuperScout` },
+    // Filtered/searched variants (?q=…) all canonicalise to the clean homepage.
+    alternates: { canonical: "/", types: SITE_FEED_ALTERNATE },
+  };
+}
 
 /** ISO 8601 week number — offers roll over weekly, so the hero names the week. */
 function isoWeek(date: Date): number {
@@ -46,9 +59,13 @@ function isoWeek(date: Date): number {
 function buildFaq(): { q: string; a: React.ReactNode; aText: string }[] {
   const chains = chainSentence();
   const missing = missingChains();
+  // No reason given here: a chain can be missing because its page changed or
+  // because its robots.txt asks us to stay away (Albert Heijn), and a single
+  // stock explanation in FAQPage markup is false for one of them. The status
+  // page states the actual reason per chain.
   const gap =
     missing.length > 0
-      ? ` ${dutchList(missing.map((m) => m.name))} ${missing.length === 1 ? "ontbreekt" : "ontbreken"} op dit moment; die ${missing.length === 1 ? "keten publiceert" : "ketens publiceren"} de folder tijdelijk op een manier die we niet kunnen inlezen.`
+      ? ` ${dutchList(missing.map((m) => m.name))} ${missing.length === 1 ? "ontbreekt" : "ontbreken"} op dit moment; op de statuspagina staat waarom.`
       : "";
 
   return [
@@ -152,9 +169,6 @@ export default function Home() {
             </Link>
             .
           </p>
-          <div className="mt-4">
-            <TopicLinks limit={8} label="Populair" />
-          </div>
         </header>
 
         {/* Only the first 48 cross into the page: OfferExplorer is a client
@@ -168,6 +182,7 @@ export default function Home() {
           nowIso={nowIso}
           dataDate={dataDate}
           stat={`${total} aanbiedingen · ${stores} winkels`}
+          belowSearch={<TopicLinks limit={8} label="Populair" />}
         />
 
         {/* Indexable explainer + FAQ. Lives below the fold so the tool stays front and centre. */}

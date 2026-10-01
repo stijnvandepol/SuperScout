@@ -10,9 +10,14 @@ export default function robots(): MetadataRoute.Robots {
       // value, and /api would only spend crawl budget on data Google cannot use.
       disallow: ["/mandje", "/volglijst", "/beheer", "/api/"],
     },
-    // Two sitemaps: the site's own pages, and the product catalogue — which is
-    // an order of magnitude larger and changes on a different rhythm.
-    sitemap: [`${SITE_URL}/sitemap.xml`, `${SITE_URL}/sitemap-producten.xml`],
+    // The site's own pages; the product catalogue, an order of magnitude larger
+    // and on a different rhythm; and the per-product price pages, separate so
+    // Search Console reports their indexing on its own.
+    sitemap: [
+      `${SITE_URL}/sitemap.xml`,
+      `${SITE_URL}/sitemap-producten.xml`,
+      `${SITE_URL}/sitemap-prijzen.xml`,
+    ],
     host: SITE_URL,
   };
 }
