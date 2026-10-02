@@ -46,6 +46,14 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build image & (re)start container
+        # docker-compose.yml reads these as ${VAR:-}; without them here every
+        # container started with an empty key, /indexnow.txt answered 404 and
+        # no IndexNow submission was ever accepted. Unset secrets stay empty,
+        # which keeps the old behaviour.
+        env:
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+          GOOGLE_SITE_VERIFICATION: ${{ secrets.GOOGLE_SITE_VERIFICATION }}
+          BING_SITE_VERIFICATION: ${{ secrets.BING_SITE_VERIFICATION }}
         run: docker compose up -d --build
 
       # A container restart already kicks off an ingest, but it runs the

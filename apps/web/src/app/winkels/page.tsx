@@ -90,10 +90,17 @@ function UnavailableChains() {
       </h2>
       <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-ink-soft">
         {dutchList(missing.map((m) => m.name))}{" "}
-        {missing.length === 1 ? "hoort" : "horen"} er ook bij, maar{" "}
-        {missing.length === 1 ? "publiceert" : "publiceren"} de folder op dit moment op een manier
-        die we niet kunnen inlezen. We laten die acties liever weg dan dat we je verouderde prijzen
-        voorschotelen.
+        {missing.length === 1 ? "hoort" : "horen"} er ook bij, maar we kunnen{" "}
+        {missing.length === 1 ? "die aanbiedingen" : "hun aanbiedingen"} op dit moment niet
+        ophalen. We laten die acties liever weg dan dat we je verouderde prijzen voorschotelen. Op
+        de{" "}
+        <Link
+          href="/status"
+          className="font-bold underline decoration-deal decoration-2 underline-offset-2"
+        >
+          statuspagina
+        </Link>{" "}
+        staat per winkel waarom.
       </p>
     </section>
   );

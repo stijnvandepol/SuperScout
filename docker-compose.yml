@@ -68,6 +68,9 @@ services:
       - STATUS_OUT=/data/ingest-status.json
       # Runs once on start, then every morning at this UTC hour (5 ≈ 07:00 NL).
       - INGEST_HOUR=5
+      # Daily IndexNow ping for the pages that changed (Bing, and through it
+      # DuckDuckGo, Ecosia, ChatGPT search). Empty = skip; same key as web.
+      - INDEXNOW_KEY=${INDEXNOW_KEY:-}
     volumes:
       - offers-data:/data
     restart: unless-stopped

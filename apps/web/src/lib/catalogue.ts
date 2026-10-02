@@ -176,15 +176,26 @@ export function productForOffer(offer: Offer): Product | undefined {
   }
 }
 
-/** How many products the catalogue holds, overall or for one chain. */
-export function catalogueSize(chain?: SupermarketSlug): number {
+/**
+ * How many products the catalogue holds, overall or for one chain.
+ *
+ * `fetchedSince` (ISO) counts only rows confirmed on or after that moment. The
+ * sitemap index passes it so that its chunk count agrees with what the chunks
+ * list — counting stale rows the chunks then skip would announce empty files.
+ */
+export function catalogueSize(chain?: SupermarketSlug, fetchedSince?: string): number {
   const handle = connect();
   if (!handle) return 0;
 
+  // ISO-8601 UTC compares correctly as text, and (source, fetched_at) is indexed.
+  const since = fetchedSince ?? "";
+
   try {
     const row = chain
-      ? handle.prepare("SELECT COUNT(*) AS n FROM products WHERE source = ?").get(chain)
-      : handle.prepare("SELECT COUNT(*) AS n FROM products").get();
+      ? handle
+          .prepare("SELECT COUNT(*) AS n FROM products WHERE source = ? AND fetched_at >= ?")
+          .get(chain, since)
+      : handle.prepare("SELECT COUNT(*) AS n FROM products WHERE fetched_at >= ?").get(since);
     return Number((row as { n: number } | undefined)?.n ?? 0);
   } catch {
     return 0;
@@ -195,12 +206,14 @@ export function catalogueSize(chain?: SupermarketSlug): number {
  * Every product id for a chain, for the sitemap.
  *
  * Returns ids and titles only: pulling 42.000 full rows to build a URL list
- * would read far more than the sitemap needs.
+ * would read far more than the sitemap needs. `fetchedSince` must match the
+ * value given to `catalogueSize`, or the chunk boundaries drift apart.
  */
 export function productIndex(
   chain: SupermarketSlug,
   limit: number,
   offset: number,
+  fetchedSince = "",
 ): { sourceProductId: string; title: string; fetchedAt: string }[] {
   const handle = connect();
   if (!handle) return [];
@@ -209,9 +222,10 @@ export function productIndex(
     return handle
       .prepare(
         `SELECT source_product_id, title, fetched_at FROM products
-         WHERE source = ? ORDER BY source_product_id LIMIT ? OFFSET ?`,
+         WHERE source = ? AND fetched_at >= ?
+         ORDER BY source_product_id LIMIT ? OFFSET ?`,
       )
-      .all(chain, limit, offset)
+      .all(chain, fetchedSince, limit, offset)
       .map((row) => {
         const r = row as unknown as {
           source_product_id: string;

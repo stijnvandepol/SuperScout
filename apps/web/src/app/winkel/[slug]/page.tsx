@@ -3,8 +3,15 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Offer, SupermarketSlug } from "@superscout/core";
 import type { CycleStart } from "@superscout/core";
-import { CATEGORY_LABEL, categorizeOffer, cycleStart } from "@superscout/core";
-import { dataFetchedAt, getOffers } from "@/lib/offers";
+import {
+  CATEGORY_LABEL,
+  categorizeOffer,
+  cycleStart,
+  INGESTED_SUPERMARKETS,
+  promoWeek,
+  toCardOffer,
+} from "@superscout/core";
+import { byBiggestDiscount, dataFetchedAt, getOffers } from "@/lib/offers";
 import { formatEuro, isExVat, STORE_META, offerSlug, validUntilShort } from "@/lib/format";
 import { DEAL_TYPES } from "@/lib/deal-types";
 import { OfferGrid } from "@/components/OfferGrid";
@@ -12,7 +19,10 @@ import { listOffers } from "@/lib/lists";
 import { ImageHostPreconnect } from "@/components/ImageHostPreconnect";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd, faqJsonLd, offerListJsonLd, SITE_URL } from "@/lib/seo";
-import { liveNoun } from "@/lib/chains";
+import { absenceReason, chainSentence, liveChains, liveNoun } from "@/lib/chains";
+import { OfferCard } from "@/components/OfferCard";
+import { productForOffer } from "@/lib/catalogue";
+import { allPricePages, promotionCount } from "@/lib/price-pages";
 
 export const revalidate = 1800;
 
@@ -30,9 +40,28 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
   const meta = STORE_META[slug as SupermarketSlug];
   if (!meta) return { title: "Winkel niet gevonden" };
-  const count = storeOffers(slug).length;
-  const title = `${meta.name} aanbiedingen deze week`;
-  const description = `Alle ${count} actuele ${meta.name}-aanbiedingen op één plek. Vergelijk de acties van deze week en vind direct de beste deal. Dagelijks ververst.`;
+  const offers = storeOffers(slug);
+  const count = offers.length;
+
+  if (count === 0 && isSupported(slug)) {
+    // Honest about the gap in the snippet itself: someone searching "albert
+    // heijn korting" learns before clicking that the chain's own site has the
+    // list, and that this page compares what the others have.
+    const title = `${meta.name} aanbiedingen — vergelijk met andere supermarkten`;
+    const description = `De ${meta.name}-aanbiedingen staan op dit moment niet op SuperScout; die vind je op de site van ${meta.name}. Hier zie je wat ${chainSentence()} deze week in de aanbieding hebben.`;
+    return {
+      title,
+      description,
+      alternates: { canonical: `/winkel/${slug}` },
+      openGraph: { title, description, type: "website", locale: "nl_NL", url: `/winkel/${slug}` },
+    };
+  }
+
+  // "Jumbo aanbiedingen week 40" is how this is searched, and how the chain
+  // labels its own folder — so the number is the chain's, not the calendar's.
+  const week = promoWeek(offers);
+  const title = `${meta.name} aanbiedingen deze week (week ${week})`;
+  const description = `Alle ${count} actuele ${meta.name}-aanbiedingen van week ${week} op één plek. Vergelijk de acties van deze week en vind direct de beste deal. Dagelijks ververst.`;
   const canonical = `/winkel/${slug}`;
   return {
     title,
@@ -55,7 +84,21 @@ export default async function StorePage({ params }: Params) {
   const { slug } = await params;
   const meta = STORE_META[slug as SupermarketSlug];
   const offers = listOffers("winkel", slug) ?? [];
-  if (!meta || offers.length === 0) notFound();
+  if (!meta) notFound();
+  if (offers.length === 0) {
+    /*
+     * A chain we cover but cannot show today (Albert Heijn: its robots.txt).
+     *
+     * This used to 404, and Search Console caught what that cost: /winkel/ah
+     * was the fastest-growing page on the site (position 44 to 35, "albert
+     * heijn korting" 35 to 23) while answering every visit with "niet
+     * gevonden". A 404 tells Google to drop a page it was starting to trust;
+     * a page that says why, links to the chain and shows the alternatives is
+     * what the visitor needed anyway.
+     */
+    if (!isSupported(slug)) notFound();
+    return <UnavailableStore slug={slug as SupermarketSlug} />;
+  }
 
   const nowIso = new Date().toISOString();
   const canonical = `/winkel/${slug}`;
@@ -105,7 +148,8 @@ export default async function StorePage({ params }: Params) {
           {meta.name} aanbiedingen deze week
         </h1>
         <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-ink-soft">
-          Alle {offers.length} acties uit de {meta.name} folder van deze week op één pagina,
+          Alle {offers.length} acties uit de {meta.name} folder van week {promoWeek(offers)} op één
+          pagina,
           gesorteerd op de grootste korting
           {cycle ? `. Nieuwe ${meta.name}-aanbiedingen starten op ${cycle.label}` : ""}. Zet je
           favorieten in je mandje en haal ze direct bij {meta.name}.
@@ -116,8 +160,140 @@ export default async function StorePage({ params }: Params) {
         <OfferGrid offers={offers} nowIso={nowIso} dataDate={dataFetchedAt()} list={{ kind: "winkel", slug }} />
       </div>
 
+      <Recurring store={meta.name} slug={slug as SupermarketSlug} />
+
       <StoreProse store={meta.name} slug={slug} offers={offers} faq={faq} />
     </div>
+  );
+}
+
+function isSupported(slug: string): boolean {
+  return INGESTED_SUPERMARKETS.includes(slug as SupermarketSlug);
+}
+
+function UnavailableStore({ slug }: { slug: SupermarketSlug }) {
+  const meta = STORE_META[slug];
+  const reason = absenceReason(slug);
+  const nowIso = new Date().toISOString();
+  const elsewhere = byBiggestDiscount(getOffers()).slice(0, 24);
+  const others = liveChains();
+
+  return (
+    <div className="mx-auto max-w-6xl px-5 pb-24">
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", path: "/" },
+          { name: "Winkels", path: "/winkels" },
+          { name: meta.name, path: `/winkel/${slug}` },
+        ])}
+      />
+      <header className="pb-6 pt-8">
+        <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+          {meta.name} aanbiedingen
+        </h1>
+        <div className="mt-5 max-w-2xl rounded-2xl border border-line bg-surface-2 p-5">
+          <p className="font-mono text-[11px] font-bold uppercase tracking-widest text-ink-soft">
+            {reason.label}
+          </p>
+          <p className="mt-2 text-[15px] leading-relaxed">
+            De aanbiedingen van {meta.name} kunnen we op dit moment niet tonen. {reason.detail}
+          </p>
+          <a
+            href={meta.offersUrl}
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            className="mt-4 inline-block rounded-full px-6 py-3 font-display text-sm font-bold shadow-sm transition-opacity hover:opacity-90"
+            style={{ background: meta.bg, color: meta.fg }}
+          >
+            Bekijk de aanbiedingen op de site van {meta.name} →
+          </a>
+        </div>
+      </header>
+
+      <section>
+        <h2 className="font-display text-xl font-bold tracking-tight">
+          Deze week in de aanbieding bij andere supermarkten
+        </h2>
+        <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-ink-soft">
+          De grootste kortingen van deze week bij {chainSentence()}.
+        </p>
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {elsewhere.map((offer, i) => (
+            <OfferCard key={offer.id} offer={toCardOffer(offer)} nowIso={nowIso} priority={i === 0} />
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-14">
+        <h2 className="font-display text-xl font-bold tracking-tight">Andere supermarkten</h2>
+        <ul className="mt-4 flex flex-wrap gap-2">
+          {others.map((chain) => (
+            <li key={chain.slug}>
+              <Link
+                href={`/winkel/${chain.slug}`}
+                className="inline-block rounded-full border border-line bg-surface px-4 py-2 text-sm font-medium hover:border-ink"
+              >
+                {chain.name} aanbiedingen
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
+  );
+}
+
+/**
+ * "Komt vaak terug" — the products this chain keeps putting on offer.
+ *
+ * Useful to a shopper (worth waiting for, worth stocking up on) and the main
+ * crawl path into the price pages: a store page is where Google already looks
+ * daily, and a page only reachable through a sitemap is a page Google does not
+ * think matters. Catalogue chains are skipped per item, since their price page
+ * redirects and a link should not.
+ */
+function Recurring({ store, slug }: { store: string; slug: SupermarketSlug }) {
+  const candidates = allPricePages()
+    .filter((page) => page.chain === slug && promotionCount(page) >= 2)
+    .sort((a, b) => promotionCount(b) - promotionCount(a) || a.latest.title.localeCompare(b.latest.title, "nl"));
+
+  const items: { href: string; title: string; count: number; now: boolean }[] = [];
+  for (const page of candidates) {
+    if (items.length === 12) break;
+    if (productForOffer(page.latest)) continue;
+    items.push({
+      href: `/prijs/${page.chain}/${page.slug}`,
+      title: page.latest.title,
+      count: promotionCount(page),
+      now: page.live.length > 0,
+    });
+  }
+  if (items.length < 3) return null;
+
+  return (
+    <section className="mt-14">
+      <h2 className="font-display text-xl font-bold tracking-tight">Komt vaak terug bij {store}</h2>
+      <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-ink-soft">
+        Deze producten zijn de afgelopen maanden het vaakst in de aanbieding geweest. Staat het nu
+        niet in de actie, dan is wachten meestal de moeite waard.
+      </p>
+      <ul className="mt-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map((item) => (
+          <li key={item.href}>
+            <Link
+              href={item.href}
+              className="flex items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-3 transition-shadow hover:shadow-[0_8px_24px_rgba(0,0,0,0.07)]"
+            >
+              <span className="min-w-0 line-clamp-1 font-medium">{item.title}</span>
+              <span className="shrink-0 font-mono text-xs text-ink-soft">
+                {item.now ? <strong className="text-fresh">nu </strong> : null}
+                {item.count}×
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

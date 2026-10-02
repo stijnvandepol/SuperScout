@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import type { Offer } from "@superscout/core";
+import { INGESTED_SUPERMARKETS } from "@superscout/core";
 import { categoriesPresent, getOffers } from "@/lib/offers";
 import { offerSlug } from "@/lib/format";
 import { DEAL_TYPES } from "@/lib/deal-types";
@@ -36,14 +37,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // params that Next does not XML-escape, which corrupts the whole sitemap.
   }));
 
-  const storePages: MetadataRoute.Sitemap = [...new Set(offers.map((o) => o.source))].map(
-    (source) => ({
-      url: `${SITE_URL}/winkel/${source}`,
-      lastModified: newestFetch(offers.filter((o) => o.source === source)),
-      changeFrequency: "daily",
-      priority: 0.9,
-    }),
-  );
+  // Every supported chain, live or not: a paused chain's page explains the gap
+  // and serves 200, and it keeps ranking for the chain's name meanwhile.
+  const storePages: MetadataRoute.Sitemap = [
+    ...new Set([...offers.map((o) => o.source), ...INGESTED_SUPERMARKETS]),
+  ].map((source) => ({
+    url: `${SITE_URL}/winkel/${source}`,
+    lastModified: newestFetch(offers.filter((o) => o.source === source)) ?? siteModified,
+    changeFrequency: "daily",
+    priority: 0.9,
+  }));
 
   const categoryPages: MetadataRoute.Sitemap = categoriesPresent().map((c) => ({
     url: `${SITE_URL}/categorie/${c.slug}`,

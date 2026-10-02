@@ -6,7 +6,8 @@ import { isCanonicalSlug, priceKey, productPath } from "@superscout/core";
 import { getProduct, neighbours } from "@/lib/catalogue";
 import { getOffers } from "@/lib/offers";
 import { insightFor } from "@/lib/price-history";
-import { formatEuro, offerSlug, STORE_META } from "@/lib/format";
+import { formatEuro, freshnessLabel, offerSlug, STORE_META } from "@/lib/format";
+import { type PriceFreshness, priceFreshness } from "@/lib/catalogue-freshness";
 import { JsonLd } from "@/components/JsonLd";
 import { breadcrumbJsonLd, SITE_URL } from "@/lib/seo";
 
@@ -47,14 +48,18 @@ function liveOffer(product: Product) {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { chain, id } = await params;
   const product = resolve(chain, id);
-  if (!product) return { title: "Product niet gevonden — SuperScout" };
+  if (!product) return { title: "Product niet gevonden" };
 
   const store = STORE_META[product.source].name;
   const price = product.priceCents !== null ? formatEuro(product.priceCents) : null;
+  const freshness = priceFreshness(product.fetchedAt);
 
-  const title = price
-    ? `${product.title} — ${price} bij ${store}`
-    : `${product.title} bij ${store}`;
+  // The title is what a searcher reads as today's price, so only a current
+  // price goes in it. An older one stays on the page, dated, where it can be.
+  const title =
+    price && freshness === "current"
+      ? `${product.title} — ${price} bij ${store}`
+      : `${product.title} bij ${store}`;
 
   const unit = product.salesUnitSize ? ` (${product.salesUnitSize})` : "";
   const perUnit =
@@ -62,13 +67,18 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       ? ` Dat is ${formatEuro(product.unitPriceCents)} per ${product.unitPriceLabel.toLowerCase()}.`
       : "";
 
-  const description = price
-    ? `${product.title}${unit} kost ${price} bij ${store}.${perUnit} Bekijk de actuele prijs en of het deze week in de aanbieding is.`
-    : `${product.title}${unit} bij ${store}. Bekijk de actuele prijs en of het deze week in de aanbieding is.`;
+  const description = !price
+    ? `${product.title}${unit} bij ${store}. Bekijk de prijs en of het deze week in de aanbieding is.`
+    : freshness === "current"
+      ? `${product.title}${unit} kost ${price} bij ${store}.${perUnit} Bekijk de actuele prijs en of het deze week in de aanbieding is.`
+      : `${product.title}${unit} bij ${store}: laatst bekende prijs ${price} (${freshnessLabel(product.fetchedAt, new Date().toISOString())}).${perUnit} Bekijk of het deze week in de aanbieding is.`;
 
   return {
     title,
     description,
+    // A month-old price is all this page would offer a searcher; keep the page
+    // for anyone following a link, but stop asking Google to rank it.
+    ...(freshness === "expired" ? { robots: { index: false, follow: true } } : {}),
     alternates: { canonical: productPath(product) },
     openGraph: {
       title,
@@ -95,10 +105,16 @@ export default async function ProductPage({ params }: Params) {
   const insight = insightFor({ source: product.source, title: product.title } as never);
   const rail = neighbours(product);
   const canonical = productPath(product);
+  const freshness = priceFreshness(product.fetchedAt);
+  const fetchedLabel = freshnessLabel(product.fetchedAt, new Date().toISOString());
 
   return (
     <div className="mx-auto max-w-6xl px-5 pb-24">
-      <JsonLd data={productJsonLd(product, `${SITE_URL}${canonical}`)} />
+      {/* Product markup without a price is an error in Search Console (it needs
+          offers, a review or a rating), so a dated price drops the whole node. */}
+      {freshness === "current" ? (
+        <JsonLd data={productJsonLd(product, `${SITE_URL}${canonical}`)} />
+      ) : null}
       <JsonLd
         data={breadcrumbJsonLd([
           { name: "Home", path: "/" },
@@ -162,6 +178,13 @@ export default async function ProductPage({ params }: Params) {
             </p>
           ) : null}
 
+          {product.priceCents !== null ? (
+            <p className="mt-2 font-mono text-xs text-ink-soft">
+              {freshness === "current" ? "Prijs " : "Laatst bekende prijs, "}
+              {fetchedLabel}
+            </p>
+          ) : null}
+
           {offer ? (
             <div className="mt-6 rounded-2xl border border-line bg-surface-2 p-4">
               <p className="font-mono text-[11px] font-bold uppercase tracking-widest text-fresh">
@@ -212,7 +235,13 @@ export default async function ProductPage({ params }: Params) {
         </div>
       </div>
 
-      <ProductProse product={product} store={store.name} offer={Boolean(offer)} />
+      <ProductProse
+        product={product}
+        store={store.name}
+        offer={Boolean(offer)}
+        freshness={freshness}
+        fetchedLabel={fetchedLabel}
+      />
 
       {rail.length > 0 ? (
         <section className="mt-14">
@@ -264,16 +293,21 @@ function ProductProse({
   product,
   store,
   offer,
+  freshness,
+  fetchedLabel,
 }: {
   product: Product;
   store: string;
   offer: boolean;
+  freshness: PriceFreshness;
+  fetchedLabel: string;
 }) {
   const price = product.priceCents !== null ? formatEuro(product.priceCents) : null;
   const perUnit =
     product.unitPriceCents != null && product.unitPriceLabel
       ? `${formatEuro(product.unitPriceCents)} per ${product.unitPriceLabel.toLowerCase()}`
       : null;
+  const current = freshness === "current";
 
   return (
     <section className="mt-14 border-t border-line pt-10">
@@ -284,7 +318,8 @@ function ProductProse({
         <p>
           {price ? (
             <>
-              <strong className="font-semibold text-ink">{product.title}</strong> kost op dit moment{" "}
+              <strong className="font-semibold text-ink">{product.title}</strong>{" "}
+              {current ? "kost op dit moment" : `kostte bij onze laatste controle (${fetchedLabel})`}{" "}
               {price} bij {store}
               {product.salesUnitSize ? ` voor ${product.salesUnitSize.toLowerCase()}` : ""}.
               {perUnit ? ` Omgerekend is dat ${perUnit}.` : ""}
@@ -299,8 +334,14 @@ function ProductProse({
         </p>
         <p>
           {offer
-            ? `Dit product staat deze week in de aanbieding. SuperScout haalt de prijzen dagelijks rechtstreeks bij ${store} op, dus wat hierboven staat is wat de keten vandaag vraagt.`
-            : `Dit product staat op dit moment niet in de aanbieding. SuperScout haalt de prijzen dagelijks rechtstreeks bij ${store} op en bewaart wat een product eerder in de actie kostte, zodat je bij een volgende korting kunt zien of die echt scherp is.`}{" "}
+            ? "Dit product staat deze week in de aanbieding."
+            : "Dit product staat op dit moment niet in de aanbieding."}{" "}
+          {/* "Dagelijks" is only true while this product keeps being seen. A stale
+              row means either the chain's crawl stopped (a robots.txt pause) or
+              the product left the assortment; the wording fits both. */}
+          {current
+            ? `SuperScout haalt de prijzen dagelijks rechtstreeks bij ${store} op en bewaart wat een product eerder in de actie kostte, zodat je bij een volgende korting kunt zien of die echt scherp is.`
+            : `De prijs hierboven is de laatste die SuperScout bij ${store} zag; sindsdien hebben we hem niet opnieuw kunnen controleren, dus de prijs in de winkel kan anders zijn.`}{" "}
           Controleer de definitieve prijs altijd in de winkel of de app van {store}; SuperScout
           verkoopt zelf niets.
         </p>

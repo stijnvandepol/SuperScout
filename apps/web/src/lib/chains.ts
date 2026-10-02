@@ -2,6 +2,7 @@ import type { SupermarketSlug } from "@superscout/core";
 import { INGESTED_SUPERMARKETS, retailerNoun } from "@superscout/core";
 import { getOffers } from "@/lib/offers";
 import { STORE_META } from "@/lib/format";
+import { readIngestStatus } from "@/lib/health";
 
 /**
  * Which chains the site can actually show today.
@@ -129,4 +130,34 @@ export function chainCountWord(): string {
 
 export function chainCount(): number {
   return liveChains().length;
+}
+
+/**
+ * Why a supported chain has no offers right now, in words a shopper reads.
+ *
+ * Shared by /status and the store page of a missing chain, so the two can
+ * never give different reasons — the FAQ once invented one ("publiceert de
+ * folder op een manier die we niet kunnen inlezen") that was false for the
+ * chain actually missing.
+ */
+export function absenceReason(slug: SupermarketSlug): { label: string; detail: string } {
+  const name = STORE_META[slug].name;
+  const result = readIngestStatus()?.results.find((r) => r.source === slug);
+
+  if (result?.blockedSince) {
+    return {
+      label: "Gepauzeerd",
+      detail: `${name} weigerde ons verzoek. We respecteren dat en proberen het over een week één keer opnieuw.`,
+    };
+  }
+  if (result?.error?.startsWith("robots.txt")) {
+    return {
+      label: "Gepauzeerd",
+      detail: `De robots.txt van ${name} staat het ophalen niet toe. Dan halen we het niet op.`,
+    };
+  }
+  return {
+    label: "Tijdelijk niet beschikbaar",
+    detail: "Het ophalen lukte bij de laatste ronde niet. Meestal is dat de volgende dag verholpen.",
+  };
 }

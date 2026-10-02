@@ -1,6 +1,7 @@
 import type { SupermarketSlug } from "@superscout/core";
 import { INGESTED_SUPERMARKETS, titleSlug } from "@superscout/core";
 import { productIndex, SITEMAP_CHUNK_SIZE } from "@/lib/catalogue";
+import { indexableSince } from "@/lib/catalogue-freshness";
 import { SITE_URL } from "@/lib/seo";
 
 /**
@@ -42,7 +43,13 @@ export async function GET(
     return new Response("Not found", { status: 404 });
   }
 
-  const rows = productIndex(chain as SupermarketSlug, SITEMAP_CHUNK_SIZE, index * SITEMAP_CHUNK_SIZE);
+  // Same cutoff as the index, so both agree on how many chunks exist.
+  const rows = productIndex(
+    chain as SupermarketSlug,
+    SITEMAP_CHUNK_SIZE,
+    index * SITEMAP_CHUNK_SIZE,
+    indexableSince(),
+  );
   if (rows.length === 0) return new Response("Not found", { status: 404 });
 
   const urls = rows.map((row) => {
